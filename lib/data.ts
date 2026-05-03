@@ -195,19 +195,22 @@ export async function getProfilePhotoUrl(photoPath: string | null) {
   return data.signedUrl;
 }
 
-export async function getAdminNote(): Promise<AdminNote> {
-  if (!hasSupabaseEnv()) return structuredClone(seedNote);
+export async function listAdminNotes(): Promise<AdminNote[]> {
+  if (!hasSupabaseEnv()) return [structuredClone(seedNote)];
 
   const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase.from("admin_notes").select("*").limit(1);
+  const { data, error } = await supabase
+    .from("admin_notes")
+    .select("*")
+    .order("updated_at", { ascending: false })
+    .order("created_at", { ascending: false });
   if (error) throw error;
+  return data ?? [];
+}
 
-  return (
-    data?.[0] ?? {
-      id: randomUUID(),
-      content: "",
-    }
-  );
+export async function getLatestAdminNote(): Promise<AdminNote | null> {
+  const notes = await listAdminNotes();
+  return notes[0] ?? null;
 }
 
 export async function saveAdminNote(input: FormData) {
@@ -216,6 +219,13 @@ export async function saveAdminNote(input: FormData) {
   const id = String(input.get("id") || randomUUID());
   const content = String(input.get("content") || "");
   const { error } = await supabase.from("admin_notes").upsert([{ id, content }], { onConflict: "id" });
+  if (error) throw error;
+}
+
+export async function deleteAdminNote(id: string) {
+  if (!hasSupabaseEnv()) return;
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase.from("admin_notes").delete().eq("id", id);
   if (error) throw error;
 }
 

@@ -1,14 +1,15 @@
 import { AdminShell } from "@/components/admin-shell";
 import { requireAdmin } from "@/lib/auth";
-import { getAdminNote, getAllVisualizations, getProfileBundle, listUploadedFiles } from "@/lib/data";
+import { getAllVisualizations, getLatestAdminNote, getProfileBundle, listAdminNotes, listUploadedFiles } from "@/lib/data";
 
 export default async function AdminDashboardPage() {
   await requireAdmin();
 
-  const [visualizations, files, note, profile] = await Promise.all([
+  const [visualizations, files, latestNote, allNotes, profile] = await Promise.all([
     getAllVisualizations(),
     listUploadedFiles(),
-    getAdminNote(),
+    getLatestAdminNote(),
+    listAdminNotes(),
     getProfileBundle(),
   ]);
 
@@ -34,12 +35,17 @@ export default async function AdminDashboardPage() {
           <h2>{profile.projects.length}</h2>
           <p className="muted">소개 페이지에 등록된 프로젝트 수</p>
         </div>
+        <div className="card">
+          <div className="tag neutral">notes</div>
+          <h2>{allNotes.length}</h2>
+          <p className="muted">저장된 관리자 메모 수</p>
+        </div>
       </div>
 
       <div className="section panel" style={{ padding: 20 }}>
         <h3>최근 메모</h3>
         <p className="muted" style={{ whiteSpace: "pre-wrap", marginBottom: 0 }}>
-          {note.content || "저장된 메모가 없습니다."}
+          {latestNote?.content || "저장된 메모가 없습니다."}
         </p>
       </div>
     </AdminShell>

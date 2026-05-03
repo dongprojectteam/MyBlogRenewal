@@ -52,6 +52,13 @@ textarea {
   font: inherit;
 }
 
+button:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 textarea {
   resize: vertical;
 }
@@ -116,6 +123,12 @@ textarea {
 .danger-button:hover {
   transform: translateY(-1px);
   border-color: rgba(148, 163, 184, 0.42);
+}
+
+.button[aria-busy="true"],
+.danger-button[aria-busy="true"],
+.ghost-button[aria-busy="true"] {
+  transform: none;
 }
 
 .ghost-button {
@@ -421,6 +434,14 @@ textarea {
   background: rgba(14, 165, 233, 0.08);
   color: #dbeafe;
   padding: 14px 16px;
+}
+
+.loading-inline {
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(226, 232, 240, 0.05);
+  color: var(--muted-strong);
+  padding: 12px 14px;
 }
 
 .table {

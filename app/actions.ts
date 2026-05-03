@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import {
+  deleteAdminNote,
   deleteProfileLink,
   deleteProfileProject,
   deleteVisualization,
@@ -29,6 +30,14 @@ export async function deleteVisualizationAction(formData: FormData) {
 
 export async function saveAdminNoteAction(formData: FormData) {
   await saveAdminNote(formData);
+  revalidatePath("/admin/notes");
+  revalidatePath("/admin/dashboard");
+}
+
+export async function deleteAdminNoteAction(formData: FormData) {
+  const id = String(formData.get("id") || "");
+  if (!id) return;
+  await deleteAdminNote(id);
   revalidatePath("/admin/notes");
   revalidatePath("/admin/dashboard");
 }
