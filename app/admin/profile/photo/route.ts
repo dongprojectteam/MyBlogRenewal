@@ -8,13 +8,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(new URL("/admin?error=invalid_credentials", request.url));
   }
 
-  const formData = await request.formData();
-  const profileId = String(formData.get("profile_id") || "");
-  const file = formData.get("photo");
+  try {
+    const formData = await request.formData();
+    const profileId = String(formData.get("profile_id") || "");
+    const file = formData.get("photo");
 
-  if (file instanceof File && profileId) {
+    if (!(file instanceof File) || file.size === 0) {
+      return NextResponse.redirect(new URL("/admin/profile?photo=missing_file", request.url));
+    }
+
+    if (!profileId) {
+      return NextResponse.redirect(new URL("/admin/profile?photo=missing_profile", request.url));
+    }
+
     await uploadProfilePhoto(file, profileId);
+    return NextResponse.redirect(new URL("/admin/profile?photo=success", request.url));
+  } catch {
+    return NextResponse.redirect(new URL("/admin/profile?photo=upload_failed", request.url));
   }
-
-  return NextResponse.redirect(new URL("/admin/profile", request.url));
 }

@@ -1,8 +1,11 @@
+import { unstable_noStore as noStore } from "next/cache";
+
 import { ProfilePhoto } from "@/components/profile-photo";
 import { SiteHeader } from "@/components/site-header";
 import { getProfileBundle, getProfilePhotoUrl } from "@/lib/data";
 
 export default async function AboutPage() {
+  noStore();
   const bundle = await getProfileBundle();
   const photoUrl = await getProfilePhotoUrl(bundle.profile.photo_path);
 

@@ -436,6 +436,18 @@ textarea {
   padding: 14px 16px;
 }
 
+.notice-error {
+  border-color: rgba(248, 113, 113, 0.3);
+  background: rgba(127, 29, 29, 0.18);
+  color: #fecaca;
+}
+
+.notice-success {
+  border-color: rgba(74, 222, 128, 0.25);
+  background: rgba(20, 83, 45, 0.22);
+  color: #dcfce7;
+}
+
 .loading-inline {
   border-radius: var(--radius-sm);
   border: 1px solid rgba(148, 163, 184, 0.2);

@@ -14,6 +14,7 @@ import type {
 
 const ADMIN_BUCKET = "admin-files";
 const PROFILE_BUCKET = "profile-images";
+const DEFAULT_PROFILE_ID = "11111111-1111-1111-1111-111111111111";
 
 function sortByOrder<T extends { sort_order: number }>(items: T[]) {
   return items.sort((a, b) => a.sort_order - b.sort_order);
@@ -75,10 +76,15 @@ export async function deleteVisualization(id: string) {
 export async function getProfileBundle(): Promise<ProfileBundle> {
   if (!hasSupabaseEnv()) return structuredClone(seedProfile);
 
-  const supabase = getSupabasePublicClient();
+  const supabase = getSupabaseAdminClient();
   const [{ data: profileRows, error: profileError }, { data: projectRows, error: projectError }, { data: linkRows, error: linkError }] =
     await Promise.all([
-      supabase.from("profile").select("*").limit(1),
+      supabase
+        .from("profile")
+        .select("*")
+        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(1),
       supabase.from("profile_projects").select("*").order("sort_order", { ascending: true }),
       supabase.from("profile_links").select("*").order("sort_order", { ascending: true }),
     ]);
@@ -90,7 +96,7 @@ export async function getProfileBundle(): Promise<ProfileBundle> {
   const profile =
     profileRows?.[0] ??
     ({
-      id: randomUUID(),
+      id: DEFAULT_PROFILE_ID,
       greeting: "안녕하세요. DOPT입니다.",
       bio: "",
       photo_path: null,
@@ -106,7 +112,7 @@ export async function getProfileBundle(): Promise<ProfileBundle> {
 export async function saveProfileText(input: FormData) {
   if (!hasSupabaseEnv()) return;
 
-  const id = String(input.get("id") || randomUUID());
+  const id = String(input.get("id") || DEFAULT_PROFILE_ID);
   const greeting = String(input.get("greeting") || "").trim();
   const bio = String(input.get("bio") || "").trim();
   const supabase = getSupabaseAdminClient();
@@ -274,4 +280,38 @@ export async function getFileDownloadUrl(id: string) {
     .createSignedUrl(file.storage_path, 60);
   if (signedUrlError) throw signedUrlError;
   return data.signedUrl;
+}
+
+export async function getUploadedFileById(id: string): Promise<UploadedFile | null> {
+  if (!hasSupabaseEnv()) return null;
+
+  const supabase = getSupabaseAdminClient();
+  const { data: rows, error } = await supabase.from("uploaded_files").select("*").eq("id", id).limit(1);
+  if (error) throw error;
+
+  return rows?.[0] ?? null;
+}
+
+export async function downloadUploadedFile(storagePath: string) {
+  if (!hasSupabaseEnv()) return null;
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase.storage.from(ADMIN_BUCKET).download(storagePath);
+  if (error) throw error;
+
+  return data;
+}
+
+export async function deleteUploadedFile(id: string) {
+  if (!hasSupabaseEnv()) return;
+
+  const supabase = getSupabaseAdminClient();
+  const file = await getUploadedFileById(id);
+  if (!file) return;
+
+  const { error: storageError } = await supabase.storage.from(ADMIN_BUCKET).remove([file.storage_path]);
+  if (storageError) throw storageError;
+
+  const { error: rowError } = await supabase.from("uploaded_files").delete().eq("id", id);
+  if (rowError) throw rowError;
 }
