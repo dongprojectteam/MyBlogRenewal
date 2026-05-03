@@ -20,6 +20,12 @@ function sortByOrder<T extends { sort_order: number }>(items: T[]) {
   return items.sort((a, b) => a.sort_order - b.sort_order);
 }
 
+function buildSafeStoragePath(id: string, fileName: string) {
+  const ext = fileName.includes(".") ? fileName.split(".").pop()?.toLowerCase() ?? "" : "";
+  const suffix = ext ? `.${ext.replace(/[^a-z0-9]/g, "")}` : "";
+  return `${id}/file${suffix}`;
+}
+
 export async function getPublicVisualizations(): Promise<Visualization[]> {
   if (!hasSupabaseEnv()) return sortByOrder([...seedVisualizations]).filter((item) => item.visible);
 
@@ -247,7 +253,7 @@ export async function saveUploadedFile(file: File) {
   if (!hasSupabaseEnv()) return;
   const supabase = getSupabaseAdminClient();
   const id = randomUUID();
-  const storagePath = `${id}/${file.name}`;
+  const storagePath = buildSafeStoragePath(id, file.name);
   const bytes = await file.arrayBuffer();
   const { error: uploadError } = await supabase.storage.from(ADMIN_BUCKET).upload(storagePath, bytes, {
     contentType: file.type || "application/octet-stream",
