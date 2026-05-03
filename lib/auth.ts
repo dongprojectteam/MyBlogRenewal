@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import type { NextRequest } from "next/server";
 
 import { getEnv } from "@/lib/env";
 
@@ -62,4 +63,8 @@ export async function requireAdmin() {
   if (!authed) {
     redirect("/admin");
   }
+}
+
+export function isAdminRequestAuthenticated(request: NextRequest) {
+  return request.cookies.get(ADMIN_COOKIE)?.value === "true";
 }
