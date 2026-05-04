@@ -3,6 +3,7 @@ export type Visualization = {
   title: string;
   description: string;
   url: string;
+  image_url?: string | null;
   visible: boolean;
   sort_order: number;
   created_at?: string;

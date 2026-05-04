@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { hasSupabaseEnv } from "@/lib/env";
 import { seedFiles, seedNote, seedProfile, seedVisualizations } from "@/lib/seed";
-import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 import { safeYear, toProjectUrl, toSlugishPath } from "@/lib/utils";
 import type {
   AdminNote,
@@ -45,7 +45,9 @@ function buildSafeStoragePath(id: string, fileName: string) {
 export async function getPublicVisualizations(): Promise<Visualization[]> {
   if (!hasSupabaseEnv()) return sortByOrder([...seedVisualizations]).filter((item) => item.visible);
 
-  const supabase = getSupabasePublicClient();
+  // Home route is server-rendered, so we can safely query with admin client.
+  // This avoids empty results when public RLS policies are restrictive.
+  const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("visualizations")
     .select("*")
@@ -72,10 +74,11 @@ export async function saveVisualization(input: FormData) {
   const title = String(input.get("title") || "").trim();
   const description = String(input.get("description") || "").trim();
   const url = toSlugishPath(String(input.get("url") || "").trim());
+  const image_url = String(input.get("image_url") || "").trim() || null;
   const visible = input.get("visible") === "on";
   const sort_order = Number(input.get("sort_order") || 0);
 
-  const payload = { title, description, url, visible, sort_order };
+  const payload = { title, description, url, image_url, visible, sort_order };
   const supabase = getSupabaseAdminClient();
 
   if (id) {

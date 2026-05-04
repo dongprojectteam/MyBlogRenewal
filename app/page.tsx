@@ -4,6 +4,8 @@ import { SiteHeader } from "@/components/site-header";
 import { UtilityCard } from "@/components/utility-card";
 import { getPublicVisualizations } from "@/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const items = await getPublicVisualizations();
   const recentItems = items.slice(0, 3);

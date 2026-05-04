@@ -1,13 +1,21 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 import type { Visualization } from "@/types";
 
 export function UtilityCard({ item }: { item: Visualization }) {
   return (
     <article className="card">
-      <div className="utility-path">{item.url}</div>
-      <h3>{item.title}</h3>
-      <p className="utility-description">{item.description}</p>
+      <div className="utility-head">
+        <h3>{item.title}</h3>
+        <div className="utility-path">{item.url}</div>
+      </div>
+      <div className="utility-detail">
+        {item.image_url ? (
+          <img className="utility-image" src={item.image_url} alt={`${item.title} preview`} loading="lazy" />
+        ) : null}
+        <p className="utility-description">{item.description}</p>
+      </div>
+
       <Link href={item.url} className="utility-link">
         열어보기 <span aria-hidden>→</span>
       </Link>

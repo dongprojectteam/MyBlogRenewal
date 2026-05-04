@@ -1,4 +1,4 @@
-import { deleteVisualizationAction, saveVisualizationAction } from "@/app/actions";
+﻿import { deleteVisualizationAction, saveVisualizationAction } from "@/app/actions";
 import { AdminShell } from "@/components/admin-shell";
 import { requireAdmin } from "@/lib/auth";
 import { getAllVisualizations } from "@/lib/data";
@@ -25,6 +25,10 @@ export default async function AdminVisualizationsPage() {
               <label className="label">URL</label>
               <input className="input" name="url" placeholder="/week-calendar" />
             </div>
+          </div>
+          <div className="field">
+            <label className="label">Image URL (optional)</label>
+            <input className="input" name="image_url" placeholder="https://.../preview.png" />
           </div>
           <div className="field">
             <label className="label">설명</label>
@@ -72,6 +76,10 @@ export default async function AdminVisualizationsPage() {
                     <label className="label">URL</label>
                     <input className="input" name="url" defaultValue={item.url} />
                   </div>
+                </div>
+                <div className="field">
+                  <label className="label">Image URL (optional)</label>
+                  <input className="input" name="image_url" defaultValue={item.image_url ?? ""} />
                 </div>
                 <div className="field">
                   <label className="label">설명</label>
