@@ -1,0 +1,21 @@
+﻿# TODO: Text Diff Utility
+
+- [ ] Create client-side diff page structure at `app/diff/page.tsx`
+- [ ] Add labeled left/right textareas and action buttons (Compare, Clear)
+- [ ] Add compare options (ignore case, trim trailing whitespace)
+- [ ] Implement line preprocessing and normalization helpers
+- [ ] Implement LCS-based line diff function
+- [ ] Implement modified-line pairing logic from add/remove blocks
+- [ ] Implement character-level inline diff tokenization for modified rows
+- [ ] Render side-by-side diff rows with line numbers and change badges
+- [ ] Render counts summary (added/removed/modified)
+- [ ] Render change-only summary cards with before/after snippets
+- [ ] Implement localStorage history schema and load-on-mount behavior
+- [ ] Save comparison snapshot to history on Compare
+- [ ] Implement history restore by clicking an item
+- [ ] Implement per-item delete and clear-all history actions
+- [ ] Add empty-state guidance for no input / no diffs
+- [ ] Add CSS styles for diff layout, highlights, summary cards, and history list
+- [ ] Ensure mobile responsiveness for input and diff layouts
+- [ ] Run build verification (`npm run build`)
+- [ ] Confirm all todo items are reflected in final implementation report

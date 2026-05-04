@@ -176,10 +176,10 @@ textarea {
 
 .hero-title {
   font-family: var(--font-serif);
-  font-size: clamp(2.5rem, 5vw, 4.6rem);
-  line-height: 1.04;
-  margin: 20px 0 18px;
-  max-width: 10ch;
+  font-size: clamp(2rem, 3.4vw, 3.2rem);
+  line-height: 1.12;
+  margin: 18px 0 16px;
+  max-width: 14ch;
 }
 
 .hero-copy {
@@ -286,6 +286,22 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  color: var(--text);
+}
+
+.hero-recent-list {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.hero-recent-link {
+  color: var(--muted-strong);
+  transition: color 160ms ease;
+}
+
+.hero-recent-link:hover {
   color: var(--text);
 }
 
@@ -596,6 +612,179 @@ textarea {
   font-size: 0.95rem;
 }
 
+.diff-input-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.diff-textarea {
+  min-height: 220px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.diff-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: var(--muted-strong);
+}
+
+.diff-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.diff-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.diff-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.diff-table-head,
+.diff-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.diff-table-head {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.diff-table-head > div {
+  padding: 12px 14px;
+  font-weight: 600;
+  color: var(--muted-strong);
+}
+
+.diff-table-body .diff-row {
+  border-top: 1px solid var(--border);
+}
+
+.diff-cell {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: start;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.diff-line-no {
+  color: var(--muted);
+  font-size: 0.86rem;
+  text-align: right;
+  padding-top: 2px;
+}
+
+.diff-text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.5;
+}
+
+.diff-added .diff-cell {
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.diff-removed .diff-cell {
+  background: rgba(248, 113, 113, 0.14);
+}
+
+.diff-modified .diff-cell {
+  background: rgba(250, 204, 21, 0.12);
+}
+
+.diff-inline-added {
+  background: rgba(34, 197, 94, 0.32);
+  border-radius: 4px;
+}
+
+.diff-inline-removed {
+  background: rgba(248, 113, 113, 0.3);
+  border-radius: 4px;
+}
+
+.diff-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.diff-summary-card {
+  border: 1px solid var(--border);
+  background: rgba(2, 6, 23, 0.26);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+}
+
+.diff-summary-button {
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.diff-summary-button:hover {
+  border-color: var(--border-strong);
+  background: rgba(30, 41, 59, 0.4);
+}
+
+.diff-summary-text {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.45;
+  color: var(--muted-strong);
+}
+
+.diff-summary-before {
+  border-left: 3px solid rgba(248, 113, 113, 0.7);
+  padding-left: 8px;
+  background: rgba(127, 29, 29, 0.18);
+}
+
+.diff-summary-after {
+  border-left: 3px solid rgba(34, 197, 94, 0.75);
+  padding-left: 8px;
+  background: rgba(20, 83, 45, 0.2);
+}
+
+.diff-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.diff-history-item {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(2, 6, 23, 0.26);
+  padding: 10px;
+}
+
+.diff-history-main {
+  flex: 1;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  display: grid;
+  gap: 4px;
+  cursor: pointer;
+}
+
 @media (max-width: 960px) {
   .hero-grid,
   .profile-grid,
@@ -607,6 +796,12 @@ textarea {
   .panel,
   .card {
     padding: 22px;
+  }
+
+  .diff-input-grid,
+  .diff-table-head,
+  .diff-row {
+    grid-template-columns: 1fr;
   }
 }
 
