@@ -1,8 +1,31 @@
-﻿import { unstable_noStore as noStore } from "next/cache";
+﻿import type { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 
 import { ProfilePhoto } from "@/components/profile-photo";
 import { SiteHeader } from "@/components/site-header";
 import { getProfileBundle, getProfilePhotoUrl } from "@/lib/data";
+
+const pageTitle = "About - DOPT";
+const pageDescription = "DOPT의 소개, 프로젝트 이력, 외부 링크를 모아둔 프로필 페이지입니다.";
+
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  alternates: {
+    canonical: "/about",
+  },
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    url: "/about",
+    type: "profile",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: pageTitle,
+    description: pageDescription,
+  },
+};
 
 function isExternalUrl(url: string) {
   return /^https?:\/\//i.test(url);

@@ -1,10 +1,9 @@
-# DOPT
+﻿# DOPT
 
-개인 취미 공간이자 유틸 허브를 목표로 하는 `Next.js + TypeScript + Supabase + Vercel` 프로젝트입니다.
+媛쒖씤 痍⑤? 怨듦컙?댁옄 ?좏떥 ?덈툕瑜?紐⑺몴濡??섎뒗 `Next.js + TypeScript + Supabase + Vercel` ?꾨줈?앺듃?낅땲??
 
-## 환경 변수
-
-프로젝트 루트에 `.env.local` 파일을 만들고 아래처럼 입력합니다.
+## ?섍꼍 蹂??
+?꾨줈?앺듃 猷⑦듃??`.env.local` ?뚯씪??留뚮뱾怨??꾨옒泥섎읆 ?낅젰?⑸땲??
 
 ```env
 PASSWORD=abc
@@ -13,70 +12,63 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxx
 SUPABASE_SECRET_KEY=sb_secret_xxxxx
 ```
 
-설명:
+?ㅻ챸:
 
 - `PASSWORD`
-  - 관리자 비밀번호의 앞부분
-  - 실제 로그인 비밀번호는 `PASSWORD + 오늘 날짜(MMDD)`
+  - 愿由ъ옄 鍮꾨?踰덊샇???욌?遺?  - 관리자 로그인 비밀번호
 - `NEXT_PUBLIC_SUPABASE_URL`
-  - Supabase 프로젝트 주소
+  - Supabase ?꾨줈?앺듃 二쇱냼
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-  - 브라우저에서 사용 가능한 공개 키
-- `SUPABASE_SECRET_KEY`
-  - 서버 전용 비밀 키
-  - 절대 브라우저나 공개 저장소에 노출하면 안 됨
-
-## Supabase에서 무엇을 어디서 가져오나
-
-최신 Supabase에서는 예전 `anon`, `service_role` 대신 보통 아래 3개만 보면 됩니다.
+  - 釉뚮씪?곗??먯꽌 ?ъ슜 媛?ν븳 怨듦컻 ??- `SUPABASE_SECRET_KEY`
+  - ?쒕쾭 ?꾩슜 鍮꾨? ??  - ?덈? 釉뚮씪?곗???怨듦컻 ??μ냼???몄텧?섎㈃ ????
+## Supabase?먯꽌 臾댁뾿???대뵒??媛?몄삤??
+理쒖떊 Supabase?먯꽌???덉쟾 `anon`, `service_role` ???蹂댄넻 ?꾨옒 3媛쒕쭔 蹂대㈃ ?⑸땲??
 
 1. `Project URL`
 2. `Publishable key`
 3. `Secret key`
 
-### 각 값의 의미
+### 媛?媛믪쓽 ?섎?
 
 `Project URL`
 
-- 예: `https://abcdefghijk.supabase.co`
-- 이 앱이 어느 Supabase 프로젝트에 연결할지 알려주는 주소
+- ?? `https://abcdefghijk.supabase.co`
+- ???깆씠 ?대뒓 Supabase ?꾨줈?앺듃???곌껐?좎? ?뚮젮二쇰뒗 二쇱냼
 
 `Publishable key`
 
-- 예: `sb_publishable_...`
-- 브라우저에서 사용 가능한 공개 키
-- 이 프로젝트에서는 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`에 넣음
+- ?? `sb_publishable_...`
+- 釉뚮씪?곗??먯꽌 ?ъ슜 媛?ν븳 怨듦컻 ??- ???꾨줈?앺듃?먯꽌??`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`???ｌ쓬
 
 `Secret key`
 
-- 예: `sb_secret_...`
-- 서버에서만 써야 하는 비밀 키
-- 관리자 쓰기 작업, 파일 업로드/다운로드 같은 서버 작업에 사용
-- 이 프로젝트에서는 `SUPABASE_SECRET_KEY`에 넣음
+- ?? `sb_secret_...`
+- ?쒕쾭?먯꽌留??⑥빞 ?섎뒗 鍮꾨? ??- 愿由ъ옄 ?곌린 ?묒뾽, ?뚯씪 ?낅줈???ㅼ슫濡쒕뱶 媛숈? ?쒕쾭 ?묒뾽???ъ슜
+- ???꾨줈?앺듃?먯꽌??`SUPABASE_SECRET_KEY`???ｌ쓬
 
-### 어디서 복사하나
+### ?대뵒??蹂듭궗?섎굹
 
-방법 1. `Connect` 화면
+諛⑸쾿 1. `Connect` ?붾㈃
 
-1. [Supabase Dashboard](https://supabase.com/dashboard)에서 프로젝트를 엽니다.
-2. `Connect`를 누릅니다.
-3. 여기서 보통 아래를 바로 볼 수 있습니다.
+1. [Supabase Dashboard](https://supabase.com/dashboard)?먯꽌 ?꾨줈?앺듃瑜??쎈땲??
+2. `Connect`瑜??꾨쫭?덈떎.
+3. ?ш린??蹂댄넻 ?꾨옒瑜?諛붾줈 蹂????덉뒿?덈떎.
    - `Project URL`
    - `Publishable key`
 
-방법 2. `Settings > API Keys`
+諛⑸쾿 2. `Settings > API Keys`
 
-1. 프로젝트를 엽니다.
+1. ?꾨줈?앺듃瑜??쎈땲??
 2. `Settings`
 3. `API Keys`
-4. 여기서 아래를 확인합니다.
+4. ?ш린???꾨옒瑜??뺤씤?⑸땲??
    - `Publishable key`
    - `Secret key`
-   - 필요하면 `Legacy API Keys`
+   - ?꾩슂?섎㈃ `Legacy API Keys`
      - `anon`
      - `service_role`
 
-이 프로젝트에서는 최신 기준으로 아래처럼 넣으면 됩니다.
+???꾨줈?앺듃?먯꽌??理쒖떊 湲곗??쇰줈 ?꾨옒泥섎읆 ?ｌ쑝硫??⑸땲??
 
 ```env
 PASSWORD=abc
@@ -85,181 +77,111 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxx
 SUPABASE_SECRET_KEY=sb_secret_xxxxx
 ```
 
-핵심:
+?듭떖:
 
-- `anon key`는 필수가 아님
-- `service_role key`도 최신 기준에서는 필수가 아님
-- 이 프로젝트는 `Publishable key + Secret key` 조합을 사용
+- `anon key`???꾩닔媛 ?꾨떂
+- `service_role key`??理쒖떊 湲곗??먯꽌???꾩닔媛 ?꾨떂
+- ???꾨줈?앺듃??`Publishable key + Secret key` 議고빀???ъ슜
 
-## Supabase 설정 순서
+## Supabase ?ㅼ젙 ?쒖꽌
 
-### 1. 프로젝트 생성
+### 1. ?꾨줈?앺듃 ?앹꽦
 
-1. [Supabase Dashboard](https://supabase.com/dashboard)에서 새 프로젝트 생성
-2. 프로젝트 준비 완료 후 `Connect` 또는 `Settings > API Keys` 확인
+1. [Supabase Dashboard](https://supabase.com/dashboard)?먯꽌 ???꾨줈?앺듃 ?앹꽦
+2. ?꾨줈?앺듃 以鍮??꾨즺 ??`Connect` ?먮뒗 `Settings > API Keys` ?뺤씤
 
-공식 참고:
+怨듭떇 李멸퀬:
 
 - [Understanding API keys](https://supabase.com/docs/guides/getting-started/api-keys)
-- [API keys 상세 문서](https://supabase.com/docs/guides/api/api-keys)
+- [API keys ?곸꽭 臾몄꽌](https://supabase.com/docs/guides/api/api-keys)
 
-### 2. 테이블 생성
 
-Supabase SQL Editor에서 아래 SQL을 실행합니다.
 
-```sql
-create extension if not exists "pgcrypto";
 
-create table if not exists public.visualizations (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  description text not null default '',
-  url text not null unique,
-  visible boolean not null default false,
-  sort_order integer not null default 0,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
 
-create table if not exists public.admin_notes (
-  id uuid primary key default gen_random_uuid(),
-  content text not null default '',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
+### 3. Storage bucket ?앹꽦
 
-create table if not exists public.uploaded_files (
-  id uuid primary key default gen_random_uuid(),
-  file_name text not null,
-  storage_path text not null,
-  file_size bigint not null default 0,
-  mime_type text not null default 'application/octet-stream',
-  created_at timestamptz not null default now()
-);
-
-create table if not exists public.profile (
-  id uuid primary key default gen_random_uuid(),
-  greeting text not null default '',
-  bio text not null default '',
-  photo_path text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table if not exists public.profile_projects (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  description text not null default '',
-  project_url text not null default '',
-  start_year integer,
-  end_year integer,
-  screenshot_url text,
-  sort_order integer not null default 0,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table if not exists public.profile_links (
-  id uuid primary key default gen_random_uuid(),
-  label text not null,
-  url text not null,
-  sort_order integer not null default 0,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create index if not exists visualizations_sort_order_idx on public.visualizations (sort_order);
-create index if not exists profile_projects_sort_order_idx on public.profile_projects (sort_order);
-create index if not exists profile_links_sort_order_idx on public.profile_links (sort_order);
-```
-
-이미 `profile_projects` 테이블을 만든 경우에는 아래 SQL도 한 번 실행합니다.
-
-```sql
-alter table public.profile_projects add column if not exists start_year integer;
-alter table public.profile_projects add column if not exists end_year integer;
-alter table public.profile_projects add column if not exists screenshot_url text;
-```
-
-### 3. Storage bucket 생성
-
-Supabase Storage에서 아래 bucket 2개를 만듭니다.
+Supabase Storage?먯꽌 ?꾨옒 bucket 2媛쒕? 留뚮벊?덈떎.
 
 - `admin-files`
 - `profile-images`
 
-권장:
+沅뚯옣:
 
-- 둘 다 `private`
+- ????`private`
 
-공식 참고:
+怨듭떇 李멸퀬:
 
 - [Storage Buckets](https://supabase.com/docs/guides/storage/buckets/fundamentals)
 
-## Vercel 설정
+## Vercel ?ㅼ젙
 
-### 1. 저장소 연결
+### 1. ??μ냼 ?곌껐
 
-1. 코드를 GitHub/GitLab/Bitbucket에 push
-2. [Vercel Dashboard](https://vercel.com/dashboard) 접속
+1. 肄붾뱶瑜?GitHub/GitLab/Bitbucket??push
+2. [Vercel Dashboard](https://vercel.com/dashboard) ?묒냽
 3. `New Project`
-4. 저장소 import
-5. Framework가 `Next.js`인지 확인
+4. ??μ냼 import
+5. Framework媛 `Next.js`?몄? ?뺤씤
 
-### 2. Vercel 환경 변수 등록
+### 2. Vercel ?섍꼍 蹂???깅줉
 
-`Project Settings > Environment Variables`에 아래 값을 등록합니다.
+`Project Settings > Environment Variables`???꾨옒 媛믪쓣 ?깅줉?⑸땲??
 
 - `PASSWORD`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SECRET_KEY`
 
-권장 환경:
+沅뚯옣 ?섍꼍:
 
 - `Production`
 - `Preview`
 - `Development`
 
-### 3. 첫 배포 후 확인
+### 3. 泥?諛고룷 ???뺤씤
 
 - `/`
 - `/about`
 - `/admin`
 
-공식 참고:
+怨듭떇 李멸퀬:
 
 - [Next.js on Vercel](https://vercel.com/docs/concepts/next.js/overview)
 - [Project Settings](https://vercel.com/docs/projects/project-configuration/project-settings)
 - [Environment Variables](https://vercel.com/docs/environment-variables)
 - [Deploying Git Repositories](https://vercel.com/docs/deployments/git)
 
-## 로컬 실행
+## 濡쒖뺄 ?ㅽ뻾
 
 ```bash
 npm install
 npm run dev
 ```
 
-브라우저:
+釉뚮씪?곗?:
 
 - `http://localhost:3000`
 
-## 관리자 로그인
-
+## 愿由ъ옄 濡쒓렇??
 - `id`: `admin`
-- `password`: `.env.local`의 `PASSWORD` + 오늘 날짜(`MMDD`)
 
-예:
 
-```env
-PASSWORD=abc
-```
+## Project SEO Skill
 
-5월 3일이면 비밀번호는:
+????μ냼?먮뒗 ?꾨줈?앺듃 ?꾩슜 SEO ?ㅽ궗???ы븿?섏뼱 ?덉뒿?덈떎.
 
-```txt
-abc0503
-```
+- 寃쎈줈: `.codex/skills/dopt-seo-indexing/SKILL.md`
+- 紐⑹쟻: 援ш? ???몃? 寃???몄텧 媛쒖꽑 ?붿껌 ?? ?꾩옱 ?곹깭瑜?癒쇱? ?먭??섍퀬 ?꾩슂???섏젙留??곸슜
+- 怨좎젙 ?꾨찓?? `https://www.doptsw.org`
 
-날짜 기준은 `Asia/Seoul`입니다.
+?ㅽ궗? ?꾨옒瑜??먮룞 ?먭??⑸땲??
+
+1. `app/layout.tsx` ?꾩뿭 硫뷀??곗씠??2. `app/robots.ts`, `app/sitemap.ts`
+3. ?섏씠吏 ?⑥쐞 硫뷀?(`/`, `/about`, 媛??좏떥)
+4. ?좏떥 JSON-LD(`WebSite`, `SoftwareApplication`)
+5. ?좉퇋 ?좏떥 ?먯?(`app/` ?쇱슦??+ `lib/data.ts` + `lib/seed.ts`)
+
+?좉퇋 ?좏떥??諛쒓껄?섎㈃ ?대떦 ?좏떥??硫뷀?/罹먮끂?덉뺄/?ъ씠?몃㏊/援ъ“?붾뜲?댄꽣瑜?蹂닿컯?⑸땲??
+
+

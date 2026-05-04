@@ -62,7 +62,7 @@ export default async function AdminProfilePage({
               </div>
               <div className="field">
                 <label className="label">URL</label>
-                <input className="input" name="project_url" placeholder="/week-calendar or https://..." />
+                <input className="input" name="project_url" placeholder="/diff or https://..." />
               </div>
             </div>
             <div className="field">

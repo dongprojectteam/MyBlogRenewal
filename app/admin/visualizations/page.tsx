@@ -23,7 +23,7 @@ export default async function AdminVisualizationsPage() {
             </div>
             <div className="field">
               <label className="label">URL</label>
-              <input className="input" name="url" placeholder="/week-calendar" />
+              <input className="input" name="url" placeholder="/diff" />
             </div>
           </div>
           <div className="field">
