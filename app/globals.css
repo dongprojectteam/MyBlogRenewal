@@ -235,6 +235,37 @@ textarea {
   grid-template-columns: 320px 1fr;
 }
 
+.about-layout {
+  align-items: start;
+}
+
+.about-photo-col {
+  align-self: start;
+}
+
+.about-photo-card {
+  position: sticky;
+  top: 24px;
+}
+
+.about-copy-col {
+  gap: 18px;
+}
+
+.about-flow-panel {
+  overflow: hidden;
+}
+
+.about-flow-copy {
+  display: flow-root;
+}
+
+.about-inline-photo {
+  float: left;
+  width: min(320px, 42%);
+  margin: 2px 24px 12px 0;
+}
+
 .admin-grid {
   grid-template-columns: 260px 1fr;
   align-items: start;
@@ -874,6 +905,12 @@ textarea {
 
   .project-item {
     grid-template-columns: 1fr;
+  }
+
+  .about-inline-photo {
+    float: none;
+    width: 100%;
+    margin: 0 0 14px;
   }
 
   .utility-detail {

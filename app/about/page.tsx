@@ -1,4 +1,4 @@
-import { unstable_noStore as noStore } from "next/cache";
+﻿import { unstable_noStore as noStore } from "next/cache";
 
 import { ProfilePhoto } from "@/components/profile-photo";
 import { SiteHeader } from "@/components/site-header";
@@ -24,18 +24,28 @@ export default async function AboutPage() {
     <div className="page-shell">
       <SiteHeader current="about" />
 
-      <section className="panel profile-grid">
-        <div>
-          <ProfilePhoto url={photoUrl} />
-        </div>
+      <section className="panel about-flow-panel">
         <div className="stack">
           <div className="eyebrow">about</div>
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.4rem, 4vw, 4rem)", marginBottom: 12 }}>
+          <h1
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+              fontSize: "clamp(2.1rem, 3.4vw, 3.2rem)",
+              marginBottom: 12,
+            }}
+          >
             {bundle.profile.greeting || "안녕하세요. DOPT입니다."}
           </h1>
-          <p className="hero-copy preserve-lines" style={{ margin: 0, maxWidth: "unset" }}>
-            {bundle.profile.bio || "이곳은 제가 좋아하는 것과 직접 만든 프로젝트를 담아두는 개인 공간입니다."}
-          </p>
+          <div className="about-flow-copy">
+            <div className="about-inline-photo">
+              <ProfilePhoto url={photoUrl} />
+            </div>
+            <p className="hero-copy preserve-lines" style={{ margin: 0, maxWidth: "unset" }}>
+              {bundle.profile.bio || "내가 좋아하는 것들과 직접 만든 프로젝트를 모아두는 개인 공간입니다."}
+            </p>
+          </div>
         </div>
       </section>
 
