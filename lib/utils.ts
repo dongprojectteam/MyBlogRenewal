@@ -17,8 +17,22 @@ export function toSlugishPath(path: string) {
   return path;
 }
 
+export function toProjectUrl(url: string) {
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("/")) return trimmed;
+  return `/${trimmed}`;
+}
+
 export function safeNumber(value: FormDataEntryValue | null, fallback = 0) {
   if (typeof value !== "string") return fallback;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+export function safeYear(value: FormDataEntryValue | null) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9999 ? parsed : null;
 }

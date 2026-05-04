@@ -62,12 +62,26 @@ export default async function AdminProfilePage({
               </div>
               <div className="field">
                 <label className="label">URL</label>
-                <input className="input" name="project_url" placeholder="/week-calendar" />
+                <input className="input" name="project_url" placeholder="/week-calendar or https://..." />
               </div>
             </div>
             <div className="field">
               <label className="label">설명</label>
               <textarea className="textarea" name="description" />
+            </div>
+            <div className="form-row">
+              <div className="field">
+                <label className="label">시작 연도</label>
+                <input className="input" name="start_year" type="number" min={0} max={9999} placeholder="2024" />
+              </div>
+              <div className="field">
+                <label className="label">완료 연도</label>
+                <input className="input" name="end_year" type="number" min={0} max={9999} placeholder="2026" />
+              </div>
+            </div>
+            <div className="field">
+              <label className="label">스크린샷 URL</label>
+              <input className="input" name="screenshot_url" placeholder="https://..." />
             </div>
             <div className="field">
               <label className="label">정렬 순서</label>
@@ -103,6 +117,34 @@ export default async function AdminProfilePage({
                   <div className="field">
                     <label className="label">설명</label>
                     <textarea className="textarea" name="description" defaultValue={project.description} />
+                  </div>
+                  <div className="form-row">
+                    <div className="field">
+                      <label className="label">시작 연도</label>
+                      <input
+                        className="input"
+                        name="start_year"
+                        type="number"
+                        min={0}
+                        max={9999}
+                        defaultValue={project.start_year ?? ""}
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="label">완료 연도</label>
+                      <input
+                        className="input"
+                        name="end_year"
+                        type="number"
+                        min={0}
+                        max={9999}
+                        defaultValue={project.end_year ?? ""}
+                      />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label className="label">스크린샷 URL</label>
+                    <input className="input" name="screenshot_url" defaultValue={project.screenshot_url ?? ""} />
                   </div>
                   <div className="field">
                     <label className="label">정렬 순서</label>

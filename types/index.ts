@@ -39,6 +39,9 @@ export type ProfileProject = {
   title: string;
   description: string;
   project_url: string;
+  start_year: number | null;
+  end_year: number | null;
+  screenshot_url: string | null;
   sort_order: number;
   created_at?: string;
   updated_at?: string;

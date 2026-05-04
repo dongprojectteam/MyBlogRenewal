@@ -1,10 +1,8 @@
 import { AdminShell } from "@/components/admin-shell";
-import { FileDeleteForm } from "@/components/file-delete-form";
-import { FileDownloadButton } from "@/components/file-download-button";
+import { FileGalleryTabs } from "@/components/file-gallery-tabs";
 import { FileUploadForm } from "@/components/file-upload-form";
 import { requireAdmin } from "@/lib/auth";
 import { listUploadedFiles } from "@/lib/data";
-import { formatBytes } from "@/lib/utils";
 
 const fileErrorMessages: Record<string, string> = {
   missing_file: "업로드할 파일을 선택해 주세요.",
@@ -26,45 +24,17 @@ export default async function AdminFilesPage({
   const errorMessage = fileErrorMessages[errorKey];
 
   return (
-    <AdminShell current="/admin/files" title="파일 관리" description="파일을 업로드하고 저장된 파일을 다운로드하거나 삭제합니다.">
+    <AdminShell
+      current="/admin/files"
+      title="파일 관리"
+      description="파일을 업로드하고 저장된 파일을 다운로드하거나 삭제합니다."
+    >
       <div className="stack">
         {errorMessage ? <div className="notice">{errorMessage}</div> : null}
 
         <FileUploadForm />
 
-        <div className="panel" style={{ padding: 20 }}>
-          <h3>업로드한 파일</h3>
-          {files.length === 0 ? (
-            <p className="muted" style={{ marginBottom: 0 }}>
-              업로드한 파일이 없습니다.
-            </p>
-          ) : (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>파일명</th>
-                  <th>크기</th>
-                  <th>다운로드</th>
-                  <th>삭제</th>
-                </tr>
-              </thead>
-              <tbody>
-                {files.map((file) => (
-                  <tr key={file.id}>
-                    <td>{file.file_name}</td>
-                    <td>{formatBytes(file.file_size)}</td>
-                    <td>
-                      <FileDownloadButton fileId={file.id} />
-                    </td>
-                    <td>
-                      <FileDeleteForm fileId={file.id} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <FileGalleryTabs files={files} />
       </div>
     </AdminShell>
   );

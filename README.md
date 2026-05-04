@@ -151,6 +151,9 @@ create table if not exists public.profile_projects (
   title text not null,
   description text not null default '',
   project_url text not null default '',
+  start_year integer,
+  end_year integer,
+  screenshot_url text,
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -168,6 +171,14 @@ create table if not exists public.profile_links (
 create index if not exists visualizations_sort_order_idx on public.visualizations (sort_order);
 create index if not exists profile_projects_sort_order_idx on public.profile_projects (sort_order);
 create index if not exists profile_links_sort_order_idx on public.profile_links (sort_order);
+```
+
+이미 `profile_projects` 테이블을 만든 경우에는 아래 SQL도 한 번 실행합니다.
+
+```sql
+alter table public.profile_projects add column if not exists start_year integer;
+alter table public.profile_projects add column if not exists end_year integer;
+alter table public.profile_projects add column if not exists screenshot_url text;
 ```
 
 ### 3. Storage bucket 생성

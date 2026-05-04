@@ -4,6 +4,17 @@ import { ProfilePhoto } from "@/components/profile-photo";
 import { SiteHeader } from "@/components/site-header";
 import { getProfileBundle, getProfilePhotoUrl } from "@/lib/data";
 
+function isExternalUrl(url: string) {
+  return /^https?:\/\//i.test(url);
+}
+
+function formatProjectYears(startYear: number | null, endYear: number | null) {
+  if (startYear && endYear) return startYear === endYear ? String(startYear) : `${startYear} - ${endYear}`;
+  if (startYear) return `${startYear} -`;
+  if (endYear) return String(endYear);
+  return "";
+}
+
 export default async function AboutPage() {
   noStore();
   const bundle = await getProfileBundle();
@@ -22,7 +33,7 @@ export default async function AboutPage() {
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.4rem, 4vw, 4rem)", marginBottom: 12 }}>
             {bundle.profile.greeting || "안녕하세요. DOPT입니다."}
           </h1>
-          <p className="hero-copy" style={{ margin: 0, maxWidth: "unset" }}>
+          <p className="hero-copy preserve-lines" style={{ margin: 0, maxWidth: "unset" }}>
             {bundle.profile.bio || "이곳은 제가 좋아하는 것과 직접 만든 프로젝트를 담아두는 개인 공간입니다."}
           </p>
         </div>
@@ -36,15 +47,35 @@ export default async function AboutPage() {
           </p>
         ) : (
           <div className="list">
-            {bundle.projects.map((project) => (
-              <div key={project.id} className="list-item">
-                <div className="list-item-header">
-                  <h3 style={{ margin: 0 }}>{project.title}</h3>
-                  <span className="utility-path">{project.project_url}</span>
+            {bundle.projects.map((project) => {
+              const years = formatProjectYears(project.start_year, project.end_year);
+              const external = isExternalUrl(project.project_url);
+
+              return (
+                <div key={project.id} className="list-item project-item">
+                  {project.screenshot_url ? (
+                    <img className="project-screenshot" src={project.screenshot_url} alt={`${project.title} screenshot`} />
+                  ) : null}
+                  <div className="project-content">
+                    <div className="list-item-header">
+                      <div>
+                        <h3 style={{ margin: 0 }}>{project.title}</h3>
+                        {years ? <div className="project-years">{years}</div> : null}
+                      </div>
+                      <a
+                        className="utility-path"
+                        href={project.project_url}
+                        target={external ? "_blank" : undefined}
+                        rel={external ? "noreferrer" : undefined}
+                      >
+                        {project.project_url}
+                      </a>
+                    </div>
+                    <p>{project.description}</p>
+                  </div>
                 </div>
-                <p>{project.description}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

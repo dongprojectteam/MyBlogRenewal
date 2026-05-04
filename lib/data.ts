@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { hasSupabaseEnv } from "@/lib/env";
 import { seedFiles, seedNote, seedProfile, seedVisualizations } from "@/lib/seed";
 import { getSupabaseAdminClient, getSupabasePublicClient } from "@/lib/supabase";
-import { toSlugishPath } from "@/lib/utils";
+import { safeYear, toProjectUrl, toSlugishPath } from "@/lib/utils";
 import type {
   AdminNote,
   Profile,
@@ -18,6 +18,22 @@ const DEFAULT_PROFILE_ID = "11111111-1111-1111-1111-111111111111";
 
 function sortByOrder<T extends { sort_order: number }>(items: T[]) {
   return items.sort((a, b) => a.sort_order - b.sort_order);
+}
+
+function sortProfileProjects<T extends { sort_order: number; end_year?: number | null; start_year?: number | null; updated_at?: string; created_at?: string }>(
+  items: T[],
+) {
+  return items.sort((a, b) => {
+    if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+
+    const aYear = a.end_year ?? a.start_year ?? 0;
+    const bYear = b.end_year ?? b.start_year ?? 0;
+    if (aYear !== bYear) return bYear - aYear;
+
+    const aDate = Date.parse(a.updated_at ?? a.created_at ?? "");
+    const bDate = Date.parse(b.updated_at ?? b.created_at ?? "");
+    return (Number.isFinite(bDate) ? bDate : 0) - (Number.isFinite(aDate) ? aDate : 0);
+  });
 }
 
 function buildSafeStoragePath(id: string, fileName: string) {
@@ -80,7 +96,11 @@ export async function deleteVisualization(id: string) {
 }
 
 export async function getProfileBundle(): Promise<ProfileBundle> {
-  if (!hasSupabaseEnv()) return structuredClone(seedProfile);
+  if (!hasSupabaseEnv()) {
+    const bundle = structuredClone(seedProfile);
+    bundle.projects = sortProfileProjects(bundle.projects);
+    return bundle;
+  }
 
   const supabase = getSupabaseAdminClient();
   const [{ data: profileRows, error: profileError }, { data: projectRows, error: projectError }, { data: linkRows, error: linkError }] =
@@ -91,7 +111,11 @@ export async function getProfileBundle(): Promise<ProfileBundle> {
         .order("updated_at", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(1),
-      supabase.from("profile_projects").select("*").order("sort_order", { ascending: true }),
+      supabase
+        .from("profile_projects")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("updated_at", { ascending: false }),
       supabase.from("profile_links").select("*").order("sort_order", { ascending: true }),
     ]);
 
@@ -110,7 +134,7 @@ export async function getProfileBundle(): Promise<ProfileBundle> {
 
   return {
     profile,
-    projects: projectRows ?? [],
+    projects: sortProfileProjects(projectRows ?? []),
     links: linkRows ?? [],
   };
 }
@@ -134,7 +158,10 @@ export async function saveProfileProject(input: FormData) {
   const payload = {
     title: String(input.get("title") || "").trim(),
     description: String(input.get("description") || "").trim(),
-    project_url: toSlugishPath(String(input.get("project_url") || "").trim()),
+    project_url: toProjectUrl(String(input.get("project_url") || "").trim()),
+    start_year: safeYear(input.get("start_year")),
+    end_year: safeYear(input.get("end_year")),
+    screenshot_url: String(input.get("screenshot_url") || "").trim() || null,
     sort_order: Number(input.get("sort_order") || 0),
   };
 
