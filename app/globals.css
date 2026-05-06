@@ -926,3 +926,135 @@ textarea {
     max-height: 220px;
   }
 }
+
+.calendar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.calendar-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.calendar-title {
+  min-width: 138px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--muted-strong);
+}
+
+.calendar-grid-wrap {
+  display: grid;
+  grid-template-columns: 56px repeat(7, minmax(0, 1fr));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.calendar-week-header,
+.calendar-day-header,
+.calendar-week-number,
+.calendar-cell {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.calendar-week-header,
+.calendar-day-header {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--muted-strong);
+  padding: 10px 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.calendar-week-number {
+  display: grid;
+  place-items: center;
+  font-size: 0.88rem;
+  color: var(--muted);
+  background: rgba(2, 6, 23, 0.22);
+}
+
+.calendar-cell {
+  min-height: 104px;
+  padding: 8px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.calendar-cell:hover {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.calendar-cell.is-outside {
+  color: var(--muted);
+  background: rgba(2, 6, 23, 0.24);
+}
+
+.calendar-cell.is-holiday {
+  background: rgba(127, 29, 29, 0.2);
+}
+
+.calendar-cell.is-selected {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: -2px;
+}
+
+.calendar-date {
+  font-weight: 600;
+}
+
+.calendar-holiday-name {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: #fecaca;
+  line-height: 1.35;
+}
+
+.calendar-memo-mark {
+  margin-top: 6px;
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  padding: 2px 8px;
+  font-size: 0.74rem;
+  color: var(--muted-strong);
+}
+
+@media (max-width: 960px) {
+  .calendar-grid-wrap {
+    grid-template-columns: 50px repeat(7, minmax(0, 1fr));
+  }
+
+  .calendar-cell {
+    min-height: 90px;
+  }
+}
+
+@media (max-width: 640px) {
+  .calendar-toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .calendar-grid-wrap {
+    font-size: 0.86rem;
+  }
+
+  .calendar-cell {
+    min-height: 76px;
+    padding: 6px;
+  }
+
+  .calendar-holiday-name {
+    font-size: 0.72rem;
+  }
+}

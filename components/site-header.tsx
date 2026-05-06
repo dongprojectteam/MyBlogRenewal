@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 type SiteHeaderProps = {
-  current?: "home" | "about";
+  current?: "home" | "about" | "calendar";
 };
 
 export function SiteHeader({ current }: SiteHeaderProps) {
@@ -19,6 +19,9 @@ export function SiteHeader({ current }: SiteHeaderProps) {
         </Link>
         <Link className={current === "about" ? "button" : "ghost-button"} href="/about">
           about
+        </Link>
+        <Link className={current === "calendar" ? "button" : "ghost-button"} href="/calendar">
+          calendar
         </Link>
         <Link className="button" href="/admin">
           admin
