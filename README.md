@@ -57,6 +57,24 @@ Supabase Storage에 아래 버킷을 생성합니다.
 
 - [Storage Buckets](https://supabase.com/docs/guides/storage/buckets/fundamentals)
 
+## Tetris 리더보드
+
+`/tetris` 유틸은 `tetris_scores` 테이블을 사용합니다.
+
+Supabase SQL Editor에서 아래 파일 내용을 실행하세요.
+
+```text
+supabase/tetris_scores.sql
+```
+
+포함 내용:
+
+- `tetris_scores` 테이블 생성
+- 모드별 점수/시간 정렬 인덱스 생성
+- `/tetris` 유틸을 `visualizations` 목록에 등록
+
+현재 서버 API가 `SUPABASE_SECRET_KEY`로 읽기/쓰기를 수행하므로, 공개 클라이언트에서 직접 테이블에 접근하지 않습니다.
+
 ## Vercel 설정
 
 1. GitHub/GitLab/Bitbucket 저장소를 연결합니다.

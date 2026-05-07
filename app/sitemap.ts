@@ -4,7 +4,22 @@ import { getPublicVisualizations } from "@/lib/data";
 
 const siteUrl = "https://www.doptsw.org";
 
-const staticPaths = ["/", "/about", "/diff"];
+const staticPaths = [
+  "/",
+  "/about",
+  "/calendar",
+  "/diff",
+  "/diagram",
+  "/tetris",
+  "/ladder",
+  "/codec",
+  "/mojibake",
+  "/time",
+  "/regex",
+  "/table-converter",
+  "/exif",
+];
+const staticPathSet = new Set(staticPaths);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -18,7 +33,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const utilityEntries = await getPublicVisualizations();
   const dynamicEntries: MetadataRoute.Sitemap = utilityEntries
     .map((item) => item.url)
-    .filter((url): url is string => typeof url === "string" && url.startsWith("/"))
+    .filter(
+      (url): url is string =>
+        typeof url === "string" && url.startsWith("/") && !url.startsWith("/admin") && !staticPathSet.has(url),
+    )
     .map((url) => ({
       url: `${siteUrl}${url}`,
       lastModified: now,

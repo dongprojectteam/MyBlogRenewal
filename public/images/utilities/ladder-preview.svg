@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+  <title id="title">Ladder Game preview</title>
+  <desc id="desc">A stylized ladder game board with connected paths and revealed results.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="0.55" stop-color="#112238"/>
+      <stop offset="1" stop-color="#164e63"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" x2="1">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset="1" stop-color="#86efac"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="640" height="360" rx="26" fill="url(#bg)"/>
+  <g opacity="0.18" stroke="#e2e8f0">
+    <path d="M24 70H616"/>
+    <path d="M24 142H616"/>
+    <path d="M24 214H616"/>
+    <path d="M24 286H616"/>
+  </g>
+  <g fill="#0b1120" stroke="#334155">
+    <rect x="58" y="26" width="94" height="38" rx="12"/>
+    <rect x="204" y="26" width="94" height="38" rx="12"/>
+    <rect x="350" y="26" width="94" height="38" rx="12"/>
+    <rect x="496" y="26" width="94" height="38" rx="12"/>
+    <rect x="58" y="296" width="94" height="38" rx="12"/>
+    <rect x="204" y="296" width="94" height="38" rx="12"/>
+    <rect x="350" y="296" width="94" height="38" rx="12"/>
+    <rect x="496" y="296" width="94" height="38" rx="12"/>
+  </g>
+  <g stroke="#cbd5e1" stroke-width="5" stroke-linecap="round" opacity="0.72">
+    <path d="M105 78V282"/>
+    <path d="M251 78V282"/>
+    <path d="M397 78V282"/>
+    <path d="M543 78V282"/>
+  </g>
+  <g stroke="#94a3b8" stroke-width="5" stroke-linecap="round" opacity="0.74">
+    <path d="M105 118H251"/>
+    <path d="M397 148H543"/>
+    <path d="M251 190H397"/>
+    <path d="M105 236H251"/>
+  </g>
+  <path
+    d="M105 78V118H251V190H397V282"
+    fill="none"
+    stroke="url(#line)"
+    stroke-width="10"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter="url(#glow)"
+  />
+  <circle cx="397" cy="282" r="13" fill="#86efac" stroke="#dcfce7" stroke-width="4"/>
+  <g fill="#e5eef8" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" text-anchor="middle">
+    <text x="105" y="50">A</text>
+    <text x="251" y="50">B</text>
+    <text x="397" y="50">C</text>
+    <text x="543" y="50">D</text>
+    <text x="105" y="320">1</text>
+    <text x="251" y="320">2</text>
+    <text x="397" y="320">3</text>
+    <text x="543" y="320">4</text>
+  </g>
+</svg>

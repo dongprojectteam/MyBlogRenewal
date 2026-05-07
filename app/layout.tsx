@@ -8,13 +8,38 @@ const siteUrl = "https://www.doptsw.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  applicationName: siteName,
   title: {
     default: siteName,
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
+  keywords: [
+    "DOPT",
+    "개인 프로젝트",
+    "개발자 유틸리티",
+    "웹 유틸리티",
+    "텍스트 비교",
+    "다이어그램 미리보기",
+    "JSON 포맷터",
+    "정규식 테스트",
+  ],
+  creator: "DOPT",
+  publisher: "DOPT",
+  category: "developer tools",
   alternates: {
     canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
   openGraph: {
     type: "website",

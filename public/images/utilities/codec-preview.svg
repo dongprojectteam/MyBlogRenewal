@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Codec toolkit preview</title>
+  <desc id="desc">A developer conversion utility with JSON and JWT output.</desc>
+  <rect width="640" height="420" fill="#0b1120"/>
+  <rect x="34" y="34" width="572" height="352" rx="18" fill="#111827" stroke="#334155"/>
+  <rect x="62" y="72" width="218" height="260" rx="10" fill="#020617" stroke="#475569"/>
+  <rect x="316" y="72" width="262" height="260" rx="10" fill="#020617" stroke="#475569"/>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">
+    <rect x="78" y="96" width="62" height="32" rx="16" fill="#0ea5e9"/>
+    <text x="95" y="118" fill="#ecfeff">JSON</text>
+    <rect x="148" y="96" width="52" height="32" rx="16" fill="#1e293b"/>
+    <text x="163" y="118" fill="#cbd5e1">URL</text>
+    <rect x="208" y="96" width="56" height="32" rx="16" fill="#1e293b"/>
+    <text x="221" y="118" fill="#cbd5e1">JWT</text>
+  </g>
+  <g font-family="Consolas, monospace" font-size="15">
+    <text x="82" y="164" fill="#7dd3fc">{</text>
+    <text x="102" y="194" fill="#cbd5e1">"tool": "codec",</text>
+    <text x="102" y="224" fill="#cbd5e1">"valid": true</text>
+    <text x="82" y="254" fill="#7dd3fc">}</text>
+    <text x="340" y="120" fill="#7dd3fc">header.payload.signature</text>
+    <rect x="340" y="148" width="198" height="24" rx="5" fill="#1e293b"/>
+    <rect x="340" y="188" width="164" height="24" rx="5" fill="#14532d"/>
+    <rect x="340" y="228" width="214" height="24" rx="5" fill="#1e293b"/>
+    <text x="350" y="166" fill="#e5eef8">alg: HS256</text>
+    <text x="350" y="206" fill="#bbf7d0">sub: dopt</text>
+    <text x="350" y="246" fill="#e5eef8">exp: 2026-05-07</text>
+  </g>
+  <path d="M286 202h24m-8-8 8 8-8 8" fill="none" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

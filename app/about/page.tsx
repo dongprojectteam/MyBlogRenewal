@@ -5,7 +5,8 @@ import { ProfilePhoto } from "@/components/profile-photo";
 import { SiteHeader } from "@/components/site-header";
 import { getProfileBundle, getProfilePhotoUrl } from "@/lib/data";
 
-const pageTitle = "About - DOPT";
+const siteUrl = "https://www.doptsw.org";
+const pageTitle = "DOPT 소개";
 const pageDescription = "DOPT의 소개, 프로젝트 이력, 외부 링크를 모아둔 프로필 페이지입니다.";
 
 export const metadata: Metadata = {
@@ -42,9 +43,36 @@ export default async function AboutPage() {
   noStore();
   const bundle = await getProfileBundle();
   const photoUrl = await getProfilePhotoUrl(bundle.profile.photo_path);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        name: "DOPT",
+        url: siteUrl,
+        inLanguage: "ko-KR",
+      },
+      {
+        "@type": "ProfilePage",
+        name: pageTitle,
+        description: pageDescription,
+        url: `${siteUrl}/about`,
+        inLanguage: "ko-KR",
+        mainEntity: {
+          "@type": "Person",
+          name: "DOPT",
+          description: bundle.profile.bio || pageDescription,
+          url: `${siteUrl}/about`,
+          image: photoUrl ?? undefined,
+          sameAs: bundle.links.map((link) => link.url).filter(isExternalUrl),
+        },
+      },
+    ],
+  };
 
   return (
     <div className="page-shell">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <SiteHeader current="about" />
 
       <section className="panel about-flow-panel">

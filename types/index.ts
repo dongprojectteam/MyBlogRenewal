@@ -62,3 +62,19 @@ export type ProfileBundle = {
   projects: ProfileProject[];
   links: ProfileLink[];
 };
+
+export type TetrisMode = "marathon" | "sprint" | "ultra" | "survival" | "daily";
+
+export type TetrisScore = {
+  id: string;
+  player_name: string;
+  mode: TetrisMode;
+  score: number;
+  lines: number;
+  level: number;
+  time_ms: number;
+  pieces: number;
+  seed: number;
+  daily_key: string | null;
+  created_at?: string;
+};

@@ -1,17 +1,84 @@
-﻿import Link from "next/link";
+import type { Metadata } from "next";
+import Link from "next/link";
 
+import { CurrentTimeCard } from "@/components/current-time-card";
 import { SiteHeader } from "@/components/site-header";
-import { UtilityCard } from "@/components/utility-card";
+import { UtilitySearchSection } from "@/components/utility-search-section";
 import { getPublicVisualizations } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
+const siteUrl = "https://www.doptsw.org";
+const pageTitle = "DOPT";
+const pageDescription = "개인 프로젝트와 직접 만든 웹 유틸리티를 모아두는 DOPT 아카이브입니다.";
+const utilitySeoDescriptions: Record<string, string> = {
+  "/diff": "텍스트를 라인 단위와 문자 단위로 비교해 변경점을 빠르게 확인하는 문서 비교 유틸리티입니다.",
+  "/diagram": "Mermaid, PlantUML, Markdown 문서 안의 다이어그램을 브라우저에서 바로 렌더링하고 미리보는 유틸리티입니다.",
+  "/calendar": "월별 달력, 한국 공휴일 정보, 날짜별 메모를 함께 관리하는 브라우저 캘린더 유틸리티입니다.",
+  "/tetris": "고스트 블록, Hold, Next 큐, 여러 게임 모드와 글로벌 리더보드를 지원하는 브라우저 테트리스 게임입니다.",
+  "/ladder": "참가자와 결과를 입력해 랜덤 사다리로 매칭하고, 애니메이션 경로와 브라우저 기록으로 결과를 다시 확인하는 유틸리티입니다.",
+  "/codec": "JSON 포맷팅, URL 인코딩, Base64 변환, JWT 페이로드 확인을 한 화면에서 처리하는 개발자 유틸리티입니다.",
+  "/mojibake": "UTF-8, CP949, EUC-KR, Windows-1252, URI 인코딩 문제로 깨진 한글 텍스트의 복구 후보를 찾아주는 유틸리티입니다.",
+  "/time": "Unix timestamp, ISO 날짜, 로컬 시간, UTC, KST와 주요 시간대를 변환하고 날짜 계산을 돕는 시간 유틸리티입니다.",
+  "/regex": "JavaScript 정규식을 테스트하고 매치 하이라이트, 캡처 그룹, 치환 결과를 바로 확인하는 정규식 유틸리티입니다.",
+  "/table-converter": "CSV, TSV, Markdown 표, JSON 형식의 표 데이터를 서로 변환하고 미리보는 테이블 변환 유틸리티입니다.",
+  "/exif": "Inspect, clean, edit, and export photo EXIF metadata locally in the browser without uploading images.",
+};
+
+export const metadata: Metadata = {
+  title: {
+    absolute: pageTitle,
+  },
+  description: pageDescription,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    url: "/",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: pageTitle,
+    description: pageDescription,
+  },
+};
+
 export default async function HomePage() {
   const items = await getPublicVisualizations();
-  const recentItems = items.slice(0, 3);
+  const recentItems = items.slice(0, 4);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        name: "DOPT",
+        url: siteUrl,
+        inLanguage: "ko-KR",
+      },
+      {
+        "@type": "CollectionPage",
+        name: pageTitle,
+        description: pageDescription,
+        url: siteUrl,
+        inLanguage: "ko-KR",
+        hasPart: items.map((item) => ({
+          "@type": "SoftwareApplication",
+          name: item.title,
+          description: utilitySeoDescriptions[item.url] ?? item.description,
+          url: `${siteUrl}${item.url}`,
+          operatingSystem: "Web",
+          applicationCategory: "WebApplication",
+        })),
+      },
+    ],
+  };
 
   return (
     <div className="page-shell">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <SiteHeader current="home" />
 
       <section className="hero-panel hero-grid">
@@ -19,57 +86,30 @@ export default async function HomePage() {
           <div className="eyebrow">personal space</div>
           <h1 className="hero-title">A quiet archive for things I build.</h1>
           <p className="hero-copy">
-            내가 좋아하는 것들, 직접 만든 작은 도구들, 그리고 차분하게 쌓아두고 싶은 기록을 담는 개인 공간입니다.
+            내가 좋아하는 것들, 직접 만든 작은 도구들, 그리고 차분하게 쌓아가는 기록을 모아두는 개인 공간입니다.
           </p>
-          <div className="actions" style={{ marginTop: 24 }}>
-            <Link href="/about" className="button">
-              about me
-            </Link>
-          </div>
+          {recentItems.length > 0 ? (
+            <div className="hero-recent-strip" aria-label="Recent updates">
+              <span className="hero-recent-strip-title">Recent updates</span>
+              <div className="hero-recent-items">
+                {recentItems.map((item) => (
+                  <Link key={item.id} href={item.url} className="hero-recent-pill">
+                    {item.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="hero-aside">
-          <div className="preview-card">
-            <div className="tag neutral">Recent updates</div>
-            {recentItems.length === 0 ? (
-              <p className="muted" style={{ lineHeight: 1.7, marginBottom: 0, marginTop: 12 }}>
-                아직 공개된 유틸이 없습니다. 곧 등록되는 것들을 차분히 둘러보세요.
-              </p>
-            ) : (
-              <ul className="hero-recent-list">
-                {recentItems.map((item) => (
-                  <li key={item.id}>
-                    <Link href={item.url} className="hero-recent-link">
-                      {item.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <CurrentTimeCard />
         </div>
       </section>
 
-      <section className="section">
-        <h2 className="section-title">Utilities</h2>
-        {items.length === 0 ? (
-          <div className="empty-card">
-            <div className="tag neutral">Empty state</div>
-            <h3>아직 등록된 유틸이 없습니다</h3>
-            <p className="muted" style={{ marginBottom: 0 }}>
-              관리자 페이지에서 유틸을 등록하면 이곳에 카드 형태로 표시됩니다.
-            </p>
-          </div>
-        ) : (
-          <div className="utility-grid">
-            {items.map((item) => (
-              <UtilityCard key={item.id} item={item} />
-            ))}
-          </div>
-        )}
-      </section>
+      <UtilitySearchSection items={items} />
 
-      <p className="footer-note">DOPT는 개인 취미와 도구들을 모아두는 조용한 개인 공간을 목표로 합니다.</p>
+      <p className="footer-note">DOPT는 개인 취향과 직접 만든 도구들을 모아두는 조용한 개인 공간을 목표로 합니다.</p>
     </div>
   );
 }

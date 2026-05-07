@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Table converter preview</title>
+  <desc id="desc">A table conversion utility turning CSV rows into a Markdown table.</desc>
+  <rect width="640" height="420" fill="#0f172a"/>
+  <rect x="34" y="34" width="572" height="352" rx="18" fill="#111827" stroke="#334155"/>
+  <rect x="62" y="76" width="218" height="244" rx="10" fill="#020617" stroke="#475569"/>
+  <rect x="334" y="76" width="244" height="244" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <g font-family="Consolas, monospace" font-size="15">
+    <text x="84" y="118" fill="#7dd3fc">name,role,score</text>
+    <text x="84" y="154" fill="#cbd5e1">DOPT,hub,98</text>
+    <text x="84" y="190" fill="#cbd5e1">Codec,tool,91</text>
+    <text x="84" y="226" fill="#cbd5e1">Regex,tester,88</text>
+  </g>
+  <g stroke="#cbd5e1">
+    <line x1="358" y1="126" x2="554" y2="126"/>
+    <line x1="358" y1="174" x2="554" y2="174"/>
+    <line x1="358" y1="222" x2="554" y2="222"/>
+    <line x1="358" y1="270" x2="554" y2="270"/>
+    <line x1="358" y1="94" x2="358" y2="270"/>
+    <line x1="430" y1="94" x2="430" y2="270"/>
+    <line x1="494" y1="94" x2="494" y2="270"/>
+    <line x1="554" y1="94" x2="554" y2="270"/>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">
+    <text x="374" y="113" fill="#0f172a">name</text>
+    <text x="446" y="113" fill="#0f172a">role</text>
+    <text x="510" y="113" fill="#0f172a">score</text>
+    <text x="374" y="157" fill="#334155">DOPT</text>
+    <text x="446" y="157" fill="#334155">hub</text>
+    <text x="510" y="157" fill="#334155">98</text>
+    <text x="374" y="205" fill="#334155">Codec</text>
+    <text x="446" y="205" fill="#334155">tool</text>
+    <text x="510" y="205" fill="#334155">91</text>
+    <text x="374" y="253" fill="#334155">Regex</text>
+    <text x="446" y="253" fill="#334155">test</text>
+    <text x="510" y="253" fill="#334155">88</text>
+  </g>
+  <path d="M292 198h30m-10-10 10 10-10 10" fill="none" stroke="#7dd3fc" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

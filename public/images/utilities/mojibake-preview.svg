@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Korean text repair preview</title>
+  <desc id="desc">A text repair utility showing broken input and readable output candidates.</desc>
+  <rect width="640" height="420" fill="#111827"/>
+  <rect x="34" y="34" width="572" height="352" rx="18" fill="#0f172a" stroke="#334155"/>
+  <rect x="62" y="76" width="230" height="240" rx="10" fill="#020617" stroke="#475569"/>
+  <rect x="348" y="76" width="230" height="240" rx="10" fill="#052e16" stroke="#22c55e"/>
+  <g font-family="Consolas, monospace" font-size="16">
+    <text x="84" y="124" fill="#fca5a5">?덈뀞?섏꽭??</text>
+    <text x="84" y="164" fill="#fca5a5">ì•ˆë…•í•˜</text>
+    <text x="84" y="204" fill="#94a3b8">DOPT text</text>
+    <text x="84" y="244" fill="#fca5a5">媛쒖씤 怨듦컙</text>
+    <text x="370" y="124" fill="#bbf7d0">Readable Korean</text>
+    <text x="370" y="164" fill="#dcfce7">UTF-8 repair</text>
+    <text x="370" y="204" fill="#dcfce7">CP949 repair</text>
+    <text x="370" y="244" fill="#dcfce7">URI decode</text>
+  </g>
+  <path d="M304 196h32m-10-10 10 10-10 10" fill="none" stroke="#86efac" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="370" y="268" width="122" height="30" rx="15" fill="#16a34a"/>
+  <text x="398" y="289" fill="#f0fdf4" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Best guess</text>
+</svg>

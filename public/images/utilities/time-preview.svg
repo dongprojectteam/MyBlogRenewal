@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Time converter preview</title>
+  <desc id="desc">A timestamp conversion utility with multiple timezone rows.</desc>
+  <rect width="640" height="420" fill="#0b1120"/>
+  <rect x="34" y="34" width="572" height="352" rx="18" fill="#111827" stroke="#334155"/>
+  <circle cx="154" cy="168" r="70" fill="#0f172a" stroke="#7dd3fc" stroke-width="5"/>
+  <path d="M154 124v46l36 22" fill="none" stroke="#bae6fd" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="82" y="286" fill="#cbd5e1" font-size="18" font-weight="700">1778112000</text>
+    <text x="80" y="314" fill="#94a3b8" font-size="14">Unix seconds</text>
+  </g>
+  <g font-family="Consolas, monospace" font-size="16">
+    <rect x="288" y="88" width="260" height="44" rx="8" fill="#020617" stroke="#475569"/>
+    <rect x="288" y="152" width="260" height="44" rx="8" fill="#020617" stroke="#475569"/>
+    <rect x="288" y="216" width="260" height="44" rx="8" fill="#020617" stroke="#475569"/>
+    <rect x="288" y="280" width="260" height="44" rx="8" fill="#020617" stroke="#475569"/>
+    <text x="308" y="116" fill="#7dd3fc">UTC 2026-05-07</text>
+    <text x="308" y="180" fill="#bae6fd">KST 2026-05-07</text>
+    <text x="308" y="244" fill="#cbd5e1">PDT 2026-05-06</text>
+    <text x="308" y="308" fill="#cbd5e1">+7 days</text>
+  </g>
+</svg>

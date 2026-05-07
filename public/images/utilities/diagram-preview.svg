@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Diagram preview utility</title>
+  <desc id="desc">A diagram rendering workspace with source text and a flow chart preview.</desc>
+  <rect width="640" height="420" fill="#0b1120"/>
+  <rect x="34" y="34" width="572" height="352" rx="18" fill="#111827" stroke="#334155"/>
+  <rect x="62" y="68" width="214" height="280" rx="10" fill="#020617" stroke="#475569"/>
+  <rect x="308" y="68" width="270" height="280" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <g font-family="Consolas, monospace" font-size="15">
+    <text x="82" y="104" fill="#7dd3fc">graph TD</text>
+    <text x="82" y="136" fill="#cbd5e1">A[Idea]</text>
+    <text x="82" y="168" fill="#cbd5e1">B[Build]</text>
+    <text x="82" y="200" fill="#cbd5e1">C[Share]</text>
+    <text x="82" y="232" fill="#94a3b8">A --&gt; B --&gt; C</text>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">
+    <rect x="356" y="122" width="112" height="48" rx="10" fill="#dbeafe" stroke="#60a5fa"/>
+    <text x="395" y="153" fill="#1e3a8a">Idea</text>
+    <rect x="356" y="204" width="112" height="48" rx="10" fill="#dcfce7" stroke="#4ade80"/>
+    <text x="394" y="235" fill="#14532d">Build</text>
+    <rect x="356" y="286" width="112" height="48" rx="10" fill="#fef3c7" stroke="#facc15"/>
+    <text x="392" y="317" fill="#854d0e">Share</text>
+    <path d="M412 170v34m0 48v34" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+    <path d="m404 196 8 8 8-8m-16 82 8 8 8-8" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

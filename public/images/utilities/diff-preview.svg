@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Diff utility preview</title>
+  <desc id="desc">A split text comparison interface with added and removed lines.</desc>
+  <rect width="640" height="420" fill="#0f172a"/>
+  <rect x="34" y="34" width="572" height="352" rx="18" fill="#111827" stroke="#334155"/>
+  <rect x="62" y="68" width="238" height="280" rx="10" fill="#020617" stroke="#475569"/>
+  <rect x="340" y="68" width="238" height="280" rx="10" fill="#020617" stroke="#475569"/>
+  <text x="80" y="102" fill="#cbd5e1" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Original</text>
+  <text x="358" y="102" fill="#cbd5e1" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Updated</text>
+  <g font-family="Consolas, monospace" font-size="15">
+    <rect x="80" y="126" width="188" height="22" rx="4" fill="#1e293b"/>
+    <rect x="80" y="162" width="160" height="22" rx="4" fill="#7f1d1d"/>
+    <rect x="80" y="198" width="198" height="22" rx="4" fill="#1e293b"/>
+    <rect x="80" y="234" width="134" height="22" rx="4" fill="#1e293b"/>
+    <rect x="80" y="270" width="176" height="22" rx="4" fill="#7f1d1d"/>
+    <rect x="358" y="126" width="188" height="22" rx="4" fill="#1e293b"/>
+    <rect x="358" y="162" width="180" height="22" rx="4" fill="#14532d"/>
+    <rect x="358" y="198" width="198" height="22" rx="4" fill="#1e293b"/>
+    <rect x="358" y="234" width="134" height="22" rx="4" fill="#1e293b"/>
+    <rect x="358" y="270" width="196" height="22" rx="4" fill="#14532d"/>
+    <text x="88" y="142" fill="#cbd5e1">line unchanged</text>
+    <text x="88" y="178" fill="#fecaca">- old value</text>
+    <text x="366" y="178" fill="#bbf7d0">+ new value</text>
+  </g>
+  <path d="M308 202h24m-8-8 8 8-8 8" fill="none" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

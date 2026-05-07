@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Regex tester preview</title>
+  <desc id="desc">A regular expression tester with highlighted matches and capture groups.</desc>
+  <rect width="640" height="420" fill="#0b1120"/>
+  <rect x="34" y="34" width="572" height="352" rx="18" fill="#111827" stroke="#334155"/>
+  <rect x="62" y="72" width="516" height="58" rx="10" fill="#020617" stroke="#475569"/>
+  <text x="84" y="109" fill="#7dd3fc" font-family="Consolas, monospace" font-size="19">/(GET|POST)\s+([^\s]+)\s+(\d{3})/gm</text>
+  <rect x="62" y="158" width="270" height="174" rx="10" fill="#020617" stroke="#475569"/>
+  <rect x="360" y="158" width="218" height="174" rx="10" fill="#020617" stroke="#475569"/>
+  <g font-family="Consolas, monospace" font-size="16">
+    <text x="84" y="198" fill="#e5eef8">GET <tspan fill="#fef08a">/api/users</tspan> <tspan fill="#bbf7d0">200</tspan></text>
+    <text x="84" y="238" fill="#e5eef8">POST <tspan fill="#fef08a">/api/files</tspan> <tspan fill="#bbf7d0">201</tspan></text>
+    <text x="84" y="278" fill="#94a3b8">DELETE /old 204</text>
+    <text x="382" y="198" fill="#fef08a">$1 GET</text>
+    <text x="382" y="238" fill="#fef08a">$2 /api/users</text>
+    <text x="382" y="278" fill="#bbf7d0">$3 200</text>
+  </g>
+</svg>

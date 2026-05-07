@@ -1,17 +1,171 @@
-﻿import type { AdminNote, ProfileBundle, UploadedFile, Visualization } from "@/types";
+import type { AdminNote, ProfileBundle, TetrisScore, UploadedFile, Visualization } from "@/types";
 
-export const seedVisualizations: Visualization[] = [
+const rawSeedVisualizations: Visualization[] = [
   {
     id: "seed-diff",
     title: "Diff",
     description: "텍스트 차이를 라인/문자 단위로 빠르게 비교하는 유틸리티입니다.",
     url: "/diff",
+    image_url: "/images/utilities/diff-preview.svg",
     visible: true,
     sort_order: 1,
   },
+  {
+    id: "seed-diagram",
+    title: "Diagram Previewer",
+    description: "Mermaid, PlantUML, Markdown 문서 안의 다이어그램을 바로 렌더링하는 프리뷰 유틸리티입니다.",
+    url: "/diagram",
+    image_url: "/images/utilities/diagram-preview.svg",
+    visible: true,
+    sort_order: 2,
+  },
+  {
+    id: "seed-calendar",
+    title: "Calendar",
+    description: "월별 달력, 공휴일 정보, 날짜별 메모를 함께 관리하는 브라우저 캘린더 유틸리티입니다.",
+    url: "/calendar",
+    image_url: "/images/utilities/calendar-preview.svg",
+    visible: true,
+    sort_order: 3,
+  },
+  {
+    id: "seed-tetris",
+    title: "Tetris",
+    description: "고스트 블록, Hold, Next 큐, 여러 모드와 전세계 점수판을 지원하는 테트리스 유틸리티입니다.",
+    url: "/tetris",
+    image_url: "/images/utilities/tetris-preview.svg",
+    visible: true,
+    sort_order: 4,
+  },
+  {
+    id: "seed-ladder",
+    title: "Ladder Game",
+    description: "참가자와 결과를 입력해 사다리 경로 애니메이션으로 랜덤 매칭을 확인하고, 지난 기록을 브라우저에 저장하는 유틸리티입니다.",
+    url: "/ladder",
+    image_url: "/images/utilities/ladder-preview.svg",
+    visible: true,
+    sort_order: 5,
+  },
+  {
+    id: "seed-codec",
+    title: "Codec Toolkit",
+    description: "Format JSON, encode URLs, decode Base64, and inspect JWT payloads in one browser utility.",
+    url: "/codec",
+    image_url: "/images/utilities/codec-preview.svg",
+    visible: true,
+    sort_order: 6,
+  },
+  {
+    id: "seed-mojibake",
+    title: "Korean Text Repair",
+    description: "Recover Korean text broken by common UTF-8, CP949, EUC-KR, Windows-1252, and URI decoding mistakes.",
+    url: "/mojibake",
+    image_url: "/images/utilities/mojibake-preview.svg",
+    visible: true,
+    sort_order: 7,
+  },
+  {
+    id: "seed-time",
+    title: "Time Converter",
+    description: "Convert Unix timestamps, ISO dates, UTC, KST, local time, and common time zones.",
+    url: "/time",
+    image_url: "/images/utilities/time-preview.svg",
+    visible: true,
+    sort_order: 8,
+  },
+  {
+    id: "seed-regex",
+    title: "Regex Tester",
+    description: "Test JavaScript regular expressions with highlighted matches, capture groups, and replacement previews.",
+    url: "/regex",
+    image_url: "/images/utilities/regex-preview.svg",
+    visible: true,
+    sort_order: 9,
+  },
+  {
+    id: "seed-table-converter",
+    title: "Table Converter",
+    description: "Convert CSV, TSV, Markdown tables, and JSON-friendly table data with a quick preview.",
+    url: "/table-converter",
+    image_url: "/images/utilities/table-converter-preview.svg",
+    visible: true,
+    sort_order: 10,
+  },
+  {
+    id: "seed-exif",
+    title: "EXIF Toolkit",
+    description: "Inspect, clean, edit, and export photo EXIF metadata locally in the browser.",
+    url: "/exif",
+    image_url: "/images/utilities/exif-preview.svg",
+    visible: true,
+    sort_order: 11,
+  },
 ];
 
-export const seedProfile: ProfileBundle = {
+const seedVisualizationSeo: Record<string, Pick<Visualization, "description" | "image_url" | "sort_order">> = {
+  "seed-diff": {
+    description: "텍스트를 라인 단위와 문자 단위로 비교해 변경점을 빠르게 확인하는 문서 비교 유틸리티입니다.",
+    image_url: "/images/utilities/diff-preview.svg",
+    sort_order: 1,
+  },
+  "seed-diagram": {
+    description: "Mermaid, PlantUML, Markdown 문서 안의 다이어그램을 브라우저에서 바로 렌더링하고 미리보는 유틸리티입니다.",
+    image_url: "/images/utilities/diagram-preview.svg",
+    sort_order: 2,
+  },
+  "seed-calendar": {
+    description: "월별 달력, 한국 공휴일 정보, 날짜별 메모를 함께 관리하는 브라우저 캘린더 유틸리티입니다.",
+    image_url: "/images/utilities/calendar-preview.svg",
+    sort_order: 3,
+  },
+  "seed-tetris": {
+    description: "고스트 블록, Hold, Next 큐, 여러 게임 모드와 글로벌 리더보드를 지원하는 브라우저 테트리스 게임입니다.",
+    image_url: "/images/utilities/tetris-preview.svg",
+    sort_order: 4,
+  },
+  "seed-ladder": {
+    description: "참가자와 결과를 입력해 랜덤 사다리로 매칭하고, 애니메이션 경로와 브라우저 기록으로 결과를 다시 확인하는 유틸리티입니다.",
+    image_url: "/images/utilities/ladder-preview.svg",
+    sort_order: 5,
+  },
+  "seed-codec": {
+    description: "JSON 포맷팅, URL 인코딩, Base64 변환, JWT 페이로드 확인을 한 화면에서 처리하는 개발자 유틸리티입니다.",
+    image_url: "/images/utilities/codec-preview.svg",
+    sort_order: 6,
+  },
+  "seed-mojibake": {
+    description: "UTF-8, CP949, EUC-KR, Windows-1252, URI 인코딩 문제로 깨진 한글 텍스트의 복구 후보를 찾아주는 유틸리티입니다.",
+    image_url: "/images/utilities/mojibake-preview.svg",
+    sort_order: 7,
+  },
+  "seed-time": {
+    description: "Unix timestamp, ISO 날짜, 로컬 시간, UTC, KST와 주요 시간대를 변환하고 날짜 계산을 돕는 시간 유틸리티입니다.",
+    image_url: "/images/utilities/time-preview.svg",
+    sort_order: 8,
+  },
+  "seed-regex": {
+    description: "JavaScript 정규식을 테스트하고 매치 하이라이트, 캡처 그룹, 치환 결과를 바로 확인하는 정규식 유틸리티입니다.",
+    image_url: "/images/utilities/regex-preview.svg",
+    sort_order: 9,
+  },
+  "seed-table-converter": {
+    description: "CSV, TSV, Markdown 표, JSON 형식의 표 데이터를 서로 변환하고 미리보는 테이블 변환 유틸리티입니다.",
+    image_url: "/images/utilities/table-converter-preview.svg",
+    sort_order: 10,
+  },
+  "seed-exif": {
+    description: "Inspect, clean, edit, and export photo EXIF metadata locally in the browser.",
+    image_url: "/images/utilities/exif-preview.svg",
+    sort_order: 11,
+  },
+};
+
+export const seedVisualizations: Visualization[] = rawSeedVisualizations.map((item) => ({
+  ...item,
+  ...(seedVisualizationSeo[item.id] ?? {}),
+}));
+
+const rawSeedProfile: ProfileBundle = {
   profile: {
     id: "seed-profile",
     greeting: "안녕하세요. DOPT입니다.",
@@ -28,6 +182,46 @@ export const seedProfile: ProfileBundle = {
       end_year: null,
       screenshot_url: null,
       sort_order: 1,
+    },
+    {
+      id: "seed-project-2",
+      title: "Diagram Previewer",
+      description: "Mermaid, PlantUML, Markdown 다이어그램 문서를 실시간으로 확인하는 프리뷰 유틸리티",
+      project_url: "/diagram",
+      start_year: 2026,
+      end_year: null,
+      screenshot_url: null,
+      sort_order: 2,
+    },
+    {
+      id: "seed-project-3",
+      title: "Calendar",
+      description: "월별 달력, 공휴일 정보, 날짜별 메모를 함께 관리하는 브라우저 캘린더 유틸리티",
+      project_url: "/calendar",
+      start_year: 2026,
+      end_year: null,
+      screenshot_url: null,
+      sort_order: 3,
+    },
+    {
+      id: "seed-project-4",
+      title: "Tetris",
+      description: "여러 플레이 모드와 글로벌 리더보드를 갖춘 브라우저 테트리스 유틸리티",
+      project_url: "/tetris",
+      start_year: 2026,
+      end_year: null,
+      screenshot_url: null,
+      sort_order: 4,
+    },
+    {
+      id: "seed-project-5",
+      title: "Ladder Game",
+      description: "참가자와 결과를 사다리 경로 애니메이션으로 매칭하고 지난 결과를 브라우저에 저장하는 유틸리티",
+      project_url: "/ladder",
+      start_year: 2026,
+      end_year: null,
+      screenshot_url: null,
+      sort_order: 5,
     },
   ],
   links: [
@@ -46,9 +240,100 @@ export const seedProfile: ProfileBundle = {
   ],
 };
 
+export const seedProfile: ProfileBundle = {
+  ...rawSeedProfile,
+  profile: {
+    ...rawSeedProfile.profile,
+    greeting: "안녕하세요. DOPT입니다.",
+    bio: "기록과 실험, 그리고 직접 만든 작은 도구를 차분히 모아두는 개인 공간입니다.",
+  },
+  projects: rawSeedProfile.projects.map((project) => {
+    const descriptions: Record<string, string> = {
+      "/diff": "텍스트를 빠르게 비교하고 라인/문자 단위 변경점을 확인하는 문서 비교 유틸리티입니다.",
+      "/diagram": "Mermaid, PlantUML, Markdown 다이어그램과 문서를 실시간으로 미리보는 유틸리티입니다.",
+      "/calendar": "월별 달력, 한국 공휴일 정보, 날짜별 메모를 함께 관리하는 캘린더 유틸리티입니다.",
+      "/tetris": "여러 게임 모드와 글로벌 리더보드를 갖춘 브라우저 테트리스 게임입니다.",
+      "/ladder": "참가자와 결과를 사다리 경로 애니메이션으로 매칭하고 기록하는 유틸리티입니다.",
+    };
+
+    return {
+      ...project,
+      description: descriptions[project.project_url] ?? project.description,
+    };
+  }),
+};
+
 export const seedNote: AdminNote = {
   id: "seed-note",
   content: "여기에 관리자 메모를 작성할 수 있습니다.",
 };
 
 export const seedFiles: UploadedFile[] = [];
+
+export const seedTetrisScores: TetrisScore[] = [
+  {
+    id: "seed-tetris-marathon-1",
+    player_name: "DOPT",
+    mode: "marathon",
+    score: 125400,
+    lines: 82,
+    level: 9,
+    time_ms: 486000,
+    pieces: 226,
+    seed: 20260507,
+    daily_key: null,
+    created_at: "2026-05-07T00:00:00.000Z",
+  },
+  {
+    id: "seed-tetris-sprint-1",
+    player_name: "DOPT",
+    mode: "sprint",
+    score: 21800,
+    lines: 40,
+    level: 4,
+    time_ms: 112540,
+    pieces: 103,
+    seed: 4020,
+    daily_key: null,
+    created_at: "2026-05-07T00:00:00.000Z",
+  },
+  {
+    id: "seed-tetris-ultra-1",
+    player_name: "DOPT",
+    mode: "ultra",
+    score: 74200,
+    lines: 58,
+    level: 6,
+    time_ms: 120000,
+    pieces: 166,
+    seed: 120120,
+    daily_key: null,
+    created_at: "2026-05-07T00:00:00.000Z",
+  },
+  {
+    id: "seed-tetris-survival-1",
+    player_name: "DOPT",
+    mode: "survival",
+    score: 96800,
+    lines: 66,
+    level: 13,
+    time_ms: 318000,
+    pieces: 191,
+    seed: 9898,
+    daily_key: null,
+    created_at: "2026-05-07T00:00:00.000Z",
+  },
+  {
+    id: "seed-tetris-daily-1",
+    player_name: "DOPT",
+    mode: "daily",
+    score: 88400,
+    lines: 61,
+    level: 8,
+    time_ms: 360000,
+    pieces: 174,
+    seed: 20260507,
+    daily_key: "2026-05-07",
+    created_at: "2026-05-07T00:00:00.000Z",
+  },
+];

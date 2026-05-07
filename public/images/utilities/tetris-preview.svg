@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Tetris arena preview</title>
+  <desc id="desc">A Tetris board with colorful pieces, ghost block, score panel, and leaderboard.</desc>
+  <rect width="640" height="420" fill="#0b1120"/>
+  <rect x="34" y="34" width="572" height="352" rx="18" fill="#111827" stroke="#334155"/>
+  <rect x="92" y="64" width="180" height="300" rx="12" fill="#020617" stroke="#475569"/>
+  <g stroke="#1e293b" stroke-width="1">
+    <path d="M110 64v300M128 64v300M146 64v300M164 64v300M182 64v300M200 64v300M218 64v300M236 64v300M254 64v300"/>
+    <path d="M92 82h180M92 100h180M92 118h180M92 136h180M92 154h180M92 172h180M92 190h180M92 208h180M92 226h180M92 244h180M92 262h180M92 280h180M92 298h180M92 316h180M92 334h180M92 352h180"/>
+  </g>
+  <g>
+    <rect x="146" y="316" width="18" height="18" fill="#38d5f5"/><rect x="164" y="316" width="18" height="18" fill="#38d5f5"/><rect x="182" y="316" width="18" height="18" fill="#38d5f5"/><rect x="200" y="316" width="18" height="18" fill="#38d5f5"/>
+    <rect x="110" y="334" width="18" height="18" fill="#facc15"/><rect x="128" y="334" width="18" height="18" fill="#facc15"/><rect x="110" y="352" width="18" height="18" fill="#facc15"/><rect x="128" y="352" width="18" height="18" fill="#facc15"/>
+    <rect x="200" y="334" width="18" height="18" fill="#c084fc"/><rect x="218" y="334" width="18" height="18" fill="#c084fc"/><rect x="236" y="334" width="18" height="18" fill="#c084fc"/><rect x="218" y="352" width="18" height="18" fill="#c084fc"/>
+    <rect x="164" y="208" width="18" height="18" fill="none" stroke="#fb923c" stroke-width="3"/><rect x="182" y="208" width="18" height="18" fill="none" stroke="#fb923c" stroke-width="3"/><rect x="200" y="208" width="18" height="18" fill="none" stroke="#fb923c" stroke-width="3"/><rect x="200" y="226" width="18" height="18" fill="none" stroke="#fb923c" stroke-width="3"/>
+    <rect x="164" y="154" width="18" height="18" fill="#fb923c"/><rect x="182" y="154" width="18" height="18" fill="#fb923c"/><rect x="200" y="154" width="18" height="18" fill="#fb923c"/><rect x="200" y="172" width="18" height="18" fill="#fb923c"/>
+  </g>
+  <rect x="310" y="64" width="110" height="86" rx="12" fill="#020617" stroke="#475569"/>
+  <rect x="448" y="64" width="110" height="300" rx="12" fill="#020617" stroke="#475569"/>
+  <text x="330" y="96" fill="#e2e8f0" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">Score</text>
+  <text x="330" y="128" fill="#7dd3fc" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">125400</text>
+  <text x="470" y="96" fill="#e2e8f0" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">Global</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="13">
+    <rect x="468" y="122" width="70" height="26" rx="6" fill="#1e293b"/><text x="480" y="140" fill="#cbd5e1">DOPT</text>
+    <rect x="468" y="162" width="70" height="26" rx="6" fill="#1e293b"/><text x="480" y="180" fill="#cbd5e1">YOU</text>
+    <rect x="468" y="202" width="70" height="26" rx="6" fill="#1e293b"/><text x="480" y="220" fill="#cbd5e1">CPU</text>
+  </g>
+</svg>

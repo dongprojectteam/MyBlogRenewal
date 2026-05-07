@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { hasSupabaseEnv } from "@/lib/env";
-import { seedFiles, seedNote, seedProfile, seedVisualizations } from "@/lib/seed";
+import { seedFiles, seedNote, seedProfile, seedTetrisScores, seedVisualizations } from "@/lib/seed";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import { safeYear, toProjectUrl, toSlugishPath } from "@/lib/utils";
 import type {
@@ -10,11 +10,27 @@ import type {
   ProfileBundle,
   UploadedFile,
   Visualization,
+  TetrisMode,
+  TetrisScore,
 } from "@/types";
 
 const ADMIN_BUCKET = "admin-files";
 const PROFILE_BUCKET = "profile-images";
 const DEFAULT_PROFILE_ID = "11111111-1111-1111-1111-111111111111";
+const TETRIS_SCORE_LIMIT = 20;
+const TETRIS_MODES = ["marathon", "sprint", "ultra", "survival", "daily"] as const;
+
+export type SaveTetrisScoreInput = {
+  playerName: string;
+  mode: TetrisMode;
+  score: number;
+  lines: number;
+  level: number;
+  timeMs: number;
+  pieces: number;
+  seed: number;
+  dailyKey?: string | null;
+};
 
 function sortByOrder<T extends { sort_order: number }>(items: T[]) {
   return items.sort((a, b) => a.sort_order - b.sort_order);
@@ -40,6 +56,77 @@ function buildSafeStoragePath(id: string, fileName: string) {
   const ext = fileName.includes(".") ? fileName.split(".").pop()?.toLowerCase() ?? "" : "";
   const suffix = ext ? `.${ext.replace(/[^a-z0-9]/g, "")}` : "";
   return `${id}/file${suffix}`;
+}
+
+export function isTetrisMode(value: string | null | undefined): value is TetrisMode {
+  return Boolean(value && TETRIS_MODES.includes(value as TetrisMode));
+}
+
+function sanitizePlayerName(value: string) {
+  return value.replace(/\s+/g, " ").trim().slice(0, 18);
+}
+
+function toSafeInteger(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(max, Math.max(min, Math.trunc(value)));
+}
+
+function isDailyKey(value: string | null | undefined): value is string {
+  return Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value));
+}
+
+function normalizeTetrisScore(input: SaveTetrisScoreInput): TetrisScore {
+  const player_name = sanitizePlayerName(input.playerName);
+  if (player_name.length < 2) {
+    throw new Error("플레이어 이름은 2자 이상 입력해 주세요.");
+  }
+
+  if (!isTetrisMode(input.mode)) {
+    throw new Error("지원하지 않는 테트리스 모드입니다.");
+  }
+
+  const lines = toSafeInteger(input.lines, 0, 9999);
+  const time_ms = toSafeInteger(input.timeMs, 0, 86_400_000);
+
+  if (input.mode === "sprint" && lines < 40) {
+    throw new Error("Sprint 기록은 40라인을 완료한 뒤 저장할 수 있습니다.");
+  }
+
+  if (input.mode !== "sprint" && input.score <= 0) {
+    throw new Error("점수가 있는 게임만 리더보드에 저장할 수 있습니다.");
+  }
+
+  return {
+    id: randomUUID(),
+    player_name,
+    mode: input.mode,
+    score: toSafeInteger(input.score, 0, 99_999_999),
+    lines,
+    level: toSafeInteger(input.level, 1, 99),
+    time_ms,
+    pieces: toSafeInteger(input.pieces, 0, 99_999),
+    seed: toSafeInteger(input.seed, 0, 2_147_483_647),
+    daily_key: input.mode === "daily" && isDailyKey(input.dailyKey) ? input.dailyKey ?? null : null,
+  };
+}
+
+function sortTetrisScores(scores: TetrisScore[], mode: TetrisMode) {
+  const sorted = [...scores];
+
+  if (mode === "sprint") {
+    return sorted.sort((a, b) => {
+      if (a.time_ms !== b.time_ms) return a.time_ms - b.time_ms;
+      if (a.score !== b.score) return b.score - a.score;
+      return (a.created_at ?? "").localeCompare(b.created_at ?? "");
+    });
+  }
+
+  return sorted.sort((a, b) => {
+    if (a.score !== b.score) return b.score - a.score;
+    if (a.lines !== b.lines) return b.lines - a.lines;
+    if (a.time_ms !== b.time_ms) return a.time_ms - b.time_ms;
+    return (a.created_at ?? "").localeCompare(b.created_at ?? "");
+  });
 }
 
 export async function getPublicVisualizations(): Promise<Visualization[]> {
@@ -350,4 +437,52 @@ export async function deleteUploadedFile(id: string) {
 
   const { error: rowError } = await supabase.from("uploaded_files").delete().eq("id", id);
   if (rowError) throw rowError;
+}
+
+export async function listTetrisScores(mode: TetrisMode, dailyKey?: string | null): Promise<TetrisScore[]> {
+  if (!isTetrisMode(mode)) return [];
+
+  if (!hasSupabaseEnv()) {
+    const localScores = seedTetrisScores.filter((item) => {
+      if (item.mode !== mode) return false;
+      if (mode === "daily" && isDailyKey(dailyKey)) return item.daily_key === dailyKey;
+      return true;
+    });
+
+    return sortTetrisScores(localScores, mode).slice(0, TETRIS_SCORE_LIMIT);
+  }
+
+  const supabase = getSupabaseAdminClient();
+  let query = supabase.from("tetris_scores").select("*").eq("mode", mode);
+
+  if (mode === "daily" && isDailyKey(dailyKey)) {
+    query = query.eq("daily_key", dailyKey);
+  }
+
+  if (mode === "sprint") {
+    query = query.order("time_ms", { ascending: true }).order("score", { ascending: false });
+  } else {
+    query = query
+      .order("score", { ascending: false })
+      .order("lines", { ascending: false })
+      .order("time_ms", { ascending: true });
+  }
+
+  const { data, error } = await query.limit(TETRIS_SCORE_LIMIT);
+  if (error) throw error;
+  return (data ?? []) as TetrisScore[];
+}
+
+export async function saveTetrisScore(input: SaveTetrisScoreInput): Promise<{ saved: boolean; score: TetrisScore }> {
+  const score = normalizeTetrisScore(input);
+
+  if (!hasSupabaseEnv()) {
+    return { saved: false, score };
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase.from("tetris_scores").insert([score]).select("*").single();
+  if (error) throw error;
+
+  return { saved: true, score: data as TetrisScore };
 }

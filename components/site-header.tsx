@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 type SiteHeaderProps = {
-  current?: "home" | "about" | "calendar";
+  current?: "home" | "about";
 };
 
 export function SiteHeader({ current }: SiteHeaderProps) {
@@ -11,7 +11,7 @@ export function SiteHeader({ current }: SiteHeaderProps) {
         <Link href="/" className="brand-title">
           DOPT
         </Link>
-        <div className="brand-subtitle">작은 취미와 유틸을 쌓아두는 개인 공간</div>
+        <div className="brand-subtitle">작은 취향과 유틸리티를 모아두는 개인 공간</div>
       </div>
       <nav className="nav-actions">
         <Link className={current === "home" ? "button" : "ghost-button"} href="/">
@@ -19,9 +19,6 @@ export function SiteHeader({ current }: SiteHeaderProps) {
         </Link>
         <Link className={current === "about" ? "button" : "ghost-button"} href="/about">
           about
-        </Link>
-        <Link className={current === "calendar" ? "button" : "ghost-button"} href="/calendar">
-          calendar
         </Link>
         <Link className="button" href="/admin">
           admin
