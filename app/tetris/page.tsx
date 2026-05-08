@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-
 import { SiteHeader } from "@/components/site-header";
-
 import { TetrisClient } from "./tetris-client";
+import { Analytics } from "@vercel/analytics/next";
 
 export const dynamic = "force-dynamic";
 
@@ -69,10 +68,13 @@ export default function TetrisPage() {
   };
 
   return (
-    <div className="page-shell">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <SiteHeader />
-      <TetrisClient />
-    </div>
+    <>
+      <div className="page-shell">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <SiteHeader />
+        <TetrisClient />
+      </div>
+      <Analytics />
+    </>
   );
 }

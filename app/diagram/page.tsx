@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-
 import { SiteHeader } from "@/components/site-header";
-
 import { DiagramClient } from "./diagram-client";
+import { Analytics } from "@vercel/analytics/next";
 
 const siteUrl = "https://www.doptsw.org";
 const pageTitle = "Diagram Previewer";
@@ -70,10 +69,13 @@ export default function DiagramPage() {
   };
 
   return (
-    <div className="page-shell">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <SiteHeader />
-      <DiagramClient />
-    </div>
+    <>
+      <div className="page-shell">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <SiteHeader />
+        <DiagramClient />
+      </div>
+      <Analytics />
+    </>
   );
 }

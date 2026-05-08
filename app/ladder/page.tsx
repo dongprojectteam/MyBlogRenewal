@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-
 import { SiteHeader } from "@/components/site-header";
-
 import { LadderClient } from "./ladder-client";
+import { Analytics } from "@vercel/analytics/next"
 
 const siteUrl = "https://www.doptsw.org";
 const pageTitle = "Ladder Game";
@@ -65,10 +64,13 @@ export default function LadderPage() {
   };
 
   return (
-    <div className="page-shell">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <SiteHeader />
-      <LadderClient />
-    </div>
+    <>
+      <div className="page-shell">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <SiteHeader />
+        <LadderClient />
+      </div>
+      <Analytics />
+    </>
   );
 }

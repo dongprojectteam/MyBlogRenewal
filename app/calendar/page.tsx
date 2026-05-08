@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-
 import { SiteHeader } from "@/components/site-header";
-
 import { CalendarClient } from "./calendar-client";
+import { Analytics } from "@vercel/analytics/next";
 
 export const dynamic = "force-dynamic";
 
@@ -60,10 +59,13 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="page-shell">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <SiteHeader />
-      <CalendarClient />
-    </div>
+    <>
+      <div className="page-shell">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <SiteHeader />
+        <CalendarClient />
+      </div>
+      <Analytics />
+    </>
   );
 }

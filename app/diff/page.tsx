@@ -1,8 +1,8 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-
 import { SiteHeader } from "@/components/site-header";
+import { Analytics } from "@vercel/analytics/next";
 
 type DiffType = "same" | "added" | "removed" | "modified";
 
@@ -418,203 +418,206 @@ export default function DiffPage() {
   const hasComparedContent = leftCompared.length > 0 || rightCompared.length > 0;
 
   return (
-    <div className="page-shell">
-      <SiteHeader />
+    <>
+      <div className="page-shell">
+        <SiteHeader />
 
-      <section className="panel stack">
-        <div className="eyebrow">utility / diff</div>
-        <h1 style={{ marginBottom: 8 }}>Text Diff Utility</h1>
-        <p className="muted" style={{ marginTop: 0, marginBottom: 0 }}>
-          두 텍스트를 비교해 라인 단위와 문자 단위 차이를 함께 보여줍니다.
-        </p>
-      </section>
-
-      <section ref={resultSectionRef} className="panel stack section">
-        <div className="diff-input-grid">
-          <label className="field">
-            <span className="label">Original (left)</span>
-            <textarea
-              className="textarea diff-textarea"
-              value={leftInput}
-              onChange={(event) => setLeftInput(event.target.value)}
-              placeholder="원본 텍스트를 입력하세요"
-            />
-          </label>
-
-          <label className="field">
-            <span className="label">Updated (right)</span>
-            <textarea
-              className="textarea diff-textarea"
-              value={rightInput}
-              onChange={(event) => setRightInput(event.target.value)}
-              placeholder="비교할 텍스트를 입력하세요"
-            />
-          </label>
-        </div>
-
-        <div className="actions">
-          <button type="button" className="button" onClick={handleCompare}>
-            Compare
-          </button>
-          <button type="button" className="ghost-button" onClick={handleClear}>
-            Clear
-          </button>
-        </div>
-
-        <div className="diff-options">
-          <label>
-            <input
-              type="checkbox"
-              checked={options.ignoreCase}
-              onChange={(event) => setOptions((prev) => ({ ...prev, ignoreCase: event.target.checked }))}
-            />
-            Ignore case
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={options.trimTrailingWhitespace}
-              onChange={(event) =>
-                setOptions((prev) => ({ ...prev, trimTrailingWhitespace: event.target.checked }))
-              }
-            />
-            Trim trailing whitespace
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={options.excludeBlankLines}
-              onChange={(event) => setOptions((prev) => ({ ...prev, excludeBlankLines: event.target.checked }))}
-            />
-            Exclude blank lines
-          </label>
-        </div>
-      </section>
-
-      <section className="panel stack section">
-        <div className="diff-counts">
-          <span className="tag neutral">Added {diffResult.counts.added}</span>
-          <span className="tag neutral">Removed {diffResult.counts.removed}</span>
-          <span className="tag neutral">Modified {diffResult.counts.modified}</span>
-        </div>
-        <div className="actions">
-          <button type="button" className="ghost-button" onClick={() => setHideSameRows((prev) => !prev)}>
-            {hideSameRows ? "동일항목 모두 펼치기" : "동일항목 모두 접기"}
-          </button>
-        </div>
-        {!hasComparedContent ? (
-          <p className="muted" style={{ margin: 0 }}>
-            좌우 텍스트를 입력한 뒤 Compare를 누르면 차이점을 보여줍니다.
+        <section className="panel stack">
+          <div className="eyebrow">utility / diff</div>
+          <h1 style={{ marginBottom: 8 }}>Text Diff Utility</h1>
+          <p className="muted" style={{ marginTop: 0, marginBottom: 0 }}>
+            두 텍스트를 비교해 라인 단위와 문자 단위 차이를 함께 보여줍니다.
           </p>
-        ) : (
-          <div className="diff-table-wrap">
-            <div className="diff-table-head">
-              <div>Original</div>
-              <div>Updated</div>
-            </div>
-            <div className="diff-table-body">
-              {visibleRowItems.map(({ row, rowKey }) => {
-                return (
-                <div
-                  key={rowKey}
-                  ref={(node) => {
-                    rowRefs.current[rowKey] = node;
-                  }}
-                  className={`diff-row diff-${row.type}`}
-                >
-                  <div className="diff-cell">
-                    <span className="diff-line-no">{row.leftLineNumber ?? "-"}</span>
-                    <pre className="diff-text">{renderInline(row.leftParts, row.leftText, "left")}</pre>
-                  </div>
+        </section>
 
-                  <div className="diff-cell">
-                    <span className="diff-line-no">{row.rightLineNumber ?? "-"}</span>
-                    <div>
-                      <span className="tag neutral">{row.type.toUpperCase()}</span>
-                      <pre className="diff-text">{renderInline(row.rightParts, row.rightText, "right")}</pre>
+        <section ref={resultSectionRef} className="panel stack section">
+          <div className="diff-input-grid">
+            <label className="field">
+              <span className="label">Original (left)</span>
+              <textarea
+                className="textarea diff-textarea"
+                value={leftInput}
+                onChange={(event) => setLeftInput(event.target.value)}
+                placeholder="원본 텍스트를 입력하세요"
+              />
+            </label>
+
+            <label className="field">
+              <span className="label">Updated (right)</span>
+              <textarea
+                className="textarea diff-textarea"
+                value={rightInput}
+                onChange={(event) => setRightInput(event.target.value)}
+                placeholder="비교할 텍스트를 입력하세요"
+              />
+            </label>
+          </div>
+
+          <div className="actions">
+            <button type="button" className="button" onClick={handleCompare}>
+              Compare
+            </button>
+            <button type="button" className="ghost-button" onClick={handleClear}>
+              Clear
+            </button>
+          </div>
+
+          <div className="diff-options">
+            <label>
+              <input
+                type="checkbox"
+                checked={options.ignoreCase}
+                onChange={(event) => setOptions((prev) => ({ ...prev, ignoreCase: event.target.checked }))}
+              />
+              Ignore case
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={options.trimTrailingWhitespace}
+                onChange={(event) =>
+                  setOptions((prev) => ({ ...prev, trimTrailingWhitespace: event.target.checked }))
+                }
+              />
+              Trim trailing whitespace
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={options.excludeBlankLines}
+                onChange={(event) => setOptions((prev) => ({ ...prev, excludeBlankLines: event.target.checked }))}
+              />
+              Exclude blank lines
+            </label>
+          </div>
+        </section>
+
+        <section className="panel stack section">
+          <div className="diff-counts">
+            <span className="tag neutral">Added {diffResult.counts.added}</span>
+            <span className="tag neutral">Removed {diffResult.counts.removed}</span>
+            <span className="tag neutral">Modified {diffResult.counts.modified}</span>
+          </div>
+          <div className="actions">
+            <button type="button" className="ghost-button" onClick={() => setHideSameRows((prev) => !prev)}>
+              {hideSameRows ? "동일항목 모두 펼치기" : "동일항목 모두 접기"}
+            </button>
+          </div>
+          {!hasComparedContent ? (
+            <p className="muted" style={{ margin: 0 }}>
+              좌우 텍스트를 입력한 뒤 Compare를 누르면 차이점을 보여줍니다.
+            </p>
+          ) : (
+            <div className="diff-table-wrap">
+              <div className="diff-table-head">
+                <div>Original</div>
+                <div>Updated</div>
+              </div>
+              <div className="diff-table-body">
+                {visibleRowItems.map(({ row, rowKey }) => {
+                  return (
+                    <div
+                      key={rowKey}
+                      ref={(node) => {
+                        rowRefs.current[rowKey] = node;
+                      }}
+                      className={`diff-row diff-${row.type}`}
+                    >
+                      <div className="diff-cell">
+                        <span className="diff-line-no">{row.leftLineNumber ?? "-"}</span>
+                        <pre className="diff-text">{renderInline(row.leftParts, row.leftText, "left")}</pre>
+                      </div>
+
+                      <div className="diff-cell">
+                        <span className="diff-line-no">{row.rightLineNumber ?? "-"}</span>
+                        <div>
+                          <span className="tag neutral">{row.type.toUpperCase()}</span>
+                          <pre className="diff-text">{renderInline(row.rightParts, row.rightText, "right")}</pre>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
 
-      <section className="panel stack section">
-        <h2 style={{ marginBottom: 2 }}>Changed Only</h2>
-        {summaryItems.length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>
-            변경된 부분이 없습니다.
-          </p>
-        ) : (
-          <div className="diff-summary-grid">
-            {summaryItems.map(({ row, rowKey }, index) => (
-              <button
-                key={`${row.type}-${row.leftLineNumber}-${row.rightLineNumber}-${index}`}
-                type="button"
-                className="diff-summary-card diff-summary-button"
-                onClick={() => handleJumpToRow(rowKey)}
-              >
-                <div className="tag neutral">{row.type.toUpperCase()}</div>
-                <p className="muted" style={{ marginTop: 10, marginBottom: 10 }}>
-                  L{row.leftLineNumber ?? "-"} {"->"} R{row.rightLineNumber ?? "-"}
-                </p>
-                {row.leftText ? (
-                  <pre className="diff-summary-text diff-summary-before">
-                    - {renderInline(row.leftParts, row.leftText, "left")}
-                  </pre>
-                ) : null}
-                {row.rightText ? (
-                  <pre className="diff-summary-text diff-summary-after">
-                    + {renderInline(row.rightParts, row.rightText, "right")}
-                  </pre>
-                ) : null}
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="panel stack section">
-        <div className="list-item-header">
-          <h2 style={{ marginBottom: 0 }}>History</h2>
-          <button type="button" className="ghost-button" onClick={handleClearHistory} disabled={history.length === 0}>
-            Clear All
-          </button>
-        </div>
-
-        {history.length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>
-            비교 이력이 없습니다.
-          </p>
-        ) : (
-          <div className="diff-history-list">
-            {history.map((entry) => (
-              <article key={entry.id} className="diff-history-item">
-                <button type="button" className="diff-history-main" onClick={() => handleRestore(entry)}>
-                  <strong>{formatDate(entry.createdAt)}</strong>
-                  {activeHistoryId === entry.id ? <span className="tag neutral">현재 불러온 항목</span> : null}
-                  <span className="muted">L: {previewLine(entry.left) || "(empty)"}</span>
-                  <span className="muted">R: {previewLine(entry.right) || "(empty)"}</span>
-                  <span className="muted">
-                    +{entry.counts.added} / -{entry.counts.removed} / ~{entry.counts.modified}
-                  </span>
-                </button>
+        <section className="panel stack section">
+          <h2 style={{ marginBottom: 2 }}>Changed Only</h2>
+          {summaryItems.length === 0 ? (
+            <p className="muted" style={{ margin: 0 }}>
+              변경된 부분이 없습니다.
+            </p>
+          ) : (
+            <div className="diff-summary-grid">
+              {summaryItems.map(({ row, rowKey }, index) => (
                 <button
+                  key={`${row.type}-${row.leftLineNumber}-${row.rightLineNumber}-${index}`}
                   type="button"
-                  className="danger-button"
-                  onClick={() => handleDeleteHistoryItem(entry.id)}
-                  aria-label="Delete history item"
+                  className="diff-summary-card diff-summary-button"
+                  onClick={() => handleJumpToRow(rowKey)}
                 >
-                  Delete
+                  <div className="tag neutral">{row.type.toUpperCase()}</div>
+                  <p className="muted" style={{ marginTop: 10, marginBottom: 10 }}>
+                    L{row.leftLineNumber ?? "-"} {"->"} R{row.rightLineNumber ?? "-"}
+                  </p>
+                  {row.leftText ? (
+                    <pre className="diff-summary-text diff-summary-before">
+                      - {renderInline(row.leftParts, row.leftText, "left")}
+                    </pre>
+                  ) : null}
+                  {row.rightText ? (
+                    <pre className="diff-summary-text diff-summary-after">
+                      + {renderInline(row.rightParts, row.rightText, "right")}
+                    </pre>
+                  ) : null}
                 </button>
-              </article>
-            ))}
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="panel stack section">
+          <div className="list-item-header">
+            <h2 style={{ marginBottom: 0 }}>History</h2>
+            <button type="button" className="ghost-button" onClick={handleClearHistory} disabled={history.length === 0}>
+              Clear All
+            </button>
           </div>
-        )}
-      </section>
-    </div>
+
+          {history.length === 0 ? (
+            <p className="muted" style={{ margin: 0 }}>
+              비교 이력이 없습니다.
+            </p>
+          ) : (
+            <div className="diff-history-list">
+              {history.map((entry) => (
+                <article key={entry.id} className="diff-history-item">
+                  <button type="button" className="diff-history-main" onClick={() => handleRestore(entry)}>
+                    <strong>{formatDate(entry.createdAt)}</strong>
+                    {activeHistoryId === entry.id ? <span className="tag neutral">현재 불러온 항목</span> : null}
+                    <span className="muted">L: {previewLine(entry.left) || "(empty)"}</span>
+                    <span className="muted">R: {previewLine(entry.right) || "(empty)"}</span>
+                    <span className="muted">
+                      +{entry.counts.added} / -{entry.counts.removed} / ~{entry.counts.modified}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="danger-button"
+                    onClick={() => handleDeleteHistoryItem(entry.id)}
+                    aria-label="Delete history item"
+                  >
+                    Delete
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+      <Analytics />
+    </>
   );
 }

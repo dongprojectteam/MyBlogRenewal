@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-
 import { SiteHeader } from "@/components/site-header";
-
 import { CodecClient } from "./codec-client";
+import { Analytics } from "@vercel/analytics/next";
 
 const siteUrl = "https://www.doptsw.org";
 const pageTitle = "Codec Toolkit";
@@ -58,10 +57,13 @@ export default function CodecPage() {
   };
 
   return (
-    <div className="page-shell">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <SiteHeader />
-      <CodecClient />
-    </div>
+    <>
+      <div className="page-shell">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <SiteHeader />
+        <CodecClient />
+      </div>
+      <Analytics />
+    </>
   );
 }

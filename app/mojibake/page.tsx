@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-
 import { SiteHeader } from "@/components/site-header";
-
 import { MojibakeClient } from "./mojibake-client";
+import { Analytics } from "@vercel/analytics/next"
 
 const siteUrl = "https://www.doptsw.org";
 const pageTitle = "Korean Text Repair";
@@ -58,10 +57,13 @@ export default function MojibakePage() {
   };
 
   return (
-    <div className="page-shell">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <SiteHeader />
-      <MojibakeClient />
-    </div>
+    <>
+      <div className="page-shell">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+        <SiteHeader />
+        <MojibakeClient />
+      </div>
+      <Analytics />
+    </>
   );
 }
