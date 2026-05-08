@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+
 import { SiteHeader } from "@/components/site-header";
+
 import { TableConverterClient } from "./table-converter-client";
-import { Analytics } from "@vercel/analytics/next";
 
 const siteUrl = "https://www.doptsw.org";
 const pageTitle = "Table Converter";
@@ -57,13 +58,10 @@ export default function TableConverterPage() {
   };
 
   return (
-    <>
-      <div className="page-shell">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        <SiteHeader />
-        <TableConverterClient />
-      </div>
-      <Analytics />
-    </>
+    <div className="page-shell">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <SiteHeader />
+      <TableConverterClient />
+    </div>
   );
 }

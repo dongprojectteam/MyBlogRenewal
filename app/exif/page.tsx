@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+
 import { SiteHeader } from "@/components/site-header";
+
 import { ExifClient } from "./exif-client";
-import { Analytics } from "@vercel/analytics/next";
 
 const siteUrl = "https://www.doptsw.org";
 const pageTitle = "EXIF Toolkit";
@@ -65,13 +66,10 @@ export default function ExifPage() {
   };
 
   return (
-    <>
-      <div className="page-shell">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        <SiteHeader />
-        <ExifClient />
-      </div>
-      <Analytics />
-    </>
+    <div className="page-shell">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <SiteHeader />
+      <ExifClient />
+    </div>
   );
 }
