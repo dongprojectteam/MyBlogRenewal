@@ -100,6 +100,15 @@ const rawSeedVisualizations: Visualization[] = [
     visible: true,
     sort_order: 11,
   },
+  {
+    id: "seed-mindmap",
+    title: "Mind Map Studio",
+    description: "드래그 편집, 브라우저 저장, 다양한 가져오기/내보내기 형식을 지원하는 로컬 마인드맵 만들기 유틸리티입니다.",
+    url: "/mindmap",
+    image_url: "/images/utilities/mindmap-preview.svg",
+    visible: true,
+    sort_order: 12,
+  },
 ];
 
 const seedVisualizationSeo: Record<string, Pick<Visualization, "description" | "image_url" | "sort_order">> = {
@@ -157,6 +166,11 @@ const seedVisualizationSeo: Record<string, Pick<Visualization, "description" | "
     description: "Inspect, clean, edit, and export photo EXIF metadata locally in the browser.",
     image_url: "/images/utilities/exif-preview.svg",
     sort_order: 11,
+  },
+  "seed-mindmap": {
+    description: "드래그로 구조를 바꾸고 브라우저에 저장하며 JSON, Markdown, OPML, FreeMind, Mermaid, CSV, SVG, PNG로 가져오고 내보내는 로컬 마인드맵 유틸리티입니다.",
+    image_url: "/images/utilities/mindmap-preview.svg",
+    sort_order: 12,
   },
 };
 

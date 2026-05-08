@@ -4,6 +4,7 @@
 - [x] Add browser-side metadata and export dependencies.
 - [x] Create `/exif` route metadata, structured data, and app shell.
 - [x] Build the client upload/drop zone and file queue.
+- [x] Move drag/drop handling to the drop-zone container so picker and drop entry points stay reliable.
 - [x] Parse images locally and flatten metadata for display.
 - [x] Render selected image preview, summary facts, and privacy risk flags.
 - [x] Add GPS coordinate display, map links, and GPS removal controls.

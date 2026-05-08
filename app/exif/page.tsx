@@ -12,6 +12,7 @@ const pageDescription =
 export const metadata: Metadata = {
   title: pageTitle,
   description: pageDescription,
+  keywords: ["EXIF", "photo metadata", "metadata remover", "사진 메타데이터", "EXIF 제거", "GPS 메타데이터"],
   alternates: {
     canonical: "/exif",
   },
@@ -49,6 +50,7 @@ export default function ExifPage() {
         url: `${siteUrl}/exif`,
         inLanguage: "ko-KR",
         featureList: [
+          "File picker and drag/drop import",
           "EXIF viewer",
           "GPS metadata cleanup",
           "Capture date correction",

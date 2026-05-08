@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-labelledby="title desc">
+  <title id="title">Mind Map Studio preview</title>
+  <desc id="desc">A colorful browser mind map with editable branches and export controls.</desc>
+  <rect width="960" height="600" rx="34" fill="#0f172a" />
+  <path d="M0 122h960M0 244h960M0 366h960M0 488h960M120 0v600M240 0v600M360 0v600M480 0v600M600 0v600M720 0v600M840 0v600" stroke="#334155" stroke-opacity=".24" />
+  <rect x="44" y="42" width="872" height="516" rx="26" fill="#111827" stroke="#334155" />
+  <rect x="74" y="72" width="230" height="34" rx="17" fill="#1e293b" stroke="#475569" />
+  <circle cx="92" cy="89" r="6" fill="#38bdf8" />
+  <circle cx="114" cy="89" r="6" fill="#34d399" />
+  <circle cx="136" cy="89" r="6" fill="#f59e0b" />
+  <rect x="694" y="72" width="80" height="34" rx="17" fill="#1e293b" stroke="#475569" />
+  <rect x="786" y="72" width="100" height="34" rx="17" fill="#38bdf8" fill-opacity=".18" stroke="#38bdf8" />
+  <path d="M482 281C395 201 333 168 238 161" fill="none" stroke="#34d399" stroke-width="7" stroke-linecap="round" opacity=".78" />
+  <path d="M481 285C392 335 317 370 225 424" fill="none" stroke="#f472b6" stroke-width="7" stroke-linecap="round" opacity=".78" />
+  <path d="M481 283C573 207 646 171 752 158" fill="none" stroke="#a78bfa" stroke-width="7" stroke-linecap="round" opacity=".78" />
+  <path d="M481 286C581 337 664 384 770 439" fill="none" stroke="#facc15" stroke-width="7" stroke-linecap="round" opacity=".78" />
+  <rect x="362" y="232" width="236" height="98" rx="18" fill="#38bdf8" />
+  <text x="480" y="274" fill="#082f49" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="800" text-anchor="middle">Mind Map</text>
+  <rect x="404" y="296" width="152" height="7" rx="3.5" fill="#082f49" opacity=".2" />
+  <rect x="404" y="296" width="92" height="7" rx="3.5" fill="#082f49" opacity=".72" />
+  <rect x="108" y="120" width="222" height="80" rx="15" fill="#34d399" />
+  <text x="132" y="157" fill="#052e16" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="800">Discovery</text>
+  <text x="132" y="181" fill="#052e16" font-family="Segoe UI, Arial, sans-serif" font-size="13" opacity=".7">ideas  research</text>
+  <rect x="102" y="382" width="234" height="84" rx="15" fill="#f472b6" />
+  <text x="126" y="421" fill="#500724" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="800">Structure</text>
+  <text x="126" y="445" fill="#500724" font-family="Segoe UI, Arial, sans-serif" font-size="13" opacity=".7">clusters  outline</text>
+  <rect x="636" y="114" width="232" height="88" rx="15" fill="#a78bfa" />
+  <text x="660" y="154" fill="#1e1b4b" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="800">Branches</text>
+  <text x="660" y="178" fill="#1e1b4b" font-family="Segoe UI, Arial, sans-serif" font-size="13" opacity=".72">balanced layout</text>
+  <rect x="650" y="398" width="246" height="86" rx="15" fill="#facc15" />
+  <text x="674" y="437" fill="#422006" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="800">Export</text>
+  <text x="674" y="461" fill="#422006" font-family="Segoe UI, Arial, sans-serif" font-size="13" opacity=".72">JSON  Markdown  SVG</text>
+  <rect x="642" y="232" width="172" height="44" rx="12" fill="#1e293b" stroke="#475569" />
+  <rect x="662" y="246" width="78" height="8" rx="4" fill="#94a3b8" />
+  <rect x="662" y="260" width="118" height="8" rx="4" fill="#64748b" />
+  <rect x="112" y="252" width="166" height="44" rx="12" fill="#1e293b" stroke="#475569" />
+  <rect x="132" y="266" width="74" height="8" rx="4" fill="#94a3b8" />
+  <rect x="132" y="280" width="104" height="8" rx="4" fill="#64748b" />
+</svg>

@@ -37,7 +37,7 @@
 ## Interaction Flow
 ```mermaid
 flowchart TD
-  A["User uploads or edits source"] --> B["Update editor state"]
+  A["User uploads, drops, or edits source"] --> B["Update editor state"]
   B --> C["Debounced render request"]
   C --> D{"Mode"}
   D -->|Auto| E["Detect Markdown, Mermaid, or PlantUML"]
@@ -71,6 +71,7 @@ flowchart TD
 - `pngState`: transient PNG export state for the async browser rasterization step.
 
 ## Validation And Errors
+- File picker and drag/drop entry points share the same file loading path.
 - File extension validation happens before reading.
 - Source larger than 1 MB blocks rendering and shows an error.
 - Mermaid render errors are caught and displayed with the resolved engine.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type SelectedMode = "auto" | "markdown" | "mermaid" | "plantuml";
 type RenderEngine = Exclude<SelectedMode, "auto">;
@@ -1023,8 +1023,10 @@ export function DiagramClient() {
   const [zoom, setZoom] = useState(100);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [pngState, setPngState] = useState<"idle" | "working" | "failed">("idle");
+  const [isFileDragging, setIsFileDragging] = useState(false);
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
   const renderIdRef = useRef(0);
+  const fileDropRef = useRef<HTMLLabelElement | null>(null);
   const previewContentRef = useRef<HTMLDivElement | null>(null);
   const previewStyle = usePreviewStyle(zoom);
 
@@ -1091,20 +1093,15 @@ export function DiagramClient() {
     setPngState("idle");
   }
 
-  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const loadFile = useCallback(async (file: File) => {
     const extension = getExtension(file.name);
     if (!ACCEPTED_EXTENSIONS.includes(extension)) {
       setFileError("지원하지 않는 파일 형식입니다.");
-      event.target.value = "";
       return;
     }
 
     if (file.size > MAX_SOURCE_BYTES) {
       setFileError(`파일이 너무 큽니다. ${formatBytes(file.size)} / 최대 1 MB`);
-      event.target.value = "";
       return;
     }
 
@@ -1115,10 +1112,70 @@ export function DiagramClient() {
       setFileError("");
     } catch {
       setFileError("파일을 읽지 못했습니다.");
+    }
+  }, []);
+
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    try {
+      if (file) await loadFile(file);
     } finally {
       event.target.value = "";
     }
   }
+
+  useEffect(() => {
+    const dropZone = fileDropRef.current;
+    if (!dropZone) return;
+    const dropZoneElement = dropZone;
+
+    function isDropZoneEvent(event: DragEvent) {
+      const target = event.target;
+      return target instanceof Node && dropZoneElement.contains(target);
+    }
+
+    function handleDragEnter(event: DragEvent) {
+      if (!isDropZoneEvent(event)) return;
+      event.preventDefault();
+      setIsFileDragging(true);
+    }
+
+    function handleDragOver(event: DragEvent) {
+      if (!isDropZoneEvent(event)) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      setIsFileDragging(true);
+    }
+
+    function handleDragLeave(event: DragEvent) {
+      if (!isDropZoneEvent(event)) return;
+      const nextTarget = event.relatedTarget;
+      if (nextTarget instanceof Node && dropZoneElement.contains(nextTarget)) return;
+      setIsFileDragging(false);
+    }
+
+    function handleDrop(event: DragEvent) {
+      if (!isDropZoneEvent(event)) return;
+      event.preventDefault();
+      setIsFileDragging(false);
+
+      const file = event.dataTransfer?.files[0];
+      if (file) void loadFile(file);
+    }
+
+    window.addEventListener("dragenter", handleDragEnter, true);
+    window.addEventListener("dragover", handleDragOver, true);
+    window.addEventListener("dragleave", handleDragLeave, true);
+    window.addEventListener("drop", handleDrop, true);
+
+    return () => {
+      window.removeEventListener("dragenter", handleDragEnter, true);
+      window.removeEventListener("dragover", handleDragOver, true);
+      window.removeEventListener("dragleave", handleDragLeave, true);
+      window.removeEventListener("drop", handleDrop, true);
+    };
+  }, [loadFile]);
 
   async function copySource() {
     try {
@@ -1266,10 +1323,23 @@ export function DiagramClient() {
       <section className="diagram-workbench section">
         <div className="panel stack diagram-editor-panel">
           <div className="diagram-control-bar">
-            <label className="field diagram-file-field">
+            <div className="field diagram-file-field">
               <span className="label">File</span>
-              <input className="file-input" type="file" accept={ACCEPTED_EXTENSIONS.join(",")} onChange={handleFileChange} />
-            </label>
+              <label
+                ref={fileDropRef}
+                className={`file-drop-zone diagram-file-drop-zone${isFileDragging ? " is-dragging" : ""}`}
+              >
+                <span className="file-drop-title">{isFileDragging ? "Drop to load" : "Drop or choose file"}</span>
+                <span className="file-drop-hint">Markdown, Mermaid, PlantUML, TXT</span>
+                <input
+                  className="file-drop-input"
+                  type="file"
+                  accept={ACCEPTED_EXTENSIONS.join(",")}
+                  aria-label="Choose diagram source file"
+                  onChange={handleFileChange}
+                />
+              </label>
+            </div>
 
             <div className="field">
               <span className="label">Mode</span>

@@ -18,6 +18,7 @@ const staticPaths = [
   "/regex",
   "/table-converter",
   "/exif",
+  "/mindmap",
 ];
 const staticPathSet = new Set(staticPaths);
 

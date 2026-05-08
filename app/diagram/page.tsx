@@ -12,6 +12,7 @@ const pageDescription =
 export const metadata: Metadata = {
   title: pageTitle,
   description: pageDescription,
+  keywords: ["Mermaid", "PlantUML", "Markdown preview", "다이어그램", "다이어그램 미리보기", "브라우저 다이어그램"],
   alternates: {
     canonical: "/diagram",
   },
@@ -47,8 +48,18 @@ export default function DiagramPage() {
         operatingSystem: "Web",
         description: pageDescription,
         url: `${siteUrl}/diagram`,
+        image: `${siteUrl}/images/utilities/diagram-preview.svg`,
         inLanguage: "ko-KR",
-        featureList: ["Mermaid rendering", "PlantUML rendering", "Markdown preview"],
+        isAccessibleForFree: true,
+        featureList: [
+          "Mermaid rendering",
+          "PlantUML rendering",
+          "Markdown preview",
+          "File picker import",
+          "File drag and drop import",
+          "SVG export",
+          "PNG export",
+        ],
         offers: {
           "@type": "Offer",
           price: "0",

@@ -9,7 +9,7 @@
 
 ## User Goals
 - Paste Mermaid or PlantUML source and see the rendered diagram automatically.
-- Upload `.mmd`, `.mermaid`, `.puml`, `.plantuml`, `.uml`, `.iuml`, `.md`, `.markdown`, or `.txt` files.
+- Upload or drag/drop `.mmd`, `.mermaid`, `.puml`, `.plantuml`, `.uml`, `.iuml`, `.md`, `.markdown`, or `.txt` files.
 - Preview Markdown as a readable document while rendering embedded diagram code blocks inline.
 - Switch rendering mode manually when automatic detection guesses incorrectly.
 - Understand syntax or rendering failures without losing the rest of the preview.
@@ -18,7 +18,7 @@
 
 ## Core Features
 - A vertical layout with the source editor above and the live preview below.
-- File upload that reads supported text files into the editor.
+- File picker and drag/drop import that read supported text files into the editor.
 - Render mode control: `Auto`, `Markdown`, `Mermaid`, and `PlantUML`.
 - Automatic render engine detection from file extension and source content.
 - Debounced live rendering while the user types.
@@ -32,6 +32,7 @@
   - Accept supported text-like extensions only.
   - Reject files larger than 1 MB with a visible error.
   - Decode uploaded files as UTF-8 text.
+  - File picker and drag/drop share the same validation and loading path.
   - Use extension hints to set the suggested mode while preserving the user's explicit mode choice when possible.
 - Mode detection:
   - Markdown is detected from `.md` and `.markdown` extensions or heading/prose plus fenced diagram blocks.
@@ -94,7 +95,7 @@
 ## Acceptance Criteria
 - `/diagram` renders a Diagram Previewer page.
 - The editor accepts pasted Mermaid, PlantUML, and Markdown source.
-- Uploading supported text files populates the editor.
+- Uploading or dropping supported text files populates the editor.
 - Auto mode selects a reasonable render engine for Mermaid, PlantUML, and Markdown examples.
 - Markdown preview renders regular Markdown and embedded Mermaid/PlantUML code blocks.
 - Mermaid diagrams render in the browser.

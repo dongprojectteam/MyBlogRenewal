@@ -24,6 +24,7 @@
 ## UI
 - [x] Build intro panel with utility description and resolved mode status.
 - [x] Build upload controls with supported file help text.
+- [x] Add drag/drop file import to the upload control.
 - [x] Build mode selector.
 - [x] Build sample buttons for Markdown, Mermaid, and PlantUML.
 - [x] Build source editor.

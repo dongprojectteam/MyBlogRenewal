@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { DragEvent as ReactDragEvent } from "react";
 import exifr from "exifr";
 import JSZip from "jszip";
 import piexif from "piexifjs";
@@ -833,6 +834,29 @@ export function ExifClient() {
     [images.length, selectedId],
   );
 
+  function handleDropZoneDragEnter(event: ReactDragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setIsDragging(true);
+  }
+
+  function handleDropZoneDragOver(event: ReactDragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setIsDragging(true);
+  }
+
+  function handleDropZoneDragLeave(event: ReactDragEvent<HTMLDivElement>) {
+    const nextTarget = event.relatedTarget;
+    if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
+    setIsDragging(false);
+  }
+
+  function handleDropZoneDrop(event: ReactDragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setIsDragging(false);
+    addFiles(event.dataTransfer.files);
+  }
+
   function updateSetting<Key extends keyof ExportSettings>(key: Key, value: ExportSettings[Key]) {
     setSettings((previous) => ({ ...previous, [key]: value }));
     setExportError("");
@@ -946,7 +970,13 @@ export function ExifClient() {
       <section className="exif-layout section">
         <div className="exif-side-stack">
           <section className="panel stack">
-            <div className={`exif-drop-zone${isDragging ? " is-dragging" : ""}`}>
+            <div
+              className={`exif-drop-zone${isDragging ? " is-dragging" : ""}`}
+              onDragEnter={handleDropZoneDragEnter}
+              onDragOver={handleDropZoneDragOver}
+              onDragLeave={handleDropZoneDragLeave}
+              onDrop={handleDropZoneDrop}
+            >
               <input
                 className="exif-file-input"
                 type="file"
@@ -956,17 +986,6 @@ export function ExifClient() {
                 onChange={(event) => {
                   if (event.currentTarget.files) addFiles(event.currentTarget.files);
                   event.currentTarget.value = "";
-                }}
-                onDragEnter={() => setIsDragging(true)}
-                onDragLeave={() => setIsDragging(false)}
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  setIsDragging(false);
-                  addFiles(event.dataTransfer.files);
                 }}
               />
               <div>

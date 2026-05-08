@@ -116,6 +116,20 @@ npm run dev
 
 - `http://localhost:3000`
 
+## 주요 유틸리티
+
+- `/diagram`: Mermaid, PlantUML, Markdown 문서 안의 다이어그램을 미리보고 SVG/PNG로 내보냅니다. 파일 선택과 드래그 앤 드롭 가져오기를 지원합니다.
+- `/exif`: 사진 EXIF 메타데이터를 브라우저에서 확인, 정리, 편집, 내보냅니다. 이미지 파일 선택과 드래그 앤 드롭을 지원합니다.
+- `/mindmap`: 마인드맵을 직접 만들고 노드 드래그, 계층 변경, 브라우저 저장, JSON/Markdown/OPML/FreeMind/Mermaid/CSV/SVG/PNG 가져오기와 내보내기를 지원합니다.
+
+## 유틸리티 기획 문서
+
+유틸리티별 요구사항, 설계, TODO는 `mockups/utilities/<slug>/` 아래에 둡니다.
+
+- `mockups/utilities/diagram/`
+- `mockups/utilities/exif/`
+- `mockups/utilities/mindmap/`
+
 ## 관리자 로그인
 
 - `id`: `admin`
@@ -126,6 +140,16 @@ npm run dev
 이 프로젝트는 SEO 관련 사이트 URL을 고정값으로 사용합니다.
 
 - `https://www.doptsw.org`
+
+신규 공개 유틸리티를 추가할 때 확인할 항목:
+
+- 페이지 단위 `Metadata`와 canonical URL
+- Open Graph/Twitter preview image
+- `SoftwareApplication` JSON-LD
+- `app/sitemap.ts` 정적 또는 동적 노출
+- `lib/seed.ts` 공개 유틸리티 seed와 홈 설명
+- `public/images/utilities/<slug>-preview.svg`
+- `mockups/utilities/<slug>/` 문서 세트
 
 ## Project SEO Skill
 

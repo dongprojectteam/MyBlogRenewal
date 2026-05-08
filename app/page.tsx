@@ -15,14 +15,15 @@ const utilitySeoDescriptions: Record<string, string> = {
   "/diff": "텍스트를 라인 단위와 문자 단위로 비교해 변경점을 빠르게 확인하는 문서 비교 유틸리티입니다.",
   "/diagram": "Mermaid, PlantUML, Markdown 문서 안의 다이어그램을 브라우저에서 바로 렌더링하고 미리보는 유틸리티입니다.",
   "/calendar": "월별 달력, 한국 공휴일 정보, 날짜별 메모를 함께 관리하는 브라우저 캘린더 유틸리티입니다.",
-  "/tetris": "고스트 블록, Hold, Next 큐, 여러 게임 모드와 글로벌 리더보드를 지원하는 브라우저 테트리스 게임입니다.",
-  "/ladder": "참가자와 결과를 입력해 랜덤 사다리로 매칭하고, 애니메이션 경로와 브라우저 기록으로 결과를 다시 확인하는 유틸리티입니다.",
+  "/tetris": "여러 게임 모드와 글로벌 리더보드를 지원하는 브라우저 테트리스 게임입니다.",
+  "/ladder": "참가자와 결과를 입력해 사다리 경로 애니메이션으로 매칭을 확인하고 기록하는 유틸리티입니다.",
   "/codec": "JSON 포맷팅, URL 인코딩, Base64 변환, JWT 페이로드 확인을 한 화면에서 처리하는 개발자 유틸리티입니다.",
-  "/mojibake": "UTF-8, CP949, EUC-KR, Windows-1252, URI 인코딩 문제로 깨진 한글 텍스트의 복구 후보를 찾아주는 유틸리티입니다.",
+  "/mojibake": "UTF-8, CP949, EUC-KR, Windows-1252, URI 인코딩 문제로 깨진 한국어 텍스트의 복구 후보를 찾아주는 유틸리티입니다.",
   "/time": "Unix timestamp, ISO 날짜, 로컬 시간, UTC, KST와 주요 시간대를 변환하고 날짜 계산을 돕는 시간 유틸리티입니다.",
   "/regex": "JavaScript 정규식을 테스트하고 매치 하이라이트, 캡처 그룹, 치환 결과를 바로 확인하는 정규식 유틸리티입니다.",
   "/table-converter": "CSV, TSV, Markdown 표, JSON 형식의 표 데이터를 서로 변환하고 미리보는 테이블 변환 유틸리티입니다.",
-  "/exif": "Inspect, clean, edit, and export photo EXIF metadata locally in the browser without uploading images.",
+  "/exif": "사진을 업로드하지 않고 브라우저에서 EXIF 메타데이터를 확인, 정리, 편집, 내보내는 로컬 유틸리티입니다.",
+  "/mindmap": "드래그 편집, 브라우저 저장, 다양한 가져오기/내보내기 형식을 지원하는 로컬 마인드맵 만들기 유틸리티입니다.",
 };
 
 export const metadata: Metadata = {
@@ -71,6 +72,7 @@ export default async function HomePage() {
           url: `${siteUrl}${item.url}`,
           operatingSystem: "Web",
           applicationCategory: "WebApplication",
+          isAccessibleForFree: true,
         })),
       },
     ],
@@ -86,7 +88,7 @@ export default async function HomePage() {
           <div className="eyebrow">personal space</div>
           <h1 className="hero-title">A quiet archive for things I build.</h1>
           <p className="hero-copy">
-            내가 좋아하는 것들, 직접 만든 작은 도구들, 그리고 차분하게 쌓아가는 기록을 모아두는 개인 공간입니다.
+            좋아하는 것들, 직접 만든 작은 도구들, 그리고 차분하게 쌓아가는 기록을 모아두는 개인 공간입니다.
           </p>
           {recentItems.length > 0 ? (
             <div className="hero-recent-strip" aria-label="Recent updates">
