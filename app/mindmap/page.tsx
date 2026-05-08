@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+
 import { SiteHeader } from "@/components/site-header";
+
 import { MindMapClient } from "./mindmap-client";
-import { Analytics } from "@vercel/analytics/next"
 
 const siteUrl = "https://www.doptsw.org";
 const pageTitle = "Mind Map Studio - 브라우저 마인드맵 만들기";
@@ -82,13 +83,10 @@ export default function MindMapPage() {
   };
 
   return (
-    <>
-      <div className="page-shell">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        <SiteHeader />
-        <MindMapClient />
-      </div>
-      <Analytics />
-    </>
+    <div className="page-shell">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <SiteHeader />
+      <MindMapClient />
+    </div>
   );
 }

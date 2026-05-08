@@ -5,7 +5,6 @@ import { CurrentTimeCard } from "@/components/current-time-card";
 import { SiteHeader } from "@/components/site-header";
 import { UtilitySearchSection } from "@/components/utility-search-section";
 import { getPublicVisualizations } from "@/lib/data";
-import { Analytics } from "@vercel/analytics/next";
 
 export const dynamic = "force-dynamic";
 
@@ -80,42 +79,39 @@ export default async function HomePage() {
   };
 
   return (
-    <>
-      <div className="page-shell">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        <SiteHeader current="home" />
+    <div className="page-shell">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <SiteHeader current="home" />
 
-        <section className="hero-panel hero-grid">
-          <div>
-            <div className="eyebrow">personal space</div>
-            <h1 className="hero-title">A quiet archive for things I build.</h1>
-            <p className="hero-copy">
-              좋아하는 것들, 직접 만든 작은 도구들, 그리고 차분하게 쌓아가는 기록을 모아두는 개인 공간입니다.
-            </p>
-            {recentItems.length > 0 ? (
-              <div className="hero-recent-strip" aria-label="Recent updates">
-                <span className="hero-recent-strip-title">Recent updates</span>
-                <div className="hero-recent-items">
-                  {recentItems.map((item) => (
-                    <Link key={item.id} href={item.url} className="hero-recent-pill">
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
+      <section className="hero-panel hero-grid">
+        <div>
+          <div className="eyebrow">personal space</div>
+          <h1 className="hero-title">A quiet archive for things I build.</h1>
+          <p className="hero-copy">
+            좋아하는 것들, 직접 만든 작은 도구들, 그리고 차분하게 쌓아가는 기록을 모아두는 개인 공간입니다.
+          </p>
+          {recentItems.length > 0 ? (
+            <div className="hero-recent-strip" aria-label="Recent updates">
+              <span className="hero-recent-strip-title">Recent updates</span>
+              <div className="hero-recent-items">
+                {recentItems.map((item) => (
+                  <Link key={item.id} href={item.url} className="hero-recent-pill">
+                    {item.title}
+                  </Link>
+                ))}
               </div>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
+        </div>
 
-          <div className="hero-aside">
-            <CurrentTimeCard />
-          </div>
-        </section>
+        <div className="hero-aside">
+          <CurrentTimeCard />
+        </div>
+      </section>
 
-        <UtilitySearchSection items={items} />
+      <UtilitySearchSection items={items} />
 
-        <p className="footer-note">DOPT는 개인 취향과 직접 만든 도구들을 모아두는 조용한 개인 공간을 목표로 합니다.</p>
-      </div>
-      <Analytics />
-    </>
+      <p className="footer-note">DOPT는 개인 취향과 직접 만든 도구들을 모아두는 조용한 개인 공간을 목표로 합니다.</p>
+    </div>
   );
 }
