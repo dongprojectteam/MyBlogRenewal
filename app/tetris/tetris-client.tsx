@@ -722,7 +722,7 @@ export function TetrisClient() {
           <h1>Tetris Arena</h1>
           <p className="muted">
             고스트 블록, Hold, Next 큐, SRS 회전, 콤보와 Back-to-Back 점수를 갖춘 테트리스입니다.
-            Supabase가 연결되면 모드별 전세계 최고 점수를 저장하고 불러옵니다.
+            모드 별 전 세계 사람들과 경쟁하고 순위를 올리세요.
           </p>
         </div>
 
