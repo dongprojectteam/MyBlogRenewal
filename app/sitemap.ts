@@ -19,6 +19,7 @@ const staticPaths = [
   "/table-converter",
   "/exif",
   "/mindmap",
+  "/animal-merge",
 ];
 const staticPathSet = new Set(staticPaths);
 
