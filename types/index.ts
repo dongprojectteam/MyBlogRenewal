@@ -78,3 +78,14 @@ export type TetrisScore = {
   daily_key: string | null;
   created_at?: string;
 };
+
+export type SudokuLevelId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+
+export type SudokuScore = {
+  id: string;
+  player_name: string;
+  level_id: number;
+  time_ms: number;
+  seed: number;
+  created_at?: string;
+};

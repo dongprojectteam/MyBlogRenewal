@@ -1,8 +1,11 @@
 import { randomUUID } from "node:crypto";
 
 import { hasSupabaseEnv } from "@/lib/env";
-import { seedFiles, seedNote, seedProfile, seedTetrisScores, seedVisualizations } from "@/lib/seed";
+import { seedFiles, seedNote, seedProfile, seedSudokuScores, seedTetrisScores, seedVisualizations } from "@/lib/seed";
 import { getSupabaseAdminClient } from "@/lib/supabase";
+import { gridToString } from "@/lib/sudoku/grid";
+import { isSudokuLevelId } from "@/lib/sudoku/level-profiles";
+import { parseSudokuSubmission } from "@/lib/sudoku/validate";
 import { safeYear, toProjectUrl, toSlugishPath } from "@/lib/utils";
 import type {
   AdminNote,
@@ -12,12 +15,14 @@ import type {
   Visualization,
   TetrisMode,
   TetrisScore,
+  SudokuScore,
 } from "@/types";
 
 const ADMIN_BUCKET = "admin-files";
 const PROFILE_BUCKET = "profile-images";
 const DEFAULT_PROFILE_ID = "11111111-1111-1111-1111-111111111111";
 const TETRIS_SCORE_LIMIT = 20;
+const SUDOKU_SCORE_LIMIT = 50;
 const TETRIS_MODES = ["marathon", "sprint", "ultra", "survival", "daily"] as const;
 
 export type SaveTetrisScoreInput = {
@@ -485,4 +490,96 @@ export async function saveTetrisScore(input: SaveTetrisScoreInput): Promise<{ sa
   if (error) throw error;
 
   return { saved: true, score: data as TetrisScore };
+}
+
+export type SaveSudokuScoreInput = {
+  playerName: string;
+  levelId: number;
+  timeMs: number;
+  seed: number;
+  puzzle: string;
+  playerGrid: string;
+  givenMask: string;
+};
+
+function sortSudokuScores(scores: SudokuScore[]) {
+  return [...scores].sort((a, b) => {
+    if (a.time_ms !== b.time_ms) return a.time_ms - b.time_ms;
+    return (a.created_at ?? "").localeCompare(b.created_at ?? "");
+  });
+}
+
+function normalizeSudokuScoreRow(input: SaveSudokuScoreInput): {
+  id: string;
+  player_name: string;
+  level_id: number;
+  time_ms: number;
+  seed: number;
+  puzzle: string;
+} {
+  const player_name = sanitizePlayerName(input.playerName);
+  if (player_name.length < 2) {
+    throw new Error("플레이어 이름은 2자 이상 입력해 주세요.");
+  }
+
+  const parsed = parseSudokuSubmission({
+    playerName: player_name,
+    levelId: input.levelId,
+    timeMs: input.timeMs,
+    seed: input.seed,
+    puzzle: input.puzzle,
+    playerGrid: input.playerGrid,
+    givenMask: input.givenMask,
+  });
+
+  return {
+    id: randomUUID(),
+    player_name,
+    level_id: parsed.levelId,
+    time_ms: parsed.timeMs,
+    seed: parsed.seed,
+    puzzle: gridToString(parsed.puzzle),
+  };
+}
+
+export async function listSudokuScores(levelId: number): Promise<SudokuScore[]> {
+  if (!isSudokuLevelId(levelId)) return [];
+
+  if (!hasSupabaseEnv()) {
+    const local = seedSudokuScores.filter((item) => item.level_id === levelId);
+    return sortSudokuScores(local).slice(0, SUDOKU_SCORE_LIMIT);
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("sudoku_scores")
+    .select("id, player_name, level_id, time_ms, seed, created_at")
+    .eq("level_id", levelId)
+    .order("time_ms", { ascending: true })
+    .order("created_at", { ascending: true })
+    .limit(SUDOKU_SCORE_LIMIT);
+
+  if (error) throw error;
+  return (data ?? []) as SudokuScore[];
+}
+
+export async function saveSudokuScore(input: SaveSudokuScoreInput): Promise<{ saved: boolean; score: SudokuScore }> {
+  const row = normalizeSudokuScoreRow(input);
+  const score: SudokuScore = {
+    id: row.id,
+    player_name: row.player_name,
+    level_id: row.level_id,
+    time_ms: row.time_ms,
+    seed: row.seed,
+  };
+
+  if (!hasSupabaseEnv()) {
+    return { saved: false, score: { ...score, created_at: new Date().toISOString() } };
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase.from("sudoku_scores").insert([row]).select("id, player_name, level_id, time_ms, seed, created_at").single();
+  if (error) throw error;
+
+  return { saved: true, score: data as SudokuScore };
 }

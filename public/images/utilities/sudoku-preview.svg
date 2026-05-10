@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#0b1120"/>
+  <rect x="80" y="80" width="470" height="470" rx="24" fill="rgba(15,23,42,0.9)" stroke="rgba(125,211,252,0.35)" stroke-width="2"/>
+  <g stroke="rgba(148,163,184,0.35)" stroke-width="1">
+    <line x1="196" y1="80" x2="196" y2="550"/>
+    <line x1="312" y1="80" x2="312" y2="550"/>
+    <line x1="434" y1="80" x2="434" y2="550"/>
+    <line x1="80" y1="196" x2="550" y2="196"/>
+    <line x1="80" y1="312" x2="550" y2="312"/>
+    <line x1="80" y1="434" x2="550" y2="434"/>
+  </g>
+  <g stroke="rgba(125,211,252,0.55)" stroke-width="2.5">
+    <line x1="318" y1="80" x2="318" y2="550"/>
+    <line x1="80" y1="318" x2="550" y2="318"/>
+  </g>
+  <text x="640" y="220" fill="#e5eef8" font-family="Segoe UI, Pretendard, sans-serif" font-size="56" font-weight="700">Sudoku</text>
+  <text x="640" y="290" fill="#94a3b8" font-family="Segoe UI, Pretendard, sans-serif" font-size="28">10 levels � Canvas � Leaderboard</text>
+  <rect x="640" y="340" width="200" height="12" rx="6" fill="rgba(56,189,248,0.35)"/>
+</svg>

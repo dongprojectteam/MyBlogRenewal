@@ -75,6 +75,14 @@ supabase/tetris_scores.sql
 
 현재 서버 API가 `SUPABASE_SECRET_KEY`로 읽기/쓰기를 수행하므로, 공개 클라이언트에서 직접 테이블에 접근하지 않습니다.
 
+## Sudoku 리더보드
+
+`/sudoku` 유틸은 `sudoku_scores` 테이블을 사용합니다.
+
+```text
+supabase/sudoku_scores.sql
+```
+
 ## Vercel 설정
 
 1. GitHub/GitLab/Bitbucket 저장소를 연결합니다.
