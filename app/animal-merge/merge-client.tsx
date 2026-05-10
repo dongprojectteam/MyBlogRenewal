@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Matter, { Body, Composite, Engine, Events, Runner, World } from "matter-js";
 
 type Animal = {
@@ -14,7 +14,7 @@ type Animal = {
   density: number;
 };
 
-type Rank = { id: string; nickname: string; score: number; max_level: number; created_at?: string };
+type Rank = { id: string; nickname: string; mode: GameMode; score: number; max_level: number; created_at?: string };
 
 type FloatingCombo = { id: number; x: number; y: number; text: string };
 type PreloadStatus = "idle" | "loading" | "ready" | "error";
@@ -36,6 +36,15 @@ const HISTORY_KEY = "animal-merge-local-v1";
 const BEST_KEY = "animal-merge-best-v1";
 const DROP_COOLDOWN_MS = 180;
 const SPAWN_MERGE_PROTECT_MS = 260;
+const DEFAULT_TIME_ATTACK_SEC = 90;
+
+type GameMode = "endless" | "whale-rush" | "time-attack";
+
+const GAME_MODES: Array<{ id: GameMode; label: string; description: string }> = [
+  { id: "endless", label: "Endless", description: "무제한 모드: 언제까지든 버텨보세요." },
+  { id: "whale-rush", label: "Whale Rush", description: "빠르게 10 Whale을 달성하세요." },
+  { id: "time-attack", label: "Time Attack", description: "정해진 시간 내 최고 점수를 노리세요." },
+];
 
 function createRandom(seed: number) {
   let value = seed >>> 0;
@@ -48,8 +57,8 @@ function createRandom(seed: number) {
   };
 }
 
-function pickSpawnLevel(maxUnlocked: number, random: () => number) {
-  return Math.min(4, Math.max(1, Math.floor(random() * Math.min(maxUnlocked + 1, 4)) + 1));
+function pickSpawnLevel(maxUnlocked: number, random: () => number, spawnCap = 4) {
+  return Math.min(spawnCap, Math.max(1, Math.floor(random() * Math.min(maxUnlocked + 1, spawnCap)) + 1));
 }
 
 export function MergeClient() {
@@ -79,6 +88,8 @@ export function MergeClient() {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [maxLevel, setMaxLevel] = useState(1);
   const [highScore, setHighScore] = useState(0);
+  const [gameMode, setGameMode] = useState<GameMode>("endless");
+  const [gameResult, setGameResult] = useState<"win" | "lose" | "timeout" | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [gameKey, setGameKey] = useState(0);
@@ -95,6 +106,19 @@ export function MergeClient() {
   const [pieces, setPieces] = useState(0);
   const [dropReady, setDropReady] = useState(true);
   const [seed, setSeed] = useState<number>(0);
+
+  const modeConfig = useMemo(() => {
+    switch (gameMode) {
+      case "whale-rush":
+        return { label: "Whale Rush", spawnCap: 4, targetLevel: 10, timeLimitSec: 0 };
+      case "time-attack":
+        return { label: "Time Attack", spawnCap: 4, targetLevel: null, timeLimitSec: DEFAULT_TIME_ATTACK_SEC };
+      default:
+        return { label: "Endless", spawnCap: 4, targetLevel: null, timeLimitSec: 0 };
+    }
+  }, [gameMode]);
+
+  const timeRemaining = modeConfig.timeLimitSec ? Math.max(0, modeConfig.timeLimitSec - elapsedSec) : 0;
 
   useEffect(() => {
     const savedBest = Number(window.localStorage.getItem(BEST_KEY) ?? "0");
@@ -347,7 +371,18 @@ export function MergeClient() {
             break;
           }
         }
-        if (shouldEnd) setIsGameOver(true);
+
+        const runtimeSec = startedAtRef.current ? Math.floor((Date.now() - startedAtRef.current) / 1000) : 0;
+        if (modeConfig.targetLevel && maxLevel >= modeConfig.targetLevel) {
+          setGameResult("win");
+          setIsGameOver(true);
+        } else if (modeConfig.timeLimitSec && runtimeSec >= modeConfig.timeLimitSec) {
+          setGameResult("timeout");
+          setIsGameOver(true);
+        } else if (shouldEnd) {
+          setGameResult("lose");
+          setIsGameOver(true);
+        }
       }
 
       requestAnimationFrame(draw);
@@ -411,7 +446,7 @@ export function MergeClient() {
     spawnBody(dropLevelRef.current, x, BOARD.top + 18);
     setPieces((v) => v + 1);
     const nextCurrent = nextQueue[0] ?? 1;
-    const appended = pickSpawnLevel(maxLevel, rngRef.current);
+    const appended = pickSpawnLevel(maxLevel, rngRef.current, modeConfig.spawnCap);
     const shifted = [...nextQueue.slice(1), appended];
     dropLevelRef.current = nextCurrent;
     setCurrentLevel(nextCurrent);
@@ -431,7 +466,7 @@ export function MergeClient() {
     await fetch("/api/merge/rank", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nickname: name, score, maxLevel }),
+      body: JSON.stringify({ nickname: name, mode: gameMode, score, maxLevel }),
     });
     await fetchRanks();
   }
@@ -440,6 +475,7 @@ export function MergeClient() {
     if (preloadStatus !== "ready") return;
     setStarted(true);
     setIsGameOver(false);
+    setGameResult(null);
     setIsPaused(false);
     setGameKey((v) => v + 1);
     setScore(0);
@@ -458,8 +494,8 @@ export function MergeClient() {
     const nextSeed = Math.floor(Math.random() * 2_147_483_647);
     setSeed(nextSeed);
     rngRef.current = createRandom(nextSeed);
-    const first = pickSpawnLevel(1, rngRef.current);
-    const queue = [pickSpawnLevel(1, rngRef.current), pickSpawnLevel(1, rngRef.current), pickSpawnLevel(1, rngRef.current)];
+    const first = pickSpawnLevel(1, rngRef.current, modeConfig.spawnCap);
+    const queue = [pickSpawnLevel(1, rngRef.current, modeConfig.spawnCap), pickSpawnLevel(1, rngRef.current, modeConfig.spawnCap), pickSpawnLevel(1, rngRef.current, modeConfig.spawnCap)];
     dropLevelRef.current = first;
     setCurrentLevel(first);
     setNextQueue(queue);
@@ -483,6 +519,7 @@ export function MergeClient() {
     if (preloadStatus !== "ready") return;
     setStarted(true);
     setIsGameOver(false);
+    setGameResult(null);
     setIsPaused(false);
     setGameKey((v) => v + 1);
     setScore(0);
@@ -501,8 +538,8 @@ export function MergeClient() {
     const nextSeed = Math.floor(Math.random() * 2_147_483_647);
     setSeed(nextSeed);
     rngRef.current = createRandom(nextSeed);
-    const first = pickSpawnLevel(1, rngRef.current);
-    const queue = [pickSpawnLevel(1, rngRef.current), pickSpawnLevel(1, rngRef.current), pickSpawnLevel(1, rngRef.current)];
+    const first = pickSpawnLevel(1, rngRef.current, modeConfig.spawnCap);
+    const queue = [pickSpawnLevel(1, rngRef.current, modeConfig.spawnCap), pickSpawnLevel(1, rngRef.current, modeConfig.spawnCap), pickSpawnLevel(1, rngRef.current, modeConfig.spawnCap)];
     dropLevelRef.current = first;
     setCurrentLevel(first);
     setNextQueue(queue);
@@ -542,12 +579,31 @@ export function MergeClient() {
 
   return (
     <section className="section" style={{ display: "grid", gap: 16 }}>
-      <section className="panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-        <div>
+      <section className="panel" style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <div className="eyebrow">utility / game</div>
           <h1 style={{ marginBottom: 4 }}>Animal Merge</h1>
           <p className="muted" style={{ marginBottom: 0 }}>
             같은 동물을 합쳐 진화시키고 콤보를 쌓아보세요. 데드라인에 3초 이상 쌓이면 게임이 종료됩니다.
+          </p>
+        </div>
+        <div style={{ minWidth: 240, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {GAME_MODES.map((mode) => (
+              <button
+                key={mode.id}
+                type="button"
+                className={mode.id === gameMode ? "button" : "ghost-button"}
+                onClick={() => !started && setGameMode(mode.id)}
+                disabled={started}
+                style={{ minWidth: 120 }}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+          <p className="muted" style={{ margin: 0, fontSize: 13, lineHeight: 1.4, textAlign: "right" }}>
+            {GAME_MODES.find((mode) => mode.id === gameMode)?.description}
           </p>
         </div>
       </section>
@@ -584,26 +640,28 @@ export function MergeClient() {
       <section style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, alignItems: "start" }}>
         <div style={{ display: "grid", gap: 16 }}>
         <div className="panel tetris-play-panel merge-play-panel">
-          <div className="tetris-play-header merge-stage-head">
-            <span className="tag neutral">Animal Merge</span>
-            <div style={{ display: "flex", gap: 8 }}>
-              {!started ? (
-                <button className="button" type="button" onClick={startGame} disabled={preloadStatus !== "ready"}>
-                  Start Game
+          <div className="tetris-play-header merge-stage-head" style={{ flexDirection: "column", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+              <span className="tag neutral">Animal Merge</span>
+              <div style={{ display: "flex", gap: 8 }}>
+                {!started ? (
+                  <button className="button" type="button" onClick={startGame} disabled={preloadStatus !== "ready"}>
+                    Start Game
+                  </button>
+                ) : (
+                  <>
+                    <button className="ghost-button" type="button" onClick={togglePause} disabled={isGameOver}>
+                      {isPaused ? "Resume" : "Pause"}
+                    </button>
+                    <button className="button" type="button" onClick={restartGame}>
+                      Restart
+                    </button>
+                  </>
+                )}
+                <button className="ghost-button" type="button" onClick={shake} disabled={!started || isGameOver || isPaused}>
+                  Shake
                 </button>
-              ) : (
-                <>
-                  <button className="ghost-button" type="button" onClick={togglePause} disabled={isGameOver}>
-                    {isPaused ? "Resume" : "Pause"}
-                  </button>
-                  <button className="button" type="button" onClick={restartGame}>
-                    Restart
-                  </button>
-                </>
-              )}
-              <button className="ghost-button" type="button" onClick={shake} disabled={!started || isGameOver || isPaused}>
-                Shake
-              </button>
+              </div>
             </div>
           </div>
           <div className="merge-top-stats">
@@ -715,9 +773,13 @@ export function MergeClient() {
               <span className="muted">Seed {seed || "-"}</span>
             </div>
             <div className="tetris-stats-grid">
+              <div className="tetris-stat"><span>Mode</span><strong>{modeConfig.label}</strong></div>
               <div className="tetris-stat"><span>Level</span><strong>{maxLevel}</strong></div>
               <div className="tetris-stat"><span>Combo</span><strong>{combo}</strong></div>
               <div className="tetris-stat"><span>Pieces</span><strong>{pieces}</strong></div>
+              {modeConfig.timeLimitSec ? (
+                <div className="tetris-stat"><span>Time left</span><strong>{timeRemaining}s</strong></div>
+              ) : null}
             </div>
             <h2 style={{ marginBottom: 0 }}>Next</h2>
             <div className="merge-next-row">
@@ -758,7 +820,9 @@ export function MergeClient() {
       {isGameOver ? (
         <section className="panel" style={{ display: "grid", gap: 8 }}>
           <h2 style={{ marginBottom: 0 }}>Game Over</h2>
-          <p className="muted" style={{ marginBottom: 0 }}>Final Score {score}. Submit your score to global leaderboard.</p>
+          <p className="muted" style={{ marginBottom: 0 }}>
+            {gameResult === "win" ? "Whale Rush Clear!" : gameResult === "timeout" ? "Time Up!" : "Final Score"} {score}. Submit your score to global leaderboard.
+          </p>
           <div style={{ display: "flex", gap: 8 }}>
             <input className="input" value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={10} placeholder="Nickname (2-10)" />
             <button type="button" className="button" onClick={submitScore}>Submit</button>
@@ -786,6 +850,19 @@ export function MergeClient() {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 8px;
+        }
+        .tetris-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+        .tetris-stat {
+          display: grid;
+          gap: 6px;
+          padding: 14px 16px;
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.06);
         }
         .merge-board-frame {
           position: relative;
