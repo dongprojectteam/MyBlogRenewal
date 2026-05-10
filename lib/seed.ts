@@ -1,4 +1,4 @@
-import type { AdminNote, ProfileBundle, TetrisScore, UploadedFile, Visualization } from "@/types";
+import type { AdminNote, ProfileBundle, SudokuScore, TetrisScore, UploadedFile, Visualization } from "@/types";
 
 const rawSeedVisualizations: Visualization[] = [
   {
@@ -109,6 +109,15 @@ const rawSeedVisualizations: Visualization[] = [
     visible: true,
     sort_order: 12,
   },
+  {
+    id: "seed-sudoku",
+    title: "Sudoku",
+    description: "10단계 난이도, Canvas 보드, 클리어 시간 글로벌 리더보드를 갖춘 스도쿠 게임입니다.",
+    url: "/sudoku",
+    image_url: "/images/utilities/sudoku-preview.svg",
+    visible: true,
+    sort_order: 13,
+  },
 ];
 
 const seedVisualizationSeo: Record<string, Pick<Visualization, "description" | "image_url" | "sort_order">> = {
@@ -171,6 +180,11 @@ const seedVisualizationSeo: Record<string, Pick<Visualization, "description" | "
     description: "드래그로 구조를 바꾸고 브라우저에 저장하며 JSON, Markdown, OPML, FreeMind, Mermaid, CSV, SVG, PNG로 가져오고 내보내는 로컬 마인드맵 유틸리티입니다.",
     image_url: "/images/utilities/mindmap-preview.svg",
     sort_order: 12,
+  },
+  "seed-sudoku": {
+    description: "레벨별 자동 생성 퍼즐, Canvas 입력, 키보드·터치 숫자 패드, Supabase 글로벌 순위표가 있는 스도쿠 게임입니다.",
+    image_url: "/images/utilities/sudoku-preview.svg",
+    sort_order: 13,
   },
 };
 
@@ -349,5 +363,44 @@ export const seedTetrisScores: TetrisScore[] = [
     seed: 20260507,
     daily_key: "2026-05-07",
     created_at: "2026-05-07T00:00:00.000Z",
+  },
+];
+
+export const seedSudokuScores: SudokuScore[] = [
+  {
+    id: "seed-sudoku-l1-1",
+    player_name: "DOPT",
+    level_id: 1,
+    time_ms: 185_000,
+    score: 2,
+    seed: 1001,
+    created_at: "2026-05-08T00:00:00.000Z",
+  },
+  {
+    id: "seed-sudoku-l1-2",
+    player_name: "Solver",
+    level_id: 1,
+    time_ms: 212_000,
+    score: 2,
+    seed: 1002,
+    created_at: "2026-05-08T01:00:00.000Z",
+  },
+  {
+    id: "seed-sudoku-l5-1",
+    player_name: "DOPT",
+    level_id: 5,
+    time_ms: 420_000,
+    score: 1,
+    seed: 5005,
+    created_at: "2026-05-09T00:00:00.000Z",
+  },
+  {
+    id: "seed-sudoku-l10-1",
+    player_name: "Grid",
+    level_id: 10,
+    time_ms: 890_000,
+    score: 1,
+    seed: 1010,
+    created_at: "2026-05-10T00:00:00.000Z",
   },
 ];

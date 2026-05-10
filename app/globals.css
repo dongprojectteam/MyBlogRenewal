@@ -2662,6 +2662,483 @@ textarea {
   }
 }
 
+/* --- Sudoku (align with Tetris utility shell) --- */
+
+.sudoku-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.sudoku-intro h1 {
+  margin: 14px 0 10px;
+  font-size: 2.4rem;
+}
+
+.sudoku-level-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sudoku-level-tabs button {
+  min-height: 80px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.76);
+  color: var(--text);
+  cursor: pointer;
+  padding: 12px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease;
+}
+
+.sudoku-level-content {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sudoku-level-content strong {
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.sudoku-level-content span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.2;
+}
+
+.sudoku-level-tabs button:hover {
+  border-color: rgba(125, 211, 252, 0.45);
+  background: rgba(15, 28, 45, 0.94);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(2, 9, 27, 0.18);
+}
+
+.sudoku-level-tabs button.is-active {
+  border-color: rgba(56, 189, 248, 0.75);
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.18), rgba(15, 23, 42, 0.8));
+  box-shadow: 0 18px 42px rgba(2, 12, 27, 0.22);
+}
+
+.sudoku-level-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.15);
+  color: #7dd3fc;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  font-size: 0.94rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.sudoku-level-tabs button.is-active .sudoku-level-icon {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(14, 165, 233, 0.16));
+}
+
+.sudoku-level-tabs strong,
+.sudoku-level-tabs span {
+  display: block;
+}
+
+.sudoku-level-tabs strong {
+  font-size: 0.92rem;
+}
+
+.sudoku-level-tabs span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.sudoku-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.sudoku-play-panel,
+.sudoku-side-panel {
+  min-width: 0;
+}
+
+.sudoku-play-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.sudoku-play-header,
+.sudoku-play-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sudoku-play-header--actions-only {
+  justify-content: flex-end;
+}
+
+.sudoku-play-actions--primary {
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.sudoku-session-panel {
+  display: grid;
+  gap: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.76);
+  backdrop-filter: blur(12px);
+  padding: 18px;
+}
+
+.sudoku-session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sudoku-session-header h2 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.sudoku-session-seed-header {
+  font-size: 0.92rem;
+  color: var(--muted);
+  min-width: 0;
+  text-align: right;
+}
+
+.sudoku-session-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sudoku-session-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(2, 6, 23, 0.22);
+}
+
+.sudoku-session-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sudoku-session-card strong {
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.sudoku-session-dl dt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.sudoku-session-dl dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.sudoku-session-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.sudoku-session-seed {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  font-size: 0.82rem;
+  color: var(--muted-strong);
+}
+
+.sudoku-canvas-wrap {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(2, 6, 23, 0.2);
+  overflow: hidden;
+}
+
+.sudoku-canvas-start-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 12px 28px;
+  border: 1px solid rgba(125, 211, 252, 0.6);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.2);
+  color: #dbeafe;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.sudoku-canvas-start-button:hover {
+  transform: translate(-50%, -50%) scale(1.02);
+  background: rgba(56, 189, 248, 0.3);
+  border-color: rgba(125, 211, 252, 0.9);
+}
+
+.sudoku-canvas {
+  display: block;
+  width: 100%;
+  vertical-align: middle;
+}
+
+.sudoku-progress {
+  display: grid;
+  gap: 8px;
+}
+
+.sudoku-progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  overflow: hidden;
+}
+
+.sudoku-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.5), rgba(125, 211, 252, 0.85));
+  transition: width 180ms ease;
+}
+
+.sudoku-progress-label {
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.sudoku-side-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.sudoku-leaderboard {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sudoku-leaderboard li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(2, 6, 23, 0.22);
+  padding: 10px;
+}
+
+.sudoku-leaderboard li > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sudoku-leaderboard strong,
+.sudoku-leaderboard span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sudoku-canvas-wrap--blur .sudoku-canvas {
+  filter: blur(4px);
+  transform: scale(1.01);
+  transition: filter 180ms ease, transform 180ms ease;
+}
+
+.sudoku-complete-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  pointer-events: none;
+}
+
+.sudoku-complete-card {
+  width: min(100%, 320px);
+  padding: 24px 24px 20px;
+  border-radius: 28px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+  text-align: center;
+  pointer-events: auto;
+}
+
+.sudoku-complete-card .tag.success {
+  display: inline-flex;
+  margin-bottom: 12px;
+}
+
+.sudoku-complete-score {
+  display: block;
+  margin: 14px auto 4px;
+  font-size: 3rem;
+  line-height: 1;
+  color: #7dd3fc;
+}
+
+.sudoku-complete-label {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.sudoku-complete-meta {
+  display: grid;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.sudoku-leaderboard span {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.sudoku-leaderboard b {
+  color: var(--text);
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.sudoku-rank {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(125, 211, 252, 0.14);
+  color: #bae6fd;
+  font-weight: 700;
+}
+
+.sudoku-submit-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.sudoku-finish-summary {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: var(--radius-sm);
+  background: rgba(14, 165, 233, 0.08);
+  padding: 14px;
+}
+
+.sudoku-finish-summary strong {
+  font-size: 1.65rem;
+}
+
+.sudoku-finish-summary span {
+  color: var(--muted-strong);
+}
+
+.sudoku-control-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sudoku-control-list span {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(2, 6, 23, 0.22);
+  padding: 10px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 1080px) {
+  .sudoku-intro,
+  .sudoku-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sudoku-level-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sudoku-side-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sudoku-side-stack .sudoku-side-panel:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .sudoku-level-tabs,
+  .sudoku-side-stack,
+  .sudoku-control-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .sudoku-intro h1 {
+    font-size: 2rem;
+  }
+
+  .sudoku-play-header,
+  .sudoku-play-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sudoku-play-actions .button,
+  .sudoku-play-actions .ghost-button {
+    width: 100%;
+  }
+}
+
 .utility-title-row {
   display: flex;
   flex-wrap: wrap;
