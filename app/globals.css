@@ -2679,29 +2679,79 @@ textarea {
 .sudoku-level-tabs {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .sudoku-level-tabs button {
-  min-height: 72px;
-  border: 1px solid var(--border);
+  min-height: 80px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: var(--radius-sm);
-  background: rgba(2, 6, 23, 0.28);
+  background: rgba(15, 23, 42, 0.76);
   color: var(--text);
   cursor: pointer;
-  padding: 10px;
-  text-align: left;
+  padding: 12px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  backdrop-filter: blur(12px);
   transition:
-    background 160ms ease,
-    border-color 160ms ease,
-    transform 160ms ease;
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease;
 }
 
-.sudoku-level-tabs button:hover,
-.sudoku-level-tabs button.is-active {
-  border-color: rgba(125, 211, 252, 0.5);
-  background: rgba(14, 165, 233, 0.14);
+.sudoku-level-content {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sudoku-level-content strong {
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.sudoku-level-content span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.2;
+}
+
+.sudoku-level-tabs button:hover {
+  border-color: rgba(125, 211, 252, 0.45);
+  background: rgba(15, 28, 45, 0.94);
   transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(2, 9, 27, 0.18);
+}
+
+.sudoku-level-tabs button.is-active {
+  border-color: rgba(56, 189, 248, 0.75);
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.18), rgba(15, 23, 42, 0.8));
+  box-shadow: 0 18px 42px rgba(2, 12, 27, 0.22);
+}
+
+.sudoku-level-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.15);
+  color: #7dd3fc;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  font-size: 0.94rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.sudoku-level-tabs button.is-active .sudoku-level-icon {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(14, 165, 233, 0.16));
 }
 
 .sudoku-level-tabs strong,
@@ -2722,7 +2772,7 @@ textarea {
 
 .sudoku-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(240px, 0.55fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
   gap: 18px;
   align-items: start;
 }
@@ -2755,23 +2805,60 @@ textarea {
   flex: 1;
 }
 
-.sudoku-session-panel h2 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1.05rem;
+.sudoku-session-panel {
+  display: grid;
+  gap: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.76);
+  backdrop-filter: blur(12px);
+  padding: 18px;
 }
 
-.sudoku-session-dl {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-}
-
-.sudoku-session-dl > div {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 8px;
+.sudoku-session-header {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sudoku-session-header h2 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.sudoku-session-seed-header {
+  font-size: 0.92rem;
+  color: var(--muted);
+  min-width: 0;
+  text-align: right;
+}
+
+.sudoku-session-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sudoku-session-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(2, 6, 23, 0.22);
+}
+
+.sudoku-session-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sudoku-session-card strong {
+  font-size: 1.05rem;
+  color: var(--text);
 }
 
 .sudoku-session-dl dt {
@@ -2783,7 +2870,8 @@ textarea {
 .sudoku-session-dl dd {
   margin: 0;
   min-width: 0;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
+  color: var(--text);
 }
 
 .sudoku-session-mono {
@@ -2798,10 +2886,34 @@ textarea {
 }
 
 .sudoku-canvas-wrap {
+  position: relative;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: rgba(2, 6, 23, 0.2);
   overflow: hidden;
+}
+
+.sudoku-canvas-start-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 12px 28px;
+  border: 1px solid rgba(125, 211, 252, 0.6);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.2);
+  color: #dbeafe;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.sudoku-canvas-start-button:hover {
+  transform: translate(-50%, -50%) scale(1.02);
+  background: rgba(56, 189, 248, 0.3);
+  border-color: rgba(125, 211, 252, 0.9);
 }
 
 .sudoku-canvas {
@@ -2869,6 +2981,59 @@ textarea {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.sudoku-canvas-wrap--blur .sudoku-canvas {
+  filter: blur(4px);
+  transform: scale(1.01);
+  transition: filter 180ms ease, transform 180ms ease;
+}
+
+.sudoku-complete-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  pointer-events: none;
+}
+
+.sudoku-complete-card {
+  width: min(100%, 320px);
+  padding: 24px 24px 20px;
+  border-radius: 28px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+  text-align: center;
+  pointer-events: auto;
+}
+
+.sudoku-complete-card .tag.success {
+  display: inline-flex;
+  margin-bottom: 12px;
+}
+
+.sudoku-complete-score {
+  display: block;
+  margin: 14px auto 4px;
+  font-size: 3rem;
+  line-height: 1;
+  color: #7dd3fc;
+}
+
+.sudoku-complete-label {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.sudoku-complete-meta {
+  display: grid;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: var(--muted);
 }
 
 .sudoku-leaderboard span {

@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { hasSupabaseEnv } from "@/lib/env";
 import { seedFiles, seedNote, seedProfile, seedSudokuScores, seedTetrisScores, seedVisualizations } from "@/lib/seed";
 import { getSupabaseAdminClient } from "@/lib/supabase";
-import { gridToString } from "@/lib/sudoku/grid";
+import { gridToString, maskFromString } from "@/lib/sudoku/grid";
 import { isSudokuLevelId } from "@/lib/sudoku/level-profiles";
 import { parseSudokuSubmission } from "@/lib/sudoku/validate";
 import { safeYear, toProjectUrl, toSlugishPath } from "@/lib/utils";
@@ -504,7 +504,8 @@ export type SaveSudokuScoreInput = {
 
 function sortSudokuScores(scores: SudokuScore[]) {
   return [...scores].sort((a, b) => {
-    if (a.time_ms !== b.time_ms) return a.time_ms - b.time_ms;
+    if (a.score !== b.score) return b.score - a.score;  // 점수 내림차순
+    if (a.time_ms !== b.time_ms) return a.time_ms - b.time_ms;  // 동점 시 시간 오름차순
     return (a.created_at ?? "").localeCompare(b.created_at ?? "");
   });
 }
@@ -514,6 +515,7 @@ function normalizeSudokuScoreRow(input: SaveSudokuScoreInput): {
   player_name: string;
   level_id: number;
   time_ms: number;
+  score: number;
   seed: number;
   puzzle: string;
 } {
@@ -532,11 +534,24 @@ function normalizeSudokuScoreRow(input: SaveSudokuScoreInput): {
     givenMask: input.givenMask,
   });
 
+  // 난이도 계산: 빈 셀 수
+  const givenMask = maskFromString(input.givenMask);
+  const emptyCells = givenMask.flat().filter((v) => !v).length;
+  const difficultyMultiplier = emptyCells / 81;
+
+  // 시간 기반 보정: 20초 이하로는 점수 과대 평가를 막기 위해 최소값을 둠
+  const timeFactor = 60000 / Math.max(parsed.timeMs, 20000);
+
+  // 최종 점수: 난이도와 시간 보정을 함께 사용
+  const rawScore = 1500 * difficultyMultiplier * timeFactor;
+  const score = Math.max(1, Math.round(rawScore));
+
   return {
     id: randomUUID(),
     player_name,
     level_id: parsed.levelId,
     time_ms: parsed.timeMs,
+    score,
     seed: parsed.seed,
     puzzle: gridToString(parsed.puzzle),
   };
@@ -553,9 +568,9 @@ export async function listSudokuScores(levelId: number): Promise<SudokuScore[]> 
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase
     .from("sudoku_scores")
-    .select("id, player_name, level_id, time_ms, seed, created_at")
+    .select("id, player_name, level_id, time_ms, score, seed, created_at")
     .eq("level_id", levelId)
-    .order("time_ms", { ascending: true })
+    .order("score", { ascending: false })
     .order("created_at", { ascending: true })
     .limit(SUDOKU_SCORE_LIMIT);
 
@@ -570,6 +585,7 @@ export async function saveSudokuScore(input: SaveSudokuScoreInput): Promise<{ sa
     player_name: row.player_name,
     level_id: row.level_id,
     time_ms: row.time_ms,
+    score: row.score,
     seed: row.seed,
   };
 
@@ -578,7 +594,7 @@ export async function saveSudokuScore(input: SaveSudokuScoreInput): Promise<{ sa
   }
 
   const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase.from("sudoku_scores").insert([row]).select("id, player_name, level_id, time_ms, seed, created_at").single();
+  const { data, error } = await supabase.from("sudoku_scores").insert([row]).select("id, player_name, level_id, time_ms, score, seed, created_at").single();
   if (error) throw error;
 
   return { saved: true, score: data as SudokuScore };

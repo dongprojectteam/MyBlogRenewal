@@ -16,7 +16,7 @@ import {
 import { getSudokuGeneratorProfile, getSudokuLevelConfig, SUDOKU_LEVEL_IDS } from "@/lib/sudoku/level-profiles";
 import type { SudokuLevelId, SudokuScore } from "@/types";
 
-type ScreenPhase = "idle" | "generating" | "ready" | "playing" | "paused" | "completed";
+type ScreenPhase = "idle" | "generating" | "ready" | "playing" | "completed";
 
 let sudokuInitialGenerationStarted = false;
 
@@ -29,12 +29,18 @@ type WorkerGenerateMessage = {
 
 type LocalBest = {
   timeMs: number;
+  score: number;
   createdAt: string;
 };
 
 const PLAYER_NAME_KEY = "dopt-sudoku-player-name";
 const BEST_KEY = "dopt-sudoku-best-v1";
 const DEFAULT_PLAYER_NAME = "DOPT";
+
+function buildEmptyCellMask(emptyCells: number): boolean[][] {
+  const flat = Array.from({ length: 81 }, (_, index) => index >= 81 - emptyCells ? false : true);
+  return Array.from({ length: 9 }, (_, row) => flat.slice(row * 9, row * 9 + 9));
+}
 
 function randomSeed() {
   return Math.floor(Math.random() * 2_147_483_647);
@@ -48,6 +54,14 @@ function formatTime(ms: number) {
   return `${minutes}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
 }
 
+function computeSudokuScore(timeMs: number, givenMask: boolean[][]) {
+  const emptyCells = givenMask.flat().filter((v) => !v).length;
+  const difficultyMultiplier = emptyCells / 81;
+  const timeFactor = 60000 / Math.max(timeMs, 20000);
+  const rawScore = 1500 * difficultyMultiplier * timeFactor;
+  return Math.max(1, Math.round(rawScore));
+}
+
 function isFormTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
   return Boolean(target.closest("input, textarea, select, button"));
@@ -56,7 +70,14 @@ function isFormTarget(target: EventTarget | null) {
 function readLocalBestMap(): Record<string, LocalBest> {
   try {
     const raw = window.localStorage.getItem(BEST_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, LocalBest>) : {};
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, { timeMs: number; score?: number; createdAt: string }>;
+    return Object.fromEntries(
+      Object.entries(parsed).map(([level, entry]) => {
+        const score = typeof entry.score === "number" ? entry.score : level === "1" ? computeSudokuScore(entry.timeMs, buildEmptyCellMask(24)) : 0;
+        return [level, { timeMs: entry.timeMs, score, createdAt: entry.createdAt }];
+      }),
+    ) as Record<string, LocalBest>;
   } catch {
     return {};
   }
@@ -174,6 +195,7 @@ function drawScene(
   selected: { row: number; col: number } | null,
   conflicts: Set<string>,
   phase: ScreenPhase,
+  levelId: number,
 ) {
   const { cssW, cssH, boardX, boardY, boardSize, padY, padH, cellPad, keyW, keyH, keyGap } = layout;
   ctx.clearRect(0, 0, cssW, cssH);
@@ -190,6 +212,7 @@ function drawScene(
   }
 
   const cell = boardSize / 9;
+  const shouldBlurBoard = phase === "ready";
 
   const roundPad = (x: number, y: number, w: number, h: number, rad: number) => {
     const rr = Math.min(rad, w / 2, h / 2);
@@ -206,6 +229,11 @@ function drawScene(
     ctx.closePath();
   };
 
+  if (shouldBlurBoard) {
+    ctx.save();
+    ctx.filter = "blur(8px)";
+  }
+
   for (let r = 0; r < 9; r += 1) {
     for (let c = 0; c < 9; c += 1) {
       const x = boardX + c * cell;
@@ -219,7 +247,7 @@ function drawScene(
   for (let r = 0; r < 9; r += 1) {
     for (let c = 0; c < 9; c += 1) {
       const key = `${r}:${c}`;
-      if (!conflicts.has(key)) continue;
+      if (!conflicts.has(key) || levelId >= 6) continue;
       const x = boardX + c * cell;
       const y = boardY + r * cell;
       ctx.fillStyle = "rgba(252,165,165,0.2)";
@@ -269,6 +297,17 @@ function drawScene(
     }
   }
 
+  if (shouldBlurBoard) {
+    ctx.restore();
+    ctx.fillStyle = "rgba(2,6,23,0.9)";
+    ctx.fillRect(boardX, boardY, boardSize, boardSize);
+    ctx.fillStyle = theme.text;
+    ctx.font = `600 18px ${theme.font}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Start를 눌러 게임을 시작하세요", boardX + boardSize / 2, boardY + boardSize / 2);
+  }
+
   const px = layout.boardX;
   const py0 = padY + keyGap;
   ctx.font = `600 14px ${theme.font}`;
@@ -299,13 +338,13 @@ function drawScene(
   ctx.fillStyle = theme.muted;
   ctx.fillText("지우기", px + (keyW * 3 + keyGap * 2) / 2, clearY + keyH / 2);
 
-  if (phase === "paused" || phase === "generating") {
+  if (phase === "generating") {
     ctx.fillStyle = "rgba(2,6,23,0.55)";
     ctx.fillRect(boardX, boardY, boardSize, boardSize);
     ctx.fillStyle = theme.text;
     ctx.font = `600 18px ${theme.font}`;
     ctx.textAlign = "center";
-    ctx.fillText(phase === "paused" ? "일시정지" : "생성 중…", boardX + boardSize / 2, boardY + boardSize / 2);
+    ctx.fillText("생성 중…", boardX + boardSize / 2, boardY + boardSize / 2);
   }
 }
 
@@ -403,10 +442,10 @@ export function SudokuClient() {
     const rect = wrap.getBoundingClientRect();
     const cssW = Math.max(280, rect.width);
     const pad = 12;
-    const numpadBlock = 100;
-    const maxBoard = 620;
+    const numpadBlock = 120;
+    const maxBoard = 720;
     const boardByW = Math.min(cssW - pad * 2, maxBoard);
-    const cssH = Math.max(320, Math.min(680, boardByW + numpadBlock + pad * 2 + 16));
+    const cssH = Math.max(320, Math.min(820, boardByW + numpadBlock + pad * 2 + 16));
     const layout = measureLayout(cssW, cssH, dpr);
     layoutRef.current = layout;
     themeRef.current = readTheme(wrap);
@@ -439,8 +478,8 @@ export function SudokuClient() {
     if (!canvas || !layout || !theme) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    drawScene(ctx, layout, theme, puzzle, playerGrid, givenMask, selected, conflicts, phase);
-  }, [puzzle, playerGrid, givenMask, selected, conflicts, phase]);
+    drawScene(ctx, layout, theme, puzzle, playerGrid, givenMask, selected, conflicts, phase, levelId);
+  }, [puzzle, playerGrid, givenMask, selected, conflicts, phase, levelId]);
 
   useEffect(() => {
     paint();
@@ -547,19 +586,6 @@ export function SudokuClient() {
     setPhase("playing");
   };
 
-  const togglePause = () => {
-    if (phase === "playing") {
-      frozenMsRef.current += performance.now() - playStartRef.current;
-      setDisplayedMs(frozenMsRef.current);
-      setPhase("paused");
-      return;
-    }
-    if (phase === "paused") {
-      playStartRef.current = performance.now();
-      setPhase("playing");
-    }
-  };
-
   const tryComplete = useCallback(
     (grid: Grid9) => {
       if (!isComplete(grid) || computeConflictCells(grid).size !== 0) return;
@@ -567,13 +593,14 @@ export function SudokuClient() {
       setDisplayedMs(frozenMsRef.current);
       setPhase("completed");
 
-      const prev = readLocalBestMap()[String(levelId)];
       const elapsed = Math.round(frozenMsRef.current);
+      const score = givenMask ? computeSudokuScore(elapsed, givenMask) : levelId === 1 ? computeSudokuScore(elapsed, buildEmptyCellMask(24)) : 0;
+      const prev = readLocalBestMap()[String(levelId)];
       if (!prev || elapsed < prev.timeMs) {
-        writeLocalBest(levelId, { timeMs: elapsed, createdAt: new Date().toISOString() });
+        writeLocalBest(levelId, { timeMs: elapsed, score, createdAt: new Date().toISOString() });
       }
     },
-    [levelId],
+    [givenMask, levelId],
   );
 
   const setCellDigit = useCallback(
@@ -604,21 +631,6 @@ export function SudokuClient() {
 
       const code = event.code;
       const ph = phaseRef.current;
-
-      if (code === "KeyP" || code === "Space") {
-        if (ph === "playing" || ph === "paused") {
-          event.preventDefault();
-          if (ph === "playing") {
-            frozenMsRef.current += performance.now() - playStartRef.current;
-            setDisplayedMs(frozenMsRef.current);
-            setPhase("paused");
-          } else {
-            playStartRef.current = performance.now();
-            setPhase("playing");
-          }
-        }
-        return;
-      }
 
       if (ph !== "playing" && ph !== "ready") return;
 
@@ -740,6 +752,11 @@ export function SudokuClient() {
     }
   };
 
+  const localScore = useMemo(
+    () => (phase === "completed" && givenMask ? computeSudokuScore(Math.round(displayedMs), givenMask) : null),
+    [displayedMs, givenMask, phase],
+  );
+
   const localBest = readLocalBestMap()[String(levelId)] ?? null;
 
   return (
@@ -749,7 +766,7 @@ export function SudokuClient() {
           <div className="eyebrow">utility / sudoku</div>
           <h1>Sudoku</h1>
           <p className="muted">
-            9×9 스도쿠를 레벨별로 생성해 풀고, 클리어 시간으로 순위를 겨루는 Canvas 게임입니다. 키보드 화살표와 숫자, 또는
+            9×9 수도쿠를 빠르게 풀어보고 전세계 사람들과 순위를 겨뤄보세요. 점수는 풀어낸 시간과 난이도에 따라 결정됩니다. 키보드 화살표와 숫자, 또는
             아래 숫자 패드를 사용하세요.
           </p>
         </div>
@@ -757,6 +774,7 @@ export function SudokuClient() {
         <div className="sudoku-level-tabs" role="tablist" aria-label="Sudoku levels">
           {SUDOKU_LEVEL_IDS.map((id) => {
             const cfg = getSudokuLevelConfig(id);
+            const label = cfg.subtitle.split("—")[0].trim();
             return (
               <button
                 key={id}
@@ -766,8 +784,24 @@ export function SudokuClient() {
                 role="tab"
                 aria-selected={id === levelId}
               >
-                <strong>{cfg.title}</strong>
-                <span>{cfg.subtitle}</span>
+                <span className="sudoku-level-icon" aria-hidden="true">
+                  <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                      <linearGradient id={"sudokuLevelGradient" + id} x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#0f172a" />
+                        <stop offset="100%" stopColor="#0b1120" />
+                      </linearGradient>
+                    </defs>
+                    <circle cx="32" cy="32" r="28" fill={`url(#sudokuLevelGradient${id})`} />
+                    <circle cx="32" cy="32" r="22" fill="rgba(14, 165, 233, 0.14)" />
+                    <text x="32" y="38" textAnchor="middle" fontSize="20" fontWeight="700" fill="#7dd3fc" fontFamily="Segoe UI, sans-serif">
+                      {id}
+                    </text>
+                  </svg>
+                </span>
+                <span className="sudoku-level-content">
+                  <strong>{label}</strong>
+                </span>
               </button>
             );
           })}
@@ -783,20 +817,10 @@ export function SudokuClient() {
                   취소
                 </button>
               ) : null}
-              {phase === "ready" ? (
-                <button type="button" className="button" onClick={startPlay}>
-                  Start
+              {phase === "playing" && puzzle ? (
+                <button type="button" className="button" onClick={handleNewGame}>
+                  New game
                 </button>
-              ) : null}
-              {(phase === "playing" || phase === "paused") && puzzle ? (
-                <>
-                  <button type="button" className="ghost-button" onClick={togglePause}>
-                    {phase === "paused" ? "Resume" : "Pause"}
-                  </button>
-                  <button type="button" className="button" onClick={handleNewGame}>
-                    New game
-                  </button>
-                </>
               ) : null}
               {phase === "idle" && !puzzle ? (
                 <button type="button" className="button" onClick={handleNewGame}>
@@ -811,13 +835,36 @@ export function SudokuClient() {
             </div>
           </div>
 
-          <div className="sudoku-canvas-wrap" ref={wrapRef} style={{ touchAction: "none" }}>
+          <div
+            className={`sudoku-canvas-wrap${phase === "completed" ? " sudoku-canvas-wrap--blur" : ""}`}
+            ref={wrapRef}
+            style={{ touchAction: "none" }}
+          >
             <canvas
               ref={canvasRef}
               className="sudoku-canvas"
               aria-label="스도쿠 보드"
               onPointerDown={onCanvasPointer}
             />
+            {phase === "ready" ? (
+              <button type="button" className="sudoku-canvas-start-button" onClick={startPlay}>
+                Start
+              </button>
+            ) : null}
+            {phase === "completed" ? (
+              <div className="sudoku-complete-overlay">
+                <div className="sudoku-complete-card">
+                  <span className="tag success">게임 종료</span>
+                  <strong className="sudoku-complete-score">{localScore ?? "-"}</strong>
+                  <p className="sudoku-complete-label">점수</p>
+                  <div className="sudoku-complete-meta">
+                    <span>시간 {formatTime(displayedMs)}</span>
+                    <span>{levelConfig.title}</span>
+                    <span>Seed {seed || "—"}</span>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {phase === "generating" ? (
@@ -836,39 +883,42 @@ export function SudokuClient() {
 
         <aside className="sudoku-side-stack">
           <section className="panel sudoku-side-panel sudoku-session-panel">
-            <h2>진행</h2>
-            <dl className="sudoku-session-dl">
+            <div className="sudoku-session-header">
               <div>
-                <dt>레벨</dt>
-                <dd>{levelConfig.title}</dd>
+                <span className="tag neutral">
+                  {phase === "idle" && "대기"}
+                  {phase === "generating" && "생성 중"}
+                  {phase === "ready" && "준비됨"}
+                  {phase === "playing" && "플레이"}
+                  {phase === "completed" && "클리어"}
+                </span>
               </div>
-              <div>
-                <dt>상태</dt>
-                <dd>
-                  <span className="tag neutral">
-                    {phase === "idle" && "대기"}
-                    {phase === "generating" && "생성 중"}
-                    {phase === "ready" && "준비됨"}
-                    {phase === "playing" && "플레이"}
-                    {phase === "paused" && "일시정지"}
-                    {phase === "completed" && "클리어"}
-                  </span>
-                </dd>
+              <div className="sudoku-session-seed-header">Seed {seed || "—"}</div>
+            </div>
+
+            <div className="sudoku-session-grid">
+              <div className="sudoku-session-card">
+                <span className="sudoku-session-label">Level</span>
+                <strong>{levelConfig.title}</strong>
               </div>
-              <div>
-                <dt>시간</dt>
-                <dd className="sudoku-session-mono">{formatTime(displayedMs)}</dd>
+              <div className="sudoku-session-card">
+                <span className="sudoku-session-label">Time</span>
+                <strong className="sudoku-session-mono">{formatTime(displayedMs)}</strong>
               </div>
-              <div>
-                <dt>시드</dt>
-                <dd className="sudoku-session-mono sudoku-session-seed">{seed || "—"}</dd>
+              <div className="sudoku-session-card">
+                <span className="sudoku-session-label">Seed</span>
+                <strong className="sudoku-session-mono sudoku-session-seed">{seed || "—"}</strong>
               </div>
-            </dl>
+              <div className="sudoku-session-card">
+                <span className="sudoku-session-label">Mode</span>
+                <strong>{phase === "idle" || phase === "ready" ? "Ready" : phase === "playing" ? "Playing" : phase === "completed" ? "Cleared" : ""}</strong>
+              </div>
+            </div>
           </section>
 
           <section className="panel sudoku-side-panel">
             <h2>Global Leaderboard</h2>
-            <p className="muted">같은 레벨에서 클리어 시간이 짧을수록 위입니다.</p>
+            <p className="muted">같은 레벨에서 난이도 기반 점수가 높을수록 위입니다.</p>
             {leaderboardError ? <div className="notice notice-error">{leaderboardError}</div> : null}
             {isLoadingScores ? <div className="loading-inline">리더보드를 불러오는 중입니다.</div> : null}
             {!isLoadingScores && scores.length === 0 ? (
@@ -884,7 +934,7 @@ export function SudokuClient() {
                       <strong>{score.player_name}</strong>
                       <span>Lv {score.level_id}</span>
                     </div>
-                    <b>{formatTime(score.time_ms)}</b>
+                    <b>{score.score}</b>
                   </li>
                 ))}
               </ol>
@@ -901,9 +951,14 @@ export function SudokuClient() {
                     {levelConfig.title} · Seed {seed}
                   </span>
                 </div>
+                {localScore !== null ? (
+                  <p className="muted" style={{ margin: 0 }}>
+                    점수: {localScore}
+                  </p>
+                ) : null}
                 {localBest ? (
                   <p className="muted" style={{ margin: 0 }}>
-                    로컬 베스트: {formatTime(localBest.timeMs)}
+                    로컬 베스트: {formatTime(localBest.timeMs)} · {localBest.score}점
                   </p>
                 ) : null}
                 <label className="field">

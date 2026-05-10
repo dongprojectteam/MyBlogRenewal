@@ -18,7 +18,7 @@ export type SudokuLevelConfig = SudokuGeneratorProfile & {
 const LEVELS: SudokuLevelConfig[] = [
   { title: "Level 1", subtitle: "입문 — 힌트가 많은 편", maxRemovals: 24, removalAttempts: 120, fullRegenerateRounds: 10 },
   { title: "Level 2", subtitle: "쉬움", maxRemovals: 28, removalAttempts: 140, fullRegenerateRounds: 11 },
-  { title: "Level 3", subtitle: "편안한 속도", maxRemovals: 32, removalAttempts: 160, fullRegenerateRounds: 12 },
+  { title: "Level 3", subtitle: "편안함", maxRemovals: 32, removalAttempts: 160, fullRegenerateRounds: 12 },
   { title: "Level 4", subtitle: "표준", maxRemovals: 36, removalAttempts: 185, fullRegenerateRounds: 13 },
   { title: "Level 5", subtitle: "약간 도전", maxRemovals: 40, removalAttempts: 210, fullRegenerateRounds: 14 },
   { title: "Level 6", subtitle: "중급", maxRemovals: 43, removalAttempts: 235, fullRegenerateRounds: 15 },

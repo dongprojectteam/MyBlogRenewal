@@ -86,6 +86,7 @@ export type SudokuScore = {
   player_name: string;
   level_id: number;
   time_ms: number;
+  score: number;
   seed: number;
   created_at?: string;
 };
