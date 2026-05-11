@@ -2,6 +2,10 @@
 import { AdminShell } from "@/components/admin-shell";
 import { requireAdmin } from "@/lib/auth";
 import { getAllVisualizations } from "@/lib/data";
+import { getVisualizationCategory, visualizationCategoryLabels } from "@/lib/visualization-categories";
+import type { VisualizationCategory } from "@/types";
+
+const categoryOptions: VisualizationCategory[] = ["utility", "game"];
 
 export default async function AdminVisualizationsPage() {
   await requireAdmin();
@@ -10,8 +14,8 @@ export default async function AdminVisualizationsPage() {
   return (
     <AdminShell
       current="/admin/visualizations"
-      title="유틸 관리"
-      description="홈에 노출할 유틸 메타데이터를 등록하고 정렬합니다."
+      title="홈 콘텐츠 관리"
+      description="홈에 노출할 유틸리티와 게임 메타데이터를 등록하고 정렬합니다."
     >
       <div className="stack">
         <form action={saveVisualizationAction} className="panel" style={{ padding: 20 }}>
@@ -29,6 +33,16 @@ export default async function AdminVisualizationsPage() {
           <div className="field">
             <label className="label">Image URL (optional)</label>
             <input className="input" name="image_url" placeholder="https://.../preview.png" />
+          </div>
+          <div className="field">
+            <label className="label">카테고리</label>
+            <select className="input" name="category" defaultValue="utility">
+              {categoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {visualizationCategoryLabels[category]}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field">
             <label className="label">설명</label>
@@ -80,6 +94,16 @@ export default async function AdminVisualizationsPage() {
                 <div className="field">
                   <label className="label">Image URL (optional)</label>
                   <input className="input" name="image_url" defaultValue={item.image_url ?? ""} />
+                </div>
+                <div className="field">
+                  <label className="label">카테고리</label>
+                  <select className="input" name="category" defaultValue={getVisualizationCategory(item)}>
+                    {categoryOptions.map((category) => (
+                      <option key={category} value={category}>
+                        {visualizationCategoryLabels[category]}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="field">
                   <label className="label">설명</label>

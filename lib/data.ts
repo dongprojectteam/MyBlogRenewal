@@ -5,8 +5,10 @@ import { seedFiles, seedNote, seedProfile, seedSudokuScores, seedTetrisScores, s
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import { gridToString, maskFromString } from "@/lib/sudoku/grid";
 import { isSudokuLevelId } from "@/lib/sudoku/level-profiles";
+import { computeSudokuScore } from "@/lib/sudoku/scoring";
 import { parseSudokuSubmission } from "@/lib/sudoku/validate";
 import { safeYear, toProjectUrl, toSlugishPath } from "@/lib/utils";
+import { normalizeVisualizationCategory } from "@/lib/visualization-categories";
 import type {
   AdminNote,
   Profile,
@@ -61,6 +63,22 @@ function buildSafeStoragePath(id: string, fileName: string) {
   const ext = fileName.includes(".") ? fileName.split(".").pop()?.toLowerCase() ?? "" : "";
   const suffix = ext ? `.${ext.replace(/[^a-z0-9]/g, "")}` : "";
   return `${id}/file${suffix}`;
+}
+
+function isMissingVisualizationCategoryColumn(error: unknown) {
+  if (typeof error !== "object" || error === null) return false;
+
+  const text = ["message", "details", "hint"]
+    .map((key) => Reflect.get(error, key))
+    .filter((value): value is string => typeof value === "string")
+    .join(" ")
+    .toLowerCase();
+  const code = Reflect.get(error, "code");
+
+  return (
+    text.includes("category") &&
+    (code === "PGRST204" || code === "42703" || text.includes("column") || text.includes("schema cache"))
+  );
 }
 
 export function isTetrisMode(value: string | null | undefined): value is TetrisMode {
@@ -167,19 +185,30 @@ export async function saveVisualization(input: FormData) {
   const description = String(input.get("description") || "").trim();
   const url = toSlugishPath(String(input.get("url") || "").trim());
   const image_url = String(input.get("image_url") || "").trim() || null;
+  const category = normalizeVisualizationCategory(input.get("category"));
   const visible = input.get("visible") === "on";
   const sort_order = Number(input.get("sort_order") || 0);
 
-  const payload = { title, description, url, image_url, visible, sort_order };
+  const legacyPayload = { title, description, url, image_url, visible, sort_order };
+  const payload = { ...legacyPayload, category };
   const supabase = getSupabaseAdminClient();
 
   if (id) {
-    const { error } = await supabase.from("visualizations").update(payload).eq("id", id);
+    let { error } = await supabase.from("visualizations").update(payload).eq("id", id);
+    if (error && isMissingVisualizationCategoryColumn(error)) {
+      const retry = await supabase.from("visualizations").update(legacyPayload).eq("id", id);
+      error = retry.error;
+    }
     if (error) throw error;
     return;
   }
 
-  const { error } = await supabase.from("visualizations").insert([{ id: randomUUID(), ...payload }]);
+  const nextId = randomUUID();
+  let { error } = await supabase.from("visualizations").insert([{ id: nextId, ...payload }]);
+  if (error && isMissingVisualizationCategoryColumn(error)) {
+    const retry = await supabase.from("visualizations").insert([{ id: nextId, ...legacyPayload }]);
+    error = retry.error;
+  }
   if (error) throw error;
 }
 
@@ -496,6 +525,7 @@ export type SaveSudokuScoreInput = {
   playerName: string;
   levelId: number;
   timeMs: number;
+  mistakeCount: number;
   seed: number;
   puzzle: string;
   playerGrid: string;
@@ -528,23 +558,15 @@ function normalizeSudokuScoreRow(input: SaveSudokuScoreInput): {
     playerName: player_name,
     levelId: input.levelId,
     timeMs: input.timeMs,
+    mistakeCount: input.mistakeCount,
     seed: input.seed,
     puzzle: input.puzzle,
     playerGrid: input.playerGrid,
     givenMask: input.givenMask,
   });
 
-  // 난이도 계산: 빈 셀 수
   const givenMask = maskFromString(input.givenMask);
-  const emptyCells = givenMask.flat().filter((v) => !v).length;
-  const difficultyMultiplier = emptyCells / 81;
-
-  // 시간 기반 보정: 20초 이하로는 점수 과대 평가를 막기 위해 최소값을 둠
-  const timeFactor = 60000 / Math.max(parsed.timeMs, 20000);
-
-  // 최종 점수: 난이도와 시간 보정을 함께 사용
-  const rawScore = 1500 * difficultyMultiplier * timeFactor;
-  const score = Math.max(1, Math.round(rawScore));
+  const score = computeSudokuScore(parsed.levelId, parsed.timeMs, givenMask, parsed.mistakeCount);
 
   return {
     id: randomUUID(),

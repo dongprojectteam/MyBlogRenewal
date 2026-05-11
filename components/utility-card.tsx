@@ -6,7 +6,7 @@ export function UtilityCard({ item }: { item: Visualization }) {
   const hasImage = Boolean(item.image_url);
 
   return (
-    <article className="card">
+    <Link href={item.url} className="card utility-card" aria-label={`${item.title} 열기`}>
       <div className="utility-head">
         <h3>{item.title}</h3>
         <div className="utility-path">{item.url}</div>
@@ -17,10 +17,9 @@ export function UtilityCard({ item }: { item: Visualization }) {
         ) : null}
         <p className="utility-description">{item.description}</p>
       </div>
-
-      <Link href={item.url} className="utility-link">
-        열어보기 <span aria-hidden>→</span>
-      </Link>
-    </article>
+      <div className="utility-description-overlay" aria-hidden="true">
+        {item.description}
+      </div>
+    </Link>
   );
 }

@@ -15,6 +15,14 @@ export type SudokuLevelConfig = SudokuGeneratorProfile & {
   subtitle: string;
 };
 
+export type SudokuAssistProfile = {
+  conflictDisplay: "all" | "selected" | "flash" | "none";
+  mistakeVisibility: "visible" | "subtle" | "completed";
+  showPeerHighlight: boolean;
+  showSameDigitHighlight: boolean;
+  label: string;
+};
+
 const LEVELS: SudokuLevelConfig[] = [
   { title: "Level 1", subtitle: "입문 — 힌트가 많은 편", maxRemovals: 24, removalAttempts: 120, fullRegenerateRounds: 10 },
   { title: "Level 2", subtitle: "쉬움", maxRemovals: 28, removalAttempts: 140, fullRegenerateRounds: 11 },
@@ -42,6 +50,76 @@ export function getSudokuGeneratorProfile(levelId: SudokuLevelId): SudokuGenerat
     maxRemovals: c.maxRemovals,
     removalAttempts: c.removalAttempts,
     fullRegenerateRounds: c.fullRegenerateRounds,
+  };
+}
+
+export function getSudokuAssistProfile(levelId: SudokuLevelId): SudokuAssistProfile {
+  if (levelId <= 2) {
+    return {
+      conflictDisplay: "all",
+      mistakeVisibility: "visible",
+      showPeerHighlight: true,
+      showSameDigitHighlight: true,
+      label: "전체 도움",
+    };
+  }
+
+  if (levelId === 3) {
+    return {
+      conflictDisplay: "all",
+      mistakeVisibility: "visible",
+      showPeerHighlight: false,
+      showSameDigitHighlight: false,
+      label: "충돌 표시",
+    };
+  }
+
+  if (levelId === 4) {
+    return {
+      conflictDisplay: "selected",
+      mistakeVisibility: "visible",
+      showPeerHighlight: false,
+      showSameDigitHighlight: false,
+      label: "선택 칸 충돌",
+    };
+  }
+
+  if (levelId === 5) {
+    return {
+      conflictDisplay: "flash",
+      mistakeVisibility: "visible",
+      showPeerHighlight: false,
+      showSameDigitHighlight: false,
+      label: "짧은 경고",
+    };
+  }
+
+  if (levelId <= 7) {
+    return {
+      conflictDisplay: "none",
+      mistakeVisibility: "visible",
+      showPeerHighlight: false,
+      showSameDigitHighlight: false,
+      label: "실수만 표시",
+    };
+  }
+
+  if (levelId === 8) {
+    return {
+      conflictDisplay: "none",
+      mistakeVisibility: "subtle",
+      showPeerHighlight: false,
+      showSameDigitHighlight: false,
+      label: "실수 작게 표시",
+    };
+  }
+
+  return {
+    conflictDisplay: "none",
+    mistakeVisibility: "completed",
+    showPeerHighlight: false,
+    showSameDigitHighlight: false,
+    label: "완료 후 공개",
   };
 }
 

@@ -1,5 +1,17 @@
-import { applyGivens, cloneGrid, computeConflictCells, gridFromString, isComplete, maskFromString, type Grid9 } from "@/lib/sudoku/grid";
-import { isSudokuLevelId } from "@/lib/sudoku/level-profiles";
+import { generateSudokuPuzzle } from "@/lib/sudoku/generator";
+import {
+  applyGivens,
+  buildGivenMask,
+  cloneGrid,
+  computeConflictCells,
+  gridFromString,
+  gridToString,
+  isComplete,
+  maskFromString,
+  maskToString,
+  type Grid9,
+} from "@/lib/sudoku/grid";
+import { getSudokuGeneratorProfile, isSudokuLevelId } from "@/lib/sudoku/level-profiles";
 
 const MAX_TIME_MS = 3_600_000;
 
@@ -13,6 +25,7 @@ export type SudokuSubmitPayload = {
   playerName: string;
   levelId: number;
   timeMs: number;
+  mistakeCount: number;
   seed: number;
   puzzle: string;
   playerGrid: string;
@@ -30,6 +43,11 @@ export function parseSudokuSubmission(payload: SudokuSubmitPayload) {
     throw new Error("클리어 시간이 올바르지 않습니다.");
   }
 
+  const mistakeCount = Math.trunc(Number(payload.mistakeCount));
+  if (!Number.isFinite(mistakeCount) || mistakeCount < 0 || mistakeCount > 999) {
+    throw new Error("실수 횟수가 올바르지 않습니다.");
+  }
+
   const seed = Math.trunc(Number(payload.seed));
   if (!Number.isFinite(seed) || seed < 0 || seed > 2_147_483_647) {
     throw new Error("시드 값이 올바르지 않습니다.");
@@ -38,6 +56,16 @@ export function parseSudokuSubmission(payload: SudokuSubmitPayload) {
   const puzzle = gridFromString(String(payload.puzzle));
   const playerGrid = gridFromString(String(payload.playerGrid));
   const givenMask = maskFromString(String(payload.givenMask));
+  const generated = generateSudokuPuzzle(seed, getSudokuGeneratorProfile(levelId));
+  const generatedPuzzle = gridToString(generated.puzzle);
+
+  if (gridToString(puzzle) !== generatedPuzzle) {
+    throw new Error("제출된 퍼즐이 레벨과 시드에 맞지 않습니다.");
+  }
+
+  if (maskToString(givenMask) !== maskToString(buildGivenMask(generated.puzzle))) {
+    throw new Error("고정 칸 마스크와 퍼즐이 일치하지 않습니다.");
+  }
 
   for (let r = 0; r < 9; r += 1) {
     for (let c = 0; c < 9; c += 1) {
@@ -61,5 +89,9 @@ export function parseSudokuSubmission(payload: SudokuSubmitPayload) {
     throw new Error("완성된 유효한 스도쿠 판이 아닙니다.");
   }
 
-  return { levelId, timeMs, seed, puzzle, playerGrid: merged };
+  if (gridToString(merged) !== gridToString(generated.solution)) {
+    throw new Error("제출된 정답이 시드에 맞지 않습니다.");
+  }
+
+  return { levelId, timeMs, mistakeCount, seed, puzzle, playerGrid: merged };
 }

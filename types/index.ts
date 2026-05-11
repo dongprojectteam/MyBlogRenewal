@@ -1,9 +1,12 @@
+export type VisualizationCategory = "utility" | "game";
+
 export type Visualization = {
   id: string;
   title: string;
   description: string;
   url: string;
   image_url?: string | null;
+  category?: VisualizationCategory | null;
   visible: boolean;
   sort_order: number;
   created_at?: string;
