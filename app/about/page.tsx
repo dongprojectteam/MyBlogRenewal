@@ -77,7 +77,6 @@ export default async function AboutPage() {
 
       <section className="panel about-flow-panel">
         <div className="stack">
-          <div className="eyebrow">about</div>
           <h1
             style={{
               fontFamily: "var(--font-sans)",

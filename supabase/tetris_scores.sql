@@ -27,13 +27,14 @@ create index if not exists tetris_scores_daily_idx
 
 alter table public.tetris_scores enable row level security;
 
-insert into public.visualizations (id, title, description, url, image_url, visible, sort_order)
+insert into public.visualizations (id, title, description, url, image_url, category, visible, sort_order)
 values (
   '9b1d2f0c-2d1f-4f2e-9b42-c9e9a5f0c003',
   'Tetris',
   '고스트 블록, Hold, Next 큐, 여러 게임 모드와 글로벌 리더보드를 지원하는 브라우저 테트리스 게임입니다.',
   '/tetris',
   '/images/utilities/tetris-preview.svg',
+  'game',
   true,
   4
 )
@@ -43,5 +44,6 @@ set
   description = excluded.description,
   url = excluded.url,
   image_url = excluded.image_url,
+  category = excluded.category,
   visible = excluded.visible,
   sort_order = excluded.sort_order;

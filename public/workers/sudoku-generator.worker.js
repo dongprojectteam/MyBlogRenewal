@@ -190,7 +190,7 @@ self.onmessage = (e) => {
       lastPuzzle = carved.puzzle;
       lastSolution = solution;
 
-      if (carved.removalsDone >= Math.min(profile.maxRemovals, 1) || round === profile.fullRegenerateRounds - 1) {
+      if (carved.removalsDone >= profile.maxRemovals || round === profile.fullRegenerateRounds - 1) {
         break;
       }
     }
@@ -205,7 +205,6 @@ self.onmessage = (e) => {
       kind: "success",
       id,
       puzzle: boardToMessage(lastPuzzle),
-      solution: boardToMessage(lastSolution),
       seed: rngBase,
       metadata: {
         givenCount: countFilled(lastPuzzle),

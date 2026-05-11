@@ -13,12 +13,18 @@ import {
   isComplete,
   type Grid9,
 } from "@/lib/sudoku/grid";
-import { getSudokuGeneratorProfile, getSudokuLevelConfig, SUDOKU_LEVEL_IDS } from "@/lib/sudoku/level-profiles";
+import {
+  getSudokuAssistProfile,
+  getSudokuGeneratorProfile,
+  getSudokuLevelConfig,
+  isSudokuLevelId,
+  SUDOKU_LEVEL_IDS,
+  type SudokuAssistProfile,
+} from "@/lib/sudoku/level-profiles";
+import { computeSudokuScore, computeSudokuScoreBreakdown } from "@/lib/sudoku/scoring";
 import type { SudokuLevelId, SudokuScore } from "@/types";
 
 type ScreenPhase = "idle" | "generating" | "ready" | "playing" | "completed";
-
-let sudokuInitialGenerationStarted = false;
 
 type WorkerGenerateMessage = {
   kind: "generate";
@@ -54,27 +60,35 @@ function formatTime(ms: number) {
   return `${minutes}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
 }
 
-function computeSudokuScore(timeMs: number, givenMask: boolean[][]) {
-  const emptyCells = givenMask.flat().filter((v) => !v).length;
-  const difficultyMultiplier = emptyCells / 81;
-  const timeFactor = 60000 / Math.max(timeMs, 20000);
-  const rawScore = 1500 * difficultyMultiplier * timeFactor;
-  return Math.max(1, Math.round(rawScore));
-}
-
 function isFormTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
   return Boolean(target.closest("input, textarea, select, button"));
 }
 
+function formatScore(value: number) {
+  return value.toLocaleString("ko-KR");
+}
+
+function normalizeStoredPlayerName(value: string | null) {
+  const clean = (value ?? "").replace(/\s+/g, " ").trim().slice(0, 18);
+  return clean || DEFAULT_PLAYER_NAME;
+}
+
 function readLocalBestMap(): Record<string, LocalBest> {
+  if (typeof window === "undefined") return {};
   try {
     const raw = window.localStorage.getItem(BEST_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, { timeMs: number; score?: number; createdAt: string }>;
     return Object.fromEntries(
       Object.entries(parsed).map(([level, entry]) => {
-        const score = typeof entry.score === "number" ? entry.score : level === "1" ? computeSudokuScore(entry.timeMs, buildEmptyCellMask(24)) : 0;
+        const parsedLevel = Number(level);
+        const score =
+          typeof entry.score === "number"
+            ? entry.score
+            : isSudokuLevelId(parsedLevel)
+              ? computeSudokuScore(parsedLevel, entry.timeMs, buildEmptyCellMask(getSudokuGeneratorProfile(parsedLevel).maxRemovals), 0)
+              : 0;
         return [level, { timeMs: entry.timeMs, score, createdAt: entry.createdAt }];
       }),
     ) as Record<string, LocalBest>;
@@ -146,9 +160,8 @@ function measureLayout(cssW: number, cssH: number, dpr: number): Layout {
   const padY = boardY + boardSize + 8;
   const padH = Math.max(numpadMinH, cssH - padY - pad);
   const cellPad = 6;
-  const keysAreaW = cssW - pad * 2;
   const keyGap = 5;
-  const keyW = (keysAreaW - keyGap * 2) / 3;
+  const keyW = (boardSize - keyGap * 2) / 3;
   const keyH = Math.min(34, Math.max(26, (padH - keyGap * 4) / 4));
   return { dpr, cssW, cssH, boardX, boardY, boardSize, padY, padH, cellPad, keyW, keyH, keyGap };
 }
@@ -194,8 +207,9 @@ function drawScene(
   givenMask: boolean[][] | null,
   selected: { row: number; col: number } | null,
   conflicts: Set<string>,
+  assistProfile: SudokuAssistProfile,
+  flashConflictKey: string | null,
   phase: ScreenPhase,
-  levelId: number,
 ) {
   const { cssW, cssH, boardX, boardY, boardSize, padY, padH, cellPad, keyW, keyH, keyGap } = layout;
   ctx.clearRect(0, 0, cssW, cssH);
@@ -234,24 +248,86 @@ function drawScene(
     ctx.filter = "blur(8px)";
   }
 
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.28)";
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = "rgba(2,6,23,0.38)";
+  roundPad(boardX - 8, boardY - 8, boardSize + 16, boardSize + 16, 12);
+  ctx.fill();
+  ctx.restore();
+
+  const boardGradient = ctx.createLinearGradient(boardX, boardY, boardX, boardY + boardSize);
+  boardGradient.addColorStop(0, "rgba(15,23,42,0.96)");
+  boardGradient.addColorStop(1, "rgba(8,15,28,0.98)");
+  ctx.fillStyle = boardGradient;
+  roundPad(boardX, boardY, boardSize, boardSize, 8);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(125,211,252,0.22)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
   for (let r = 0; r < 9; r += 1) {
     for (let c = 0; c < 9; c += 1) {
       const x = boardX + c * cell;
       const y = boardY + r * cell;
       const g = givenMask[r][c];
-      ctx.fillStyle = g ? "rgba(148,163,184,0.08)" : "rgba(2,6,23,0.15)";
+      const boxTone = (Math.floor(r / 3) + Math.floor(c / 3)) % 2 === 0 ? 0.11 : 0.06;
+      ctx.fillStyle = g ? `rgba(148,163,184,${boxTone})` : `rgba(2,6,23,${boxTone + 0.08})`;
       ctx.fillRect(x + 0.5, y + 0.5, cell - 1, cell - 1);
+    }
+  }
+
+  if (selected && assistProfile.showPeerHighlight) {
+    const { row, col } = selected;
+    const boxR = Math.floor(row / 3) * 3;
+    const boxC = Math.floor(col / 3) * 3;
+    ctx.fillStyle = "rgba(125,211,252,0.1)";
+    for (let i = 0; i < 9; i += 1) {
+      ctx.fillRect(boardX + i * cell + 1, boardY + row * cell + 1, cell - 2, cell - 2);
+      ctx.fillRect(boardX + col * cell + 1, boardY + i * cell + 1, cell - 2, cell - 2);
+    }
+    for (let r = boxR; r < boxR + 3; r += 1) {
+      for (let c = boxC; c < boxC + 3; c += 1) {
+        ctx.fillRect(boardX + c * cell + 1, boardY + r * cell + 1, cell - 2, cell - 2);
+      }
+    }
+  }
+
+  if (selected && assistProfile.showSameDigitHighlight) {
+    const selectedValue = playerGrid[selected.row][selected.col];
+    if (selectedValue !== 0) {
+      ctx.fillStyle = "rgba(134,239,172,0.16)";
+      for (let r = 0; r < 9; r += 1) {
+        for (let c = 0; c < 9; c += 1) {
+          if (playerGrid[r][c] !== selectedValue) continue;
+          ctx.fillRect(boardX + c * cell + 1, boardY + r * cell + 1, cell - 2, cell - 2);
+        }
+      }
     }
   }
 
   for (let r = 0; r < 9; r += 1) {
     for (let c = 0; c < 9; c += 1) {
       const key = `${r}:${c}`;
-      if (!conflicts.has(key) || levelId >= 6) continue;
+      const shouldShowConflict =
+        assistProfile.conflictDisplay === "all"
+          ? conflicts.has(key)
+          : assistProfile.conflictDisplay === "selected"
+            ? conflicts.has(key) && selected?.row === r && selected?.col === c
+            : assistProfile.conflictDisplay === "flash"
+              ? conflicts.has(key) && flashConflictKey === key
+              : false;
+      if (!shouldShowConflict) continue;
       const x = boardX + c * cell;
       const y = boardY + r * cell;
-      ctx.fillStyle = "rgba(252,165,165,0.2)";
+      ctx.fillStyle = assistProfile.conflictDisplay === "flash" ? "rgba(252,165,165,0.38)" : "rgba(252,165,165,0.22)";
       ctx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+      if (assistProfile.conflictDisplay === "flash") {
+        ctx.strokeStyle = "rgba(248,113,113,0.86)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + cellPad * 0.55, y + cellPad * 0.55, cell - cellPad * 1.1, cell - cellPad * 1.1);
+      }
     }
   }
 
@@ -259,17 +335,28 @@ function drawScene(
     const { row, col } = selected;
     const x = boardX + col * cell;
     const y = boardY + row * cell;
+    const selectedFill = ctx.createLinearGradient(x, y, x, y + cell);
+    selectedFill.addColorStop(0, "rgba(56,189,248,0.23)");
+    selectedFill.addColorStop(1, "rgba(14,165,233,0.1)");
+    ctx.fillStyle = selectedFill;
+    roundPad(x + cellPad * 0.35, y + cellPad * 0.35, cell - cellPad * 0.7, cell - cellPad * 0.7, 6);
+    ctx.fill();
+    ctx.save();
+    ctx.shadowColor = "rgba(125,211,252,0.35)";
+    ctx.shadowBlur = 10;
     ctx.strokeStyle = theme.accent;
-    ctx.lineWidth = 2.5;
-    ctx.strokeRect(x + cellPad * 0.35, y + cellPad * 0.35, cell - cellPad * 0.7, cell - cellPad * 0.7);
+    ctx.lineWidth = 2.4;
+    roundPad(x + cellPad * 0.35, y + cellPad * 0.35, cell - cellPad * 0.7, cell - cellPad * 0.7, 6);
+    ctx.stroke();
+    ctx.restore();
   }
 
   ctx.strokeStyle = theme.border;
   ctx.lineWidth = 1;
   for (let i = 0; i <= 9; i += 1) {
     const thick = i % 3 === 0;
-    ctx.lineWidth = thick ? 2.2 : 1;
-    ctx.strokeStyle = thick ? theme.borderStrong : theme.border;
+    ctx.lineWidth = thick ? 2.8 : 1;
+    ctx.strokeStyle = thick ? "rgba(203,213,225,0.36)" : "rgba(148,163,184,0.16)";
     const p = boardX + i * cell;
     ctx.beginPath();
     ctx.moveTo(p, boardY);
@@ -291,9 +378,12 @@ function drawScene(
       const x = boardX + c * cell + cell / 2;
       const y = boardY + r * cell + cell / 2;
       const g = givenMask[r][c];
-      ctx.fillStyle = g ? theme.muted : theme.text;
-      ctx.font = `${g ? 600 : 500} ${Math.floor(cell * 0.52)}px ${theme.font}`;
+      ctx.fillStyle = g ? "rgba(226,232,240,0.82)" : "#e0f2fe";
+      ctx.font = `${g ? 700 : 600} ${Math.floor(cell * 0.5)}px ${theme.font}`;
+      ctx.shadowColor = g ? "transparent" : "rgba(56,189,248,0.18)";
+      ctx.shadowBlur = g ? 0 : 8;
       ctx.fillText(String(v), x, y);
+      ctx.shadowBlur = 0;
     }
   }
 
@@ -310,32 +400,53 @@ function drawScene(
 
   const px = layout.boardX;
   const py0 = padY + keyGap;
-  ctx.font = `600 14px ${theme.font}`;
+  const selectedValue = selected ? playerGrid[selected.row][selected.col] : 0;
+  ctx.font = `700 14px ${theme.font}`;
   for (let n = 1; n <= 9; n += 1) {
     const i = n - 1;
     const r = Math.floor(i / 3);
     const c = i % 3;
     const x0 = px + c * (keyW + keyGap);
     const y0 = py0 + r * (keyH + keyGap);
-    ctx.fillStyle = "rgba(2,6,23,0.35)";
-    ctx.strokeStyle = theme.border;
-    ctx.lineWidth = 1;
+    const active = selectedValue === n;
+    const keyGradient = ctx.createLinearGradient(x0, y0, x0, y0 + keyH);
+    keyGradient.addColorStop(0, active ? "rgba(56,189,248,0.34)" : "rgba(30,41,59,0.86)");
+    keyGradient.addColorStop(1, active ? "rgba(14,165,233,0.18)" : "rgba(2,6,23,0.66)");
+    ctx.save();
+    ctx.shadowColor = active ? "rgba(56,189,248,0.22)" : "rgba(0,0,0,0.2)";
+    ctx.shadowBlur = active ? 12 : 7;
+    ctx.shadowOffsetY = 3;
+    ctx.fillStyle = keyGradient;
     roundPad(x0, y0, keyW, keyH, 8);
     ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = active ? "rgba(125,211,252,0.75)" : "rgba(148,163,184,0.2)";
+    ctx.lineWidth = active ? 1.4 : 1;
+    roundPad(x0, y0, keyW, keyH, 8);
     ctx.stroke();
-    ctx.fillStyle = theme.text;
+    ctx.fillStyle = active ? "#e0f2fe" : theme.text;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(n), x0 + keyW / 2, y0 + keyH / 2);
   }
 
   const clearY = py0 + 3 * (keyH + keyGap) + keyGap;
-  ctx.fillStyle = "rgba(2,6,23,0.35)";
-  ctx.strokeStyle = theme.border;
+  const clearGradient = ctx.createLinearGradient(px, clearY, px, clearY + keyH);
+  clearGradient.addColorStop(0, "rgba(30,41,59,0.82)");
+  clearGradient.addColorStop(1, "rgba(2,6,23,0.66)");
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.2)";
+  ctx.shadowBlur = 7;
+  ctx.shadowOffsetY = 3;
+  ctx.fillStyle = clearGradient;
   roundPad(px, clearY, keyW * 3 + keyGap * 2, keyH, 8);
   ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = "rgba(148,163,184,0.2)";
+  ctx.lineWidth = 1;
+  roundPad(px, clearY, keyW * 3 + keyGap * 2, keyH, 8);
   ctx.stroke();
-  ctx.fillStyle = theme.muted;
+  ctx.fillStyle = "rgba(203,213,225,0.86)";
   ctx.fillText("지우기", px + (keyW * 3 + keyGap * 2) / 2, clearY + keyH / 2);
 
   if (phase === "generating") {
@@ -373,6 +484,9 @@ export function SudokuClient() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [liveRegion, setLiveRegion] = useState("");
+  const [mistakeCount, setMistakeCount] = useState(0);
+  const [flashConflictKey, setFlashConflictKey] = useState<string | null>(null);
+  const [localBestMap, setLocalBestMap] = useState<Record<string, LocalBest>>({});
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -383,10 +497,35 @@ export function SudokuClient() {
   const playStartRef = useRef(0);
   const frozenMsRef = useRef(0);
   const selectedRef = useRef<{ row: number; col: number } | null>({ row: 0, col: 0 });
+  const playerGridRef = useRef<Grid9>(emptyGrid());
+  const mistakeCountRef = useRef(0);
+  const mistakeKeysRef = useRef<Set<string>>(new Set());
+  const flashConflictTimerRef = useRef<number | null>(null);
 
   const levelConfig = useMemo(() => getSudokuLevelConfig(levelId), [levelId]);
+  const assistProfile = useMemo(() => getSudokuAssistProfile(levelId), [levelId]);
+  const shouldShowMistakes = phase === "completed" || assistProfile.mistakeVisibility !== "completed";
+  const shouldShowSubtleMistakes = phase !== "completed" && assistProfile.mistakeVisibility === "subtle";
 
   const conflicts = useMemo(() => computeConflictCells(playerGrid), [playerGrid]);
+
+  useEffect(() => {
+    playerGridRef.current = playerGrid;
+  }, [playerGrid]);
+
+  const resetMistakes = useCallback(() => {
+    mistakeCountRef.current = 0;
+    mistakeKeysRef.current.clear();
+    setMistakeCount(0);
+  }, []);
+
+  const clearFlashConflict = useCallback(() => {
+    if (flashConflictTimerRef.current !== null) {
+      window.clearTimeout(flashConflictTimerRef.current);
+      flashConflictTimerRef.current = null;
+    }
+    setFlashConflictKey(null);
+  }, []);
 
   const loadScores = useCallback(async (targetLevel: SudokuLevelId) => {
     setIsLoadingScores(true);
@@ -407,8 +546,14 @@ export function SudokuClient() {
   }, []);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(PLAYER_NAME_KEY);
-    if (saved) setPlayerName(saved);
+    setPlayerName(normalizeStoredPlayerName(window.localStorage.getItem(PLAYER_NAME_KEY)));
+    setLocalBestMap(readLocalBestMap());
+  }, []);
+
+  const handlePlayerNameChange = useCallback((value: string) => {
+    const next = value.slice(0, 18);
+    setPlayerName(next);
+    window.localStorage.setItem(PLAYER_NAME_KEY, normalizeStoredPlayerName(next));
   }, []);
 
   useEffect(() => {
@@ -478,8 +623,8 @@ export function SudokuClient() {
     if (!canvas || !layout || !theme) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    drawScene(ctx, layout, theme, puzzle, playerGrid, givenMask, selected, conflicts, phase, levelId);
-  }, [puzzle, playerGrid, givenMask, selected, conflicts, phase, levelId]);
+    drawScene(ctx, layout, theme, puzzle, playerGrid, givenMask, selected, conflicts, assistProfile, flashConflictKey, phase);
+  }, [puzzle, playerGrid, givenMask, selected, conflicts, assistProfile, flashConflictKey, phase]);
 
   useEffect(() => {
     paint();
@@ -492,6 +637,15 @@ export function SudokuClient() {
 
   useEffect(() => () => terminateWorker(), [terminateWorker]);
 
+  useEffect(
+    () => () => {
+      if (flashConflictTimerRef.current !== null) {
+        window.clearTimeout(flashConflictTimerRef.current);
+      }
+    },
+    [],
+  );
+
   const startGeneration = useCallback(
     (nextLevel: SudokuLevelId, nextId: number) => {
       terminateWorker();
@@ -501,15 +655,19 @@ export function SudokuClient() {
       setPhase("generating");
       setPuzzle(null);
       setGivenMask(null);
-      setPlayerGrid(emptyGrid());
+      const freshGrid = emptyGrid();
+      playerGridRef.current = freshGrid;
+      setPlayerGrid(freshGrid);
       setHasSubmitted(false);
       setSaveStatus("");
+      resetMistakes();
+      clearFlashConflict();
 
       const worker = new Worker("/workers/sudoku-generator.worker.js");
       workerRef.current = worker;
 
       const onMessage = (event: MessageEvent) => {
-        const data = event.data as { kind: string; id: number; ratio?: number; label?: string; message?: string; puzzle?: Grid9; solution?: Grid9; seed?: number; metadata?: { givenCount?: number } };
+        const data = event.data as { kind: string; id: number; ratio?: number; label?: string; message?: string; puzzle?: Grid9; seed?: number; metadata?: { givenCount?: number } };
         if (data.id !== nextId) return;
 
         if (data.kind === "progress") {
@@ -523,13 +681,14 @@ export function SudokuClient() {
           setPhase("idle");
           return;
         }
-        if (data.kind === "success" && data.puzzle && data.solution) {
+        if (data.kind === "success" && data.puzzle) {
           terminateWorker();
           const p = data.puzzle as Grid9;
           const gMask = buildGivenMask(p);
           const pg = cloneGrid(p);
           setPuzzle(p);
           setGivenMask(gMask);
+          playerGridRef.current = pg;
           setPlayerGrid(pg);
           setSeed(data.seed ?? randomSeed());
           setPhase("ready");
@@ -548,7 +707,7 @@ export function SudokuClient() {
       };
       worker.postMessage(msg);
     },
-    [terminateWorker],
+    [clearFlashConflict, resetMistakes, terminateWorker],
   );
 
   const handleLevelChange = (next: SudokuLevelId) => {
@@ -572,14 +731,20 @@ export function SudokuClient() {
     setGenProgress(0);
     setGenLabel("");
     setPuzzle(null);
-    setPlayerGrid(emptyGrid());
+    const freshGrid = emptyGrid();
+    playerGridRef.current = freshGrid;
+    setPlayerGrid(freshGrid);
     setGivenMask(null);
+    resetMistakes();
+    clearFlashConflict();
   };
 
   const startPlay = () => {
     if (phase !== "ready" || !puzzle || !givenMask) return;
-    applyGivens(playerGrid, puzzle, givenMask);
-    setPlayerGrid(cloneGrid(playerGrid));
+    const next = cloneGrid(playerGridRef.current);
+    applyGivens(next, puzzle, givenMask);
+    playerGridRef.current = next;
+    setPlayerGrid(next);
     frozenMsRef.current = 0;
     playStartRef.current = performance.now();
     setDisplayedMs(0);
@@ -594,10 +759,17 @@ export function SudokuClient() {
       setPhase("completed");
 
       const elapsed = Math.round(frozenMsRef.current);
-      const score = givenMask ? computeSudokuScore(elapsed, givenMask) : levelId === 1 ? computeSudokuScore(elapsed, buildEmptyCellMask(24)) : 0;
+      const mistakes = mistakeCountRef.current;
+      const score = givenMask
+        ? computeSudokuScore(levelId, elapsed, givenMask, mistakes)
+        : levelId === 1
+          ? computeSudokuScore(levelId, elapsed, buildEmptyCellMask(getSudokuGeneratorProfile(levelId).maxRemovals), mistakes)
+          : 0;
       const prev = readLocalBestMap()[String(levelId)];
-      if (!prev || elapsed < prev.timeMs) {
-        writeLocalBest(levelId, { timeMs: elapsed, score, createdAt: new Date().toISOString() });
+      if (!prev || score > prev.score || (score === prev.score && elapsed < prev.timeMs)) {
+        const nextBest = { timeMs: elapsed, score, createdAt: new Date().toISOString() };
+        writeLocalBest(levelId, nextBest);
+        setLocalBestMap((prevMap) => ({ ...prevMap, [String(levelId)]: nextBest }));
       }
     },
     [givenMask, levelId],
@@ -609,15 +781,36 @@ export function SudokuClient() {
       if (!givenMask || !puzzle) return;
       if (givenMask[row][col]) return;
 
-      setPlayerGrid((prev) => {
-        const next = cloneGrid(prev);
-        next[row][col] = value;
-        applyGivens(next, puzzle, givenMask);
-        if (phaseRef.current === "playing") tryComplete(next);
-        return next;
-      });
+      const next = cloneGrid(playerGridRef.current);
+      next[row][col] = value;
+      applyGivens(next, puzzle, givenMask);
+
+      if (value !== 0 && computeConflictCells(next).has(`${row}:${col}`)) {
+        const mistakeKey = `${row}:${col}:${value}`;
+        if (!mistakeKeysRef.current.has(mistakeKey)) {
+          mistakeKeysRef.current.add(mistakeKey);
+          const nextMistakeCount = mistakeCountRef.current + 1;
+          mistakeCountRef.current = nextMistakeCount;
+          setMistakeCount(nextMistakeCount);
+        }
+        if (assistProfile.conflictDisplay === "flash") {
+          const conflictKey = `${row}:${col}`;
+          setFlashConflictKey(conflictKey);
+          if (flashConflictTimerRef.current !== null) {
+            window.clearTimeout(flashConflictTimerRef.current);
+          }
+          flashConflictTimerRef.current = window.setTimeout(() => {
+            flashConflictTimerRef.current = null;
+            setFlashConflictKey((current) => (current === conflictKey ? null : current));
+          }, 650);
+        }
+      }
+
+      playerGridRef.current = next;
+      setPlayerGrid(next);
+      if (phaseRef.current === "playing") tryComplete(next);
     },
-    [givenMask, puzzle, tryComplete],
+    [assistProfile.conflictDisplay, givenMask, puzzle, tryComplete],
   );
 
   useEffect(() => {
@@ -676,8 +869,6 @@ export function SudokuClient() {
   }, [puzzle, givenMask, setCellDigit]);
 
   useEffect(() => {
-    if (sudokuInitialGenerationStarted) return;
-    sudokuInitialGenerationStarted = true;
     startGeneration(1, bumpGenSeq());
   }, [startGeneration, bumpGenSeq]);
 
@@ -728,6 +919,7 @@ export function SudokuClient() {
           playerName: cleanName,
           levelId,
           timeMs: Math.round(displayedMs),
+          mistakeCount,
           seed,
           puzzle: gridToString(puzzle),
           playerGrid: gridToString(playerGrid),
@@ -752,12 +944,16 @@ export function SudokuClient() {
     }
   };
 
-  const localScore = useMemo(
-    () => (phase === "completed" && givenMask ? computeSudokuScore(Math.round(displayedMs), givenMask) : null),
-    [displayedMs, givenMask, phase],
+  const scoreBreakdown = useMemo(
+    () => (givenMask ? computeSudokuScoreBreakdown(levelId, Math.round(displayedMs), givenMask, mistakeCount) : null),
+    [displayedMs, givenMask, levelId, mistakeCount],
   );
 
-  const localBest = readLocalBestMap()[String(levelId)] ?? null;
+  const localScoreBreakdown = phase === "completed" ? scoreBreakdown : null;
+  const localScore = localScoreBreakdown?.finalScore ?? null;
+  const hudScore = scoreBreakdown?.finalScore ?? null;
+
+  const localBest = localBestMap[String(levelId)] ?? null;
 
   return (
     <>
@@ -771,40 +967,41 @@ export function SudokuClient() {
           </p>
         </div>
 
-        <div className="sudoku-level-tabs" role="tablist" aria-label="Sudoku levels">
-          {SUDOKU_LEVEL_IDS.map((id) => {
-            const cfg = getSudokuLevelConfig(id);
-            const label = cfg.subtitle.split("—")[0].trim();
-            return (
-              <button
-                key={id}
-                type="button"
-                className={id === levelId ? "is-active" : ""}
-                onClick={() => (id === levelId ? handleNewGame() : handleLevelChange(id))}
-                role="tab"
-                aria-selected={id === levelId}
-              >
-                <span className="sudoku-level-icon" aria-hidden="true">
-                  <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <defs>
-                      <linearGradient id={"sudokuLevelGradient" + id} x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#0f172a" />
-                        <stop offset="100%" stopColor="#0b1120" />
-                      </linearGradient>
-                    </defs>
-                    <circle cx="32" cy="32" r="28" fill={`url(#sudokuLevelGradient${id})`} />
-                    <circle cx="32" cy="32" r="22" fill="rgba(14, 165, 233, 0.14)" />
-                    <text x="32" y="38" textAnchor="middle" fontSize="20" fontWeight="700" fill="#7dd3fc" fontFamily="Segoe UI, sans-serif">
-                      {id}
-                    </text>
-                  </svg>
-                </span>
-                <span className="sudoku-level-content">
-                  <strong>{label}</strong>
-                </span>
-              </button>
-            );
-          })}
+        <div className="sudoku-level-picker">
+          <div className="sudoku-level-picker-header">
+            <span>Difficulty</span>
+            <strong>Lv {levelId}</strong>
+          </div>
+          <div className="sudoku-level-tabs" role="tablist" aria-label="Sudoku levels">
+            {SUDOKU_LEVEL_IDS.map((id) => {
+              const cfg = getSudokuLevelConfig(id);
+              const label = cfg.subtitle.split("—")[0].trim();
+              const tier = id <= 3 ? "Easy" : id <= 7 ? "Focus" : "Expert";
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  className={id === levelId ? "is-active" : ""}
+                  onClick={() => (id === levelId ? handleNewGame() : handleLevelChange(id))}
+                  role="tab"
+                  aria-selected={id === levelId}
+                >
+                  <span className="sudoku-level-topline">
+                    <span className="sudoku-level-badge">Lv {id}</span>
+                    <span className="sudoku-level-tier">{tier}</span>
+                  </span>
+                  <span className="sudoku-level-content">
+                    <strong>{label}</strong>
+                  </span>
+                  <span className="sudoku-level-meter" aria-hidden="true">
+                    {Array.from({ length: 10 }, (_, index) => (
+                      <span key={index} className={index < id ? "is-filled" : ""} />
+                    ))}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -835,6 +1032,32 @@ export function SudokuClient() {
             </div>
           </div>
 
+          <div className="sudoku-top-hud" aria-label="Game stats">
+            <div className="sudoku-hud-stat sudoku-hud-stat--score">
+              <span>Score</span>
+              <strong>{hudScore === null ? "-" : formatScore(hudScore)}</strong>
+            </div>
+            <div className="sudoku-hud-stat">
+              <span>Time</span>
+              <strong>{formatTime(displayedMs)}</strong>
+            </div>
+            {shouldShowMistakes ? (
+              <div className={mistakeCount > 0 ? "sudoku-hud-stat sudoku-hud-stat--penalty is-active" : "sudoku-hud-stat sudoku-hud-stat--penalty"}>
+                <span>Penalty</span>
+                <strong>{mistakeCount}</strong>
+              </div>
+            ) : (
+              <div className="sudoku-hud-stat sudoku-hud-stat--hidden">
+                <span>Penalty</span>
+                <strong>Hidden</strong>
+              </div>
+            )}
+            <div className="sudoku-hud-stat">
+              <span>Best</span>
+              <strong>{localBest ? formatScore(localBest.score) : "-"}</strong>
+            </div>
+          </div>
+
           <div
             className={`sudoku-canvas-wrap${phase === "completed" ? " sudoku-canvas-wrap--blur" : ""}`}
             ref={wrapRef}
@@ -846,6 +1069,12 @@ export function SudokuClient() {
               aria-label="스도쿠 보드"
               onPointerDown={onCanvasPointer}
             />
+            {phase !== "completed" ? (
+              <div className="sudoku-board-badge" aria-hidden="true">
+                <span>Lv {levelId}</span>
+                <strong>{assistProfile.label}</strong>
+              </div>
+            ) : null}
             {phase === "ready" ? (
               <button type="button" className="sudoku-canvas-start-button" onClick={startPlay}>
                 Start
@@ -855,13 +1084,36 @@ export function SudokuClient() {
               <div className="sudoku-complete-overlay">
                 <div className="sudoku-complete-card">
                   <span className="tag success">게임 종료</span>
-                  <strong className="sudoku-complete-score">{localScore ?? "-"}</strong>
+                  <strong className="sudoku-complete-score">{localScore === null ? "-" : formatScore(localScore)}</strong>
                   <p className="sudoku-complete-label">점수</p>
                   <div className="sudoku-complete-meta">
                     <span>시간 {formatTime(displayedMs)}</span>
+                    <span>실수 {mistakeCount}</span>
                     <span>{levelConfig.title}</span>
                     <span>Seed {seed || "—"}</span>
                   </div>
+                  <form
+                    className="sudoku-complete-submit"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void handleSubmitScore();
+                    }}
+                  >
+                    <label className="sudoku-complete-name">
+                      <span>Player name</span>
+                      <input
+                        className="input"
+                        value={playerName}
+                        maxLength={18}
+                        onChange={(e) => handlePlayerNameChange(e.target.value)}
+                        placeholder="이름"
+                      />
+                    </label>
+                    <button type="submit" className="button sudoku-complete-submit-button" disabled={isSaving || hasSubmitted} aria-busy={isSaving}>
+                      {hasSubmitted ? "Saved" : isSaving ? "Saving..." : "Save Score"}
+                    </button>
+                    {saveStatus ? <div className="sudoku-complete-status">{saveStatus}</div> : null}
+                  </form>
                 </div>
               </div>
             ) : null}
@@ -905,6 +1157,16 @@ export function SudokuClient() {
                 <span className="sudoku-session-label">Time</span>
                 <strong className="sudoku-session-mono">{formatTime(displayedMs)}</strong>
               </div>
+              {shouldShowMistakes ? (
+                <div className={`sudoku-session-card${shouldShowSubtleMistakes ? " sudoku-session-card--subtle" : ""}`}>
+                  <span className="sudoku-session-label">Penalty</span>
+                  <strong className="sudoku-session-mono">{mistakeCount}</strong>
+                </div>
+              ) : null}
+              <div className="sudoku-session-card">
+                <span className="sudoku-session-label">Assist</span>
+                <strong>{assistProfile.label}</strong>
+              </div>
               <div className="sudoku-session-card">
                 <span className="sudoku-session-label">Seed</span>
                 <strong className="sudoku-session-mono sudoku-session-seed">{seed || "—"}</strong>
@@ -934,7 +1196,7 @@ export function SudokuClient() {
                       <strong>{score.player_name}</strong>
                       <span>Lv {score.level_id}</span>
                     </div>
-                    <b>{score.score}</b>
+                    <b>{formatScore(score.score)}</b>
                   </li>
                 ))}
               </ol>
@@ -953,12 +1215,20 @@ export function SudokuClient() {
                 </div>
                 {localScore !== null ? (
                   <p className="muted" style={{ margin: 0 }}>
-                    점수: {localScore}
+                    점수: {formatScore(localScore)}
                   </p>
+                ) : null}
+                {localScoreBreakdown ? (
+                  <div className="sudoku-score-breakdown" aria-label="점수 산정 근거">
+                    <span>기본 {formatScore(localScoreBreakdown.baseScore)}</span>
+                    <span>시간 -{formatScore(localScoreBreakdown.timePenalty)}</span>
+                    <span>실수 -{formatScore(localScoreBreakdown.mistakePenalty)}</span>
+                    <span>빈칸 {localScoreBreakdown.emptyCells} · 실수 {mistakeCount}</span>
+                  </div>
                 ) : null}
                 {localBest ? (
                   <p className="muted" style={{ margin: 0 }}>
-                    로컬 베스트: {formatTime(localBest.timeMs)} · {localBest.score}점
+                    로컬 베스트: {formatTime(localBest.timeMs)} · {formatScore(localBest.score)}점
                   </p>
                 ) : null}
                 <label className="field">
@@ -967,7 +1237,7 @@ export function SudokuClient() {
                     className="input"
                     value={playerName}
                     maxLength={18}
-                    onChange={(e) => setPlayerName(e.target.value)}
+                    onChange={(e) => handlePlayerNameChange(e.target.value)}
                     placeholder="이름"
                   />
                 </label>
@@ -983,7 +1253,6 @@ export function SudokuClient() {
                 <span>화살표 / WASD 이동</span>
                 <span>1–9 입력</span>
                 <span>Backspace 지우기</span>
-                <span>P / Space 일시정지</span>
               </div>
             )}
           </section>

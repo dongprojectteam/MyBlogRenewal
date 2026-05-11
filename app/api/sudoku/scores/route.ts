@@ -9,6 +9,7 @@ type ScorePayload = {
   playerName?: string;
   levelId?: number;
   timeMs?: number;
+  mistakeCount?: number;
   seed?: number;
   puzzle?: string;
   playerGrid?: string;
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
       playerName: String(payload.playerName ?? ""),
       levelId,
       timeMs: Number(payload.timeMs ?? 0),
+      mistakeCount: Number(payload.mistakeCount ?? 0),
       seed: Number(payload.seed ?? 0),
       puzzle: String(payload.puzzle ?? ""),
       playerGrid: String(payload.playerGrid ?? ""),

@@ -4,6 +4,7 @@ import type { CSSProperties, PointerEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BOARD_WIDTH,
+  LINE_CLEAR_ANIM_MS,
   VISIBLE_HEIGHT,
   VISIBLE_TOP,
   createEngine,
@@ -20,6 +21,7 @@ import {
   type GameMode,
   type GameState,
   type PieceKind,
+  type ClearInfo,
   type RotationDirection,
 } from "tetris-toolkit";
 
@@ -29,6 +31,9 @@ type ModeConfig = {
   id: TetrisMode;
   title: string;
   subtitle: string;
+  badge: string;
+  accentA: string;
+  accentB: string;
   engineMode: GameMode;
   startLevel?: number;
   durationMs?: number;
@@ -57,6 +62,9 @@ const MODES: ModeConfig[] = [
   {
     id: "marathon",
     title: "Marathon",
+    badge: "Classic",
+    accentA: "#8affc7",
+    accentB: "#7ad8ff",
     subtitle: "점수를 쌓으며 오래 버티는 기본 모드",
     engineMode: "marathon",
     startLevel: 1,
@@ -64,12 +72,18 @@ const MODES: ModeConfig[] = [
   {
     id: "sprint",
     title: "Sprint 40",
+    badge: "40 Lines",
+    accentA: "#ffd54a",
+    accentB: "#ff8f6d",
     subtitle: "40라인을 가장 빠르게 클리어",
     engineMode: "sprint",
   },
   {
     id: "ultra",
     title: "Ultra 2:00",
+    badge: "2 Min",
+    accentA: "#7ad8ff",
+    accentB: "#d6b3ff",
     subtitle: "2분 동안 최대 점수 경쟁",
     engineMode: "ultra",
     durationMs: 120_000,
@@ -77,6 +91,9 @@ const MODES: ModeConfig[] = [
   {
     id: "survival",
     title: "Survival",
+    badge: "Lv 8",
+    accentA: "#f5686a",
+    accentB: "#ffd54a",
     subtitle: "빠른 중력으로 버티는 고난도 모드",
     engineMode: "marathon",
     startLevel: 8,
@@ -84,6 +101,9 @@ const MODES: ModeConfig[] = [
   {
     id: "daily",
     title: "Daily",
+    badge: "Seeded",
+    accentA: "#8affc7",
+    accentB: "#f2ff8a",
     subtitle: "오늘의 고정 시드로 전세계 경쟁",
     engineMode: "marathon",
     startLevel: 3,
@@ -105,6 +125,25 @@ const PIECE_COLORS: Record<PieceKind, string> = {
 
 function getModeConfig(mode: TetrisMode) {
   return MODES.find((item) => item.id === mode) ?? MODES[0];
+}
+
+function TetrisModeIcon({ mode }: { mode: TetrisMode }) {
+  const patterns: Record<TetrisMode, number[]> = {
+    marathon: [1, 4, 5, 7],
+    sprint: [3, 4, 5, 6],
+    ultra: [1, 3, 4, 5],
+    survival: [0, 3, 4, 7],
+    daily: [1, 3, 4, 7],
+  };
+  const filled = new Set(patterns[mode]);
+
+  return (
+    <span className="tetris-mode-icon" aria-hidden="true">
+      {Array.from({ length: 9 }, (_, index) => (
+        <i key={`${mode}-${index}`} className={filled.has(index) ? "is-filled" : ""} />
+      ))}
+    </span>
+  );
 }
 
 function getTodayKey() {
@@ -192,6 +231,10 @@ function formatTime(ms: number) {
   return `${minutes}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
 }
 
+function normalizePlayerName(value: string) {
+  return value.replace(/\s+/g, " ").trim().slice(0, 18);
+}
+
 function getDisplayTime(state: GameState) {
   if (state.phase.kind === "sprintFinished") return state.phase.timeMs;
   if (state.phase.kind === "ultraFinished") return state.phase.timeMs;
@@ -218,6 +261,87 @@ function getFinishTitle(state: GameState, mode: TetrisMode) {
   if (mode === "survival") return "생존 종료";
   if (mode === "daily") return "오늘의 도전 종료";
   return "게임 종료";
+}
+
+function getClearTitle(clear: ClearInfo) {
+  if (clear.isPerfectClear) return "PERFECT CLEAR";
+
+  const lineTitle = ["", "SINGLE", "DOUBLE", "TRIPLE", "TETRIS"][clear.lines] ?? `${clear.lines} LINES`;
+  if (clear.tSpin === "full") return `T-SPIN ${lineTitle}`;
+  if (clear.tSpin === "mini") return clear.lines > 0 ? `MINI T-SPIN ${lineTitle}` : "MINI T-SPIN";
+  return lineTitle;
+}
+
+function getClearBadges(clear: ClearInfo) {
+  const badges: string[] = [];
+
+  if (clear.isBackToBack) badges.push("Back-to-Back");
+  if (clear.combo > 0) badges.push(`${clear.combo + 1} Combo`);
+  if (clear.tSpin !== "none") badges.push("T-Spin");
+
+  return badges;
+}
+
+function getBaseClearPoints(clear: Pick<ClearInfo, "lines" | "tSpin">) {
+  if (clear.tSpin === "full") {
+    if (clear.lines === 1) return 800;
+    if (clear.lines === 2) return 1200;
+    if (clear.lines === 3) return 1600;
+    return 400;
+  }
+
+  if (clear.tSpin === "mini") {
+    if (clear.lines === 1) return 200;
+    if (clear.lines === 2) return 400;
+    return 100;
+  }
+
+  if (clear.lines === 1) return 100;
+  if (clear.lines === 2) return 300;
+  if (clear.lines === 3) return 500;
+  if (clear.lines === 4) return 800;
+  return 0;
+}
+
+function isDifficultClear(clear: Pick<ClearInfo, "lines" | "tSpin">) {
+  return clear.lines === 4 || (clear.tSpin === "full" && clear.lines > 0) || (clear.tSpin === "mini" && clear.lines > 0);
+}
+
+function getPerfectClearBonus(lines: number) {
+  if (lines === 1) return 800;
+  if (lines === 2) return 1200;
+  if (lines === 3) return 1800;
+  if (lines === 4) return 2000;
+  return 0;
+}
+
+function isPerfectClearAfterRows(state: GameState, rows: readonly number[]) {
+  const clearingRows = new Set(rows);
+  return state.board.every((row, rowIndex) => clearingRows.has(rowIndex) || row.every((cell) => cell === null));
+}
+
+function getPendingClearInfo(state: GameState): ClearInfo | null {
+  if (state.phase.kind !== "lineClearAnim" || state.phase.rows.length === 0) return null;
+
+  const lines = state.phase.rows.length;
+  const tSpin = state.phase.tSpin;
+  const preview = { lines, tSpin };
+  const level = Math.max(1, state.level);
+  const difficult = isDifficultClear(preview);
+  const isPerfectClear = isPerfectClearAfterRows(state, state.phase.rows);
+  const combo = state.combo + 1;
+  const base = Math.floor(getBaseClearPoints(preview) * level * (difficult && state.backToBack ? 1.5 : 1));
+  const comboBonus = combo > 0 ? 50 * combo * level : 0;
+  const perfectClearBonus = isPerfectClear ? getPerfectClearBonus(lines) * level : 0;
+
+  return {
+    lines,
+    tSpin,
+    isBackToBack: difficult && state.backToBack,
+    combo,
+    isPerfectClear,
+    points: base + comboBonus + perfectClearBonus,
+  };
 }
 
 function getBestStorageKey(mode: TetrisMode, dailyKey: string | null) {
@@ -278,23 +402,50 @@ function buildVisibleCells(state: GameState): RenderCell[] {
   return cells;
 }
 
+type BoardProps = {
+  state: GameState;
+  mode: TetrisMode;
+  hasStarted: boolean;
+  displayedTimeMs: number;
+  playerName: string;
+  personalBest: LocalBest | null;
+  saveStatus: string;
+  isSaving: boolean;
+  hasSubmitted: boolean;
+  onStart: () => void;
+  onPlayAgain: () => void;
+  onPlayerNameChange: (value: string) => void;
+  onSubmitScore: () => void;
+};
+
 function Board({
   state,
   mode,
   hasStarted,
+  displayedTimeMs,
+  playerName,
+  personalBest,
+  saveStatus,
+  isSaving,
+  hasSubmitted,
   onStart,
-}: {
-  state: GameState;
-  mode: TetrisMode;
-  hasStarted: boolean;
-  onStart: () => void;
-}) {
+  onPlayAgain,
+  onPlayerNameChange,
+  onSubmitScore,
+}: BoardProps) {
   const cells = useMemo(() => buildVisibleCells(state), [state]);
   const finished = isFinished(state);
   const paused = isPaused(state);
+  const clearRows =
+    state.phase.kind === "lineClearAnim"
+      ? state.phase.rows.filter((row) => row >= VISIBLE_TOP && row < VISIBLE_TOP + VISIBLE_HEIGHT)
+      : [];
+  const clearInfo = clearRows.length > 0 ? getPendingClearInfo(state) : null;
+  const clearBadges = clearInfo ? getClearBadges(clearInfo) : [];
+  const stageStyle = clearInfo ? ({ "--clear-duration": `${LINE_CLEAR_ANIM_MS}ms` } as CSSProperties) : undefined;
 
   return (
-    <div className="tetris-board-stage">
+    <div className={`tetris-board-stage${clearInfo ? " is-clearing" : ""}`} style={stageStyle}>
       <div className="tetris-board" aria-label="Tetris board">
         {cells.map((cell, index) => {
           const style = cell.kind ? ({ "--piece-color": PIECE_COLORS[cell.kind] } as CSSProperties) : undefined;
@@ -310,21 +461,93 @@ function Board({
         })}
       </div>
 
+      {clearInfo ? (
+        <>
+          <div className="tetris-clear-layer" aria-hidden="true">
+            {clearRows.map((row, index) => (
+              <span
+                key={`${row}-${index}`}
+                className="tetris-clear-row-flash"
+                style={
+                  {
+                    animationDelay: `${index * 32}ms`,
+                    top: `${((row - VISIBLE_TOP) / VISIBLE_HEIGHT) * 100}%`,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </div>
+          <div className={`tetris-clear-pop is-lines-${Math.min(clearInfo.lines, 4)}`} aria-live="polite">
+            <strong>{getClearTitle(clearInfo)}</strong>
+            <span>+{formatNumber(clearInfo.points)}</span>
+            {clearBadges.length > 0 ? (
+              <small>
+                {clearBadges.map((badge) => (
+                  <b key={badge}>{badge}</b>
+                ))}
+              </small>
+            ) : null}
+          </div>
+        </>
+      ) : null}
+
       {!hasStarted || paused || finished ? (
-        <div className="tetris-board-overlay">
-          <strong>{!hasStarted ? "Ready" : finished ? getFinishTitle(state, mode) : "일시정지"}</strong>
-          <span>
-            {!hasStarted
-              ? "모드를 고른 뒤 Start를 누르면 블록이 내려오기 시작합니다."
-              : finished
-                ? "기록을 저장하거나 다시 시작할 수 있습니다."
-                : "P 키로 이어서 플레이하세요."}
-          </span>
-          {!hasStarted ? (
-            <button type="button" className="button" onClick={onStart}>
-              Start
-            </button>
-          ) : null}
+        <div className={`tetris-board-overlay${finished ? " is-finished" : ""}`}>
+          {finished ? (
+            <form
+              className="tetris-board-submit"
+              onSubmit={(event) => {
+                event.preventDefault();
+                onSubmitScore();
+              }}
+            >
+              <div className="tetris-board-result">
+                <span>{getFinishTitle(state, mode)}</span>
+                <strong>{mode === "sprint" ? formatTime(displayedTimeMs) : formatNumber(state.score)}</strong>
+                <small>
+                  {state.lines} lines · Lv {state.level} · {formatTime(displayedTimeMs)}
+                </small>
+              </div>
+              {personalBest ? (
+                <p className="tetris-board-best">
+                  Personal best: {mode === "sprint" ? formatTime(personalBest.timeMs) : formatNumber(personalBest.score)}
+                </p>
+              ) : null}
+              <label className="field tetris-board-name">
+                <span className="label">Player name</span>
+                <input
+                  className="input"
+                  value={playerName}
+                  maxLength={18}
+                  onChange={(event) => onPlayerNameChange(event.target.value)}
+                  placeholder="이름"
+                />
+              </label>
+              <div className="tetris-board-actions">
+                <button type="submit" className="button" disabled={isSaving || hasSubmitted} aria-busy={isSaving}>
+                  {hasSubmitted ? "Saved" : isSaving ? "Saving..." : "Save Score"}
+                </button>
+                <button type="button" className="ghost-button" onClick={onPlayAgain}>
+                  Play Again
+                </button>
+              </div>
+              {saveStatus ? (
+                <div className="notice tetris-board-save-status" aria-live="polite">
+                  {saveStatus}
+                </div>
+              ) : null}
+            </form>
+          ) : (
+            <>
+              <strong>{!hasStarted ? "Ready" : "일시정지"}</strong>
+              <span>{!hasStarted ? "모드를 고른 뒤 Start를 누르면 블록이 내려오기 시작합니다." : "P 키로 이어서 플레이하세요."}</span>
+              {!hasStarted ? (
+                <button type="button" className="button" onClick={onStart}>
+                  Start
+                </button>
+              ) : null}
+            </>
+          )}
         </div>
       ) : null}
     </div>
@@ -468,9 +691,13 @@ export function TetrisClient() {
   }, []);
 
   useEffect(() => {
-    const savedName = window.localStorage.getItem(PLAYER_NAME_KEY);
+    const savedName = normalizePlayerName(window.localStorage.getItem(PLAYER_NAME_KEY) ?? "");
     if (savedName) {
       setPlayerName(savedName);
+      window.localStorage.setItem(PLAYER_NAME_KEY, savedName);
+    } else {
+      setPlayerName(DEFAULT_PLAYER_NAME);
+      window.localStorage.removeItem(PLAYER_NAME_KEY);
     }
   }, []);
 
@@ -668,12 +895,26 @@ export function TetrisClient() {
     if (action === "hold") engine.hold();
   };
 
+  const handlePlayerNameChange = useCallback((value: string) => {
+    const nextName = value.slice(0, 18);
+    const cleanName = normalizePlayerName(nextName);
+
+    setPlayerName(nextName);
+
+    if (cleanName) {
+      window.localStorage.setItem(PLAYER_NAME_KEY, cleanName);
+    } else {
+      window.localStorage.removeItem(PLAYER_NAME_KEY);
+    }
+  }, []);
+
   const handleSubmitScore = async () => {
     if (!finished || isSaving || hasSubmitted) return;
 
-    const cleanName = playerName.replace(/\s+/g, " ").trim().slice(0, 18);
+    const cleanName = normalizePlayerName(playerName) || DEFAULT_PLAYER_NAME;
     setIsSaving(true);
     setSaveStatus("");
+    setPlayerName(cleanName);
     window.localStorage.setItem(PLAYER_NAME_KEY, cleanName);
 
     try {
@@ -717,29 +958,48 @@ export function TetrisClient() {
   return (
     <>
       <section className="panel tetris-intro">
-        <div>
+        <div className="tetris-intro-copy">
           <div className="eyebrow">utility / tetris</div>
           <h1>Tetris Arena</h1>
           <p className="muted">
-            고스트 블록, Hold, Next 큐, SRS 회전, 콤보와 Back-to-Back 점수를 갖춘 테트리스입니다.
-            모드 별 전 세계 사람들과 경쟁하고 순위를 올리세요.
+            고스트 블록, Hold, SRS 회전, 콤보와 Back-to-Back 점수를 갖춘 브라우저 테트리스입니다.
           </p>
         </div>
 
-        <div className="tetris-mode-tabs" role="tablist" aria-label="Tetris modes">
-          {MODES.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={item.id === mode ? "is-active" : ""}
-              onClick={() => handleModeSelect(item.id)}
-              role="tab"
-              aria-selected={item.id === mode}
-            >
-              <strong>{item.title}</strong>
-              <span>{item.subtitle}</span>
-            </button>
-          ))}
+        <div className="tetris-mode-console">
+          <div className="tetris-mode-console-header">
+            <span>Game mode</span>
+            <strong>{config.title}</strong>
+          </div>
+          <div className="tetris-mode-tabs" role="tablist" aria-label="Tetris modes">
+            {MODES.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={item.id === mode ? "tetris-mode-card is-active" : "tetris-mode-card"}
+                onClick={() => handleModeSelect(item.id)}
+                role="tab"
+                aria-selected={item.id === mode}
+                aria-label={`${item.title}: ${item.subtitle}`}
+                title={item.subtitle}
+                style={
+                  {
+                    "--mode-a": item.accentA,
+                    "--mode-b": item.accentB,
+                  } as CSSProperties
+                }
+              >
+                <span className="tetris-mode-aura" aria-hidden="true" />
+                <TetrisModeIcon mode={item.id} />
+                <span className="tetris-mode-copy">
+                  <strong>{item.title}</strong>
+                  <small>{item.badge}</small>
+                </span>
+                <span className="tetris-mode-check" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+          <p className="tetris-mode-readout">{config.subtitle}</p>
         </div>
       </section>
 
@@ -768,7 +1028,21 @@ export function TetrisClient() {
             </div>
           </div>
 
-          <Board state={state} mode={mode} hasStarted={hasStarted} onStart={startCurrentGame} />
+          <Board
+            state={state}
+            mode={mode}
+            hasStarted={hasStarted}
+            displayedTimeMs={displayedTimeMs}
+            playerName={playerName}
+            personalBest={personalBest}
+            saveStatus={saveStatus}
+            isSaving={isSaving}
+            hasSubmitted={hasSubmitted}
+            onStart={startCurrentGame}
+            onPlayAgain={() => startNewGame(mode)}
+            onPlayerNameChange={handlePlayerNameChange}
+            onSubmitScore={handleSubmitScore}
+          />
 
           <div className="tetris-touch-controls" aria-label="Touch controls">
             <button
@@ -940,7 +1214,7 @@ export function TetrisClient() {
                     className="input"
                     value={playerName}
                     maxLength={18}
-                    onChange={(event) => setPlayerName(event.target.value)}
+                    onChange={(event) => handlePlayerNameChange(event.target.value)}
                     placeholder="이름"
                   />
                 </label>

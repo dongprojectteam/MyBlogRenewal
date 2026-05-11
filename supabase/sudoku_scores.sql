@@ -16,13 +16,14 @@ create index if not exists sudoku_scores_level_score_idx
 
 alter table public.sudoku_scores enable row level security;
 
-insert into public.visualizations (id, title, description, url, image_url, visible, sort_order)
+insert into public.visualizations (id, title, description, url, image_url, category, visible, sort_order)
 values (
   '9b1d2f0c-2d1f-4f2e-9b42-c9e9a5f0c004',
   'Sudoku',
   '레벨별 자동 생성 퍼즐, Canvas 입력, 난이도 기반 점수 글로벌 리더보드를 갖춘 스도쿠 게임입니다.',
   '/sudoku',
   '/images/utilities/sudoku-preview.svg',
+  'game',
   true,
   13
 )
@@ -32,5 +33,6 @@ set
   description = excluded.description,
   url = excluded.url,
   image_url = excluded.image_url,
+  category = excluded.category,
   visible = excluded.visible,
   sort_order = excluded.sort_order;

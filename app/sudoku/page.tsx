@@ -10,10 +10,12 @@ const siteUrl = "https://www.doptsw.org";
 const pageTitle = "Sudoku";
 const pageDescription =
   "10단계 난이도의 자동 생성 스도쿠입니다. Canvas 보드와 숫자 패드로 플레이하고, 클리어 시간으로 전 세계 리더보드에 도전해 보세요.";
+const previewImage = "/images/utilities/sudoku-preview.svg";
 
 export const metadata: Metadata = {
   title: pageTitle,
   description: pageDescription,
+  keywords: ["Sudoku", "스도쿠", "온라인 스도쿠", "스도쿠 게임", "숫자 퍼즐", "DOPT"],
   alternates: {
     canonical: "/sudoku",
   },
@@ -22,13 +24,13 @@ export const metadata: Metadata = {
     description: pageDescription,
     url: "/sudoku",
     type: "website",
-    images: ["/images/utilities/sudoku-preview.svg"],
+    images: [previewImage],
   },
   twitter: {
     card: "summary_large_image",
     title: pageTitle,
     description: pageDescription,
-    images: ["/images/utilities/sudoku-preview.svg"],
+    images: [previewImage],
   },
 };
 
@@ -49,6 +51,7 @@ export default function SudokuPage() {
         operatingSystem: "Web",
         description: pageDescription,
         url: `${siteUrl}/sudoku`,
+        image: `${siteUrl}${previewImage}`,
         inLanguage: "ko-KR",
         featureList: [
           "10 difficulty levels",

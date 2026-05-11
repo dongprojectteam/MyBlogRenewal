@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { CurrentTimeCard } from "@/components/current-time-card";
 import { SiteHeader } from "@/components/site-header";
 import { UtilitySearchSection } from "@/components/utility-search-section";
 import { getPublicVisualizations } from "@/lib/data";
+import { getVisualizationCategory } from "@/lib/visualization-categories";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +16,7 @@ const utilitySeoDescriptions: Record<string, string> = {
   "/diagram": "Mermaid, PlantUML, Markdown 문서 안의 다이어그램을 브라우저에서 바로 렌더링하고 미리보는 유틸리티입니다.",
   "/calendar": "월별 달력, 한국 공휴일 정보, 날짜별 메모를 함께 관리하는 브라우저 캘린더 유틸리티입니다.",
   "/tetris": "여러 게임 모드와 글로벌 리더보드를 지원하는 브라우저 테트리스 게임입니다.",
+  "/animal-merge": "Drop and merge animals in a browser physics puzzle game with combos and leaderboards.",
   "/ladder": "참가자와 결과를 입력해 사다리 경로 애니메이션으로 매칭을 확인하고 기록하는 유틸리티입니다.",
   "/codec": "JSON 포맷팅, URL 인코딩, Base64 변환, JWT 페이로드 확인을 한 화면에서 처리하는 개발자 유틸리티입니다.",
   "/mojibake": "UTF-8, CP949, EUC-KR, Windows-1252, URI 인코딩 문제로 깨진 한국어 텍스트의 복구 후보를 찾아주는 유틸리티입니다.",
@@ -49,7 +50,6 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const items = await getPublicVisualizations();
-  const recentItems = items.slice(0, 4);
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -71,7 +71,7 @@ export default async function HomePage() {
           description: utilitySeoDescriptions[item.url] ?? item.description,
           url: `${siteUrl}${item.url}`,
           operatingSystem: "Web",
-          applicationCategory: "WebApplication",
+          applicationCategory: getVisualizationCategory(item) === "game" ? "GameApplication" : "UtilitiesApplication",
           isAccessibleForFree: true,
         })),
       },
@@ -83,25 +83,13 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <SiteHeader current="home" />
 
-      <section className="hero-panel hero-grid">
+      <section className="hero-panel hero-grid home-hero">
         <div>
           <div className="eyebrow">personal space</div>
           <h1 className="hero-title">A quiet archive for things I build.</h1>
           <p className="hero-copy">
             좋아하는 것들, 직접 만든 작은 도구들, 그리고 차분하게 쌓아가는 기록을 모아두는 개인 공간입니다.
           </p>
-          {recentItems.length > 0 ? (
-            <div className="hero-recent-strip" aria-label="Recent updates">
-              <span className="hero-recent-strip-title">Recent updates</span>
-              <div className="hero-recent-items">
-                {recentItems.map((item) => (
-                  <Link key={item.id} href={item.url} className="hero-recent-pill">
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ) : null}
         </div>
 
         <div className="hero-aside">

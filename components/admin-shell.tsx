@@ -4,11 +4,11 @@ import { ReactNode } from "react";
 import { LogoutButton } from "@/components/logout-button";
 
 const links = [
-  { href: "/admin/dashboard", label: "대시보드" },
-  { href: "/admin/profile", label: "소개 페이지" },
-  { href: "/admin/visualizations", label: "유틸 관리" },
-  { href: "/admin/notes", label: "메모장" },
-  { href: "/admin/files", label: "파일 관리" },
+  { href: "/admin/dashboard", label: "Dashboard" },
+  { href: "/admin/profile", label: "Profile" },
+  { href: "/admin/visualizations", label: "Home content" },
+  { href: "/admin/notes", label: "Notes" },
+  { href: "/admin/files", label: "Files" },
 ];
 
 type AdminShellProps = {
@@ -26,7 +26,7 @@ export function AdminShell({ current, title, description, children }: AdminShell
           <Link href="/" className="brand-title">
             DOPT Admin
           </Link>
-          <div className="brand-subtitle">홈, 소개, 파일과 메타데이터를 관리합니다</div>
+          <div className="brand-subtitle">Manage profile, files, notes, and home content.</div>
         </div>
         <div className="nav-actions">
           <Link className="ghost-button" href="/">
@@ -44,9 +44,9 @@ export function AdminShell({ current, title, description, children }: AdminShell
           <div className="stack">
             <div>
               <div className="eyebrow">admin</div>
-              <h2 style={{ marginBottom: 8 }}>관리 메뉴</h2>
+              <h2 style={{ marginBottom: 8 }}>Menu</h2>
               <p className="muted" style={{ marginTop: 0 }}>
-                직접 만든 유틸과 개인 소개 페이지를 여기서 관리합니다.
+                Keep the public home and personal pages organized from one place.
               </p>
             </div>
 
