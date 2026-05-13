@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { hasSupabaseEnv } from "@/lib/env";
-import { seedFiles, seedNote, seedProfile, seedSudokuScores, seedTetrisScores, seedVisualizations } from "@/lib/seed";
+import { seedFiles, seedNote, seedPhaseDualScores, seedProfile, seedSudokuScores, seedTetrisScores, seedVisualizations } from "@/lib/seed";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import { gridToString, maskFromString } from "@/lib/sudoku/grid";
 import { isSudokuLevelId } from "@/lib/sudoku/level-profiles";
@@ -18,6 +18,7 @@ import type {
   TetrisMode,
   TetrisScore,
   SudokuScore,
+  PhaseDualScore,
 } from "@/types";
 
 const ADMIN_BUCKET = "admin-files";
@@ -25,6 +26,7 @@ const PROFILE_BUCKET = "profile-images";
 const DEFAULT_PROFILE_ID = "11111111-1111-1111-1111-111111111111";
 const TETRIS_SCORE_LIMIT = 20;
 const SUDOKU_SCORE_LIMIT = 50;
+const PHASE_DUAL_SCORE_LIMIT = 50;
 const TETRIS_MODES = ["marathon", "sprint", "ultra", "survival", "daily"] as const;
 
 export type SaveTetrisScoreInput = {
@@ -37,6 +39,16 @@ export type SaveTetrisScoreInput = {
   pieces: number;
   seed: number;
   dailyKey?: string | null;
+};
+
+export type SavePhaseDualScoreInput = {
+  playerName: string;
+  dailyKey: string;
+  puzzleId: string;
+  score: number;
+  moves: number;
+  timeMs: number;
+  undos: number;
 };
 
 function sortByOrder<T extends { sort_order: number }>(items: T[]) {
@@ -519,6 +531,109 @@ export async function saveTetrisScore(input: SaveTetrisScoreInput): Promise<{ sa
   if (error) throw error;
 
   return { saved: true, score: data as TetrisScore };
+}
+
+const PHASE_DUAL_DAILY_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const PHASE_DUAL_PUZZLE_ID_RE = /^daily-\d{4}-\d{2}-\d{2}$/;
+
+function sortPhaseDualScores(scores: PhaseDualScore[]) {
+  return [...scores].sort((a, b) => {
+    if (a.score !== b.score) return b.score - a.score;
+    if (a.time_ms !== b.time_ms) return a.time_ms - b.time_ms;
+    return (a.created_at ?? "").localeCompare(b.created_at ?? "");
+  });
+}
+
+function normalizePhaseDualRow(input: SavePhaseDualScoreInput): {
+  id: string;
+  player_name: string;
+  daily_key: string;
+  puzzle_id: string;
+  score: number;
+  moves: number;
+  time_ms: number;
+  undos: number;
+} {
+  const player_name = sanitizePlayerName(input.playerName);
+  if (player_name.length < 2) {
+    throw new Error("플레이어 이름은 2자 이상 입력해 주세요.");
+  }
+  if (!PHASE_DUAL_DAILY_KEY_RE.test(input.dailyKey)) {
+    throw new Error("일일 키 형식이 올바르지 않습니다.");
+  }
+  if (!PHASE_DUAL_PUZZLE_ID_RE.test(input.puzzleId)) {
+    throw new Error("데일리 퍼즐 식별자 형식이 올바르지 않습니다.");
+  }
+
+  return {
+    id: randomUUID(),
+    player_name,
+    daily_key: input.dailyKey,
+    puzzle_id: input.puzzleId,
+    score: toSafeInteger(input.score, 0, 2000),
+    moves: toSafeInteger(input.moves, 1, 500),
+    time_ms: toSafeInteger(input.timeMs, 1000, 180_000),
+    undos: toSafeInteger(input.undos, 0, 200),
+  };
+}
+
+export async function listPhaseDualScores(dailyKey: string): Promise<PhaseDualScore[]> {
+  if (!PHASE_DUAL_DAILY_KEY_RE.test(dailyKey)) return [];
+
+  if (!hasSupabaseEnv()) {
+    const local = seedPhaseDualScores.filter((item) => item.daily_key === dailyKey);
+    return sortPhaseDualScores(local).slice(0, PHASE_DUAL_SCORE_LIMIT);
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("phase_dual_scores")
+    .select("id, player_name, daily_key, puzzle_id, score, moves, time_ms, undos, created_at")
+    .eq("daily_key", dailyKey)
+    .order("score", { ascending: false })
+    .order("time_ms", { ascending: true })
+    .order("created_at", { ascending: true })
+    .limit(PHASE_DUAL_SCORE_LIMIT);
+
+  if (error) throw error;
+  return (data ?? []) as PhaseDualScore[];
+}
+
+export async function savePhaseDualScore(
+  input: SavePhaseDualScoreInput,
+): Promise<{ saved: boolean; conflict?: boolean; score: PhaseDualScore }> {
+  const row = normalizePhaseDualRow(input);
+  const score: PhaseDualScore = {
+    id: row.id,
+    player_name: row.player_name,
+    daily_key: row.daily_key,
+    puzzle_id: row.puzzle_id,
+    score: row.score,
+    moves: row.moves,
+    time_ms: row.time_ms,
+    undos: row.undos,
+  };
+
+  if (!hasSupabaseEnv()) {
+    return { saved: false, score: { ...score, created_at: new Date().toISOString() } };
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("phase_dual_scores")
+    .insert([row])
+    .select("id, player_name, daily_key, puzzle_id, score, moves, time_ms, undos, created_at")
+    .single();
+
+  if (error) {
+    const code = (error as { code?: string }).code;
+    if (code === "23505") {
+      return { saved: false, conflict: true, score };
+    }
+    throw error;
+  }
+
+  return { saved: true, score: data as PhaseDualScore };
 }
 
 export type SaveSudokuScoreInput = {

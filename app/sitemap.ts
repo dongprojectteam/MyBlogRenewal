@@ -21,6 +21,7 @@ const staticPaths = [
   "/mindmap",
   "/sudoku",
   "/animal-merge",
+  "/phase-dual",
 ];
 const staticPathSet = new Set(staticPaths);
 
@@ -49,5 +50,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [...baseEntries, ...dynamicEntries];
 }
-
 

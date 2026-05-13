@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Phase Dual preview</title>
+  <desc id="desc">A linked sliding puzzle with two grids, colored pieces, targets, walls, and a central rule transformer.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="0.48" stop-color="#101827"/>
+      <stop offset="1" stop-color="#132719"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111c2d"/>
+      <stop offset="1" stop-color="#0a1220"/>
+    </linearGradient>
+    <linearGradient id="rule" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#020617" flood-opacity="0.45"/>
+    </filter>
+    <filter id="pieceShadow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#020617" flood-opacity="0.36"/>
+    </filter>
+    <pattern id="microGrid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#233044" stroke-width="1" opacity="0.55"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#microGrid)" opacity="0.42"/>
+  <path d="M86 514C246 438 372 440 520 493C678 550 858 560 1088 454" fill="none" stroke="#22c55e" stroke-width="2" stroke-opacity="0.18"/>
+  <path d="M84 154C286 220 420 184 564 120C758 34 914 66 1116 158" fill="none" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.16"/>
+
+  <g font-family="Segoe UI, Pretendard, Apple SD Gothic Neo, Arial, sans-serif">
+    <text x="92" y="94" fill="#f8fafc" font-size="50" font-weight="800" letter-spacing="0">Phase Dual</text>
+    <text x="94" y="132" fill="#a7b6cc" font-size="21">Linked sliding puzzle · two boards, one rule</text>
+  </g>
+
+  <g transform="translate(77 172)" filter="url(#softShadow)">
+    <rect width="424" height="362" rx="24" fill="url(#panel)" stroke="#334155" stroke-width="2"/>
+    <rect x="30" y="34" width="300" height="300" rx="16" fill="#070f1d" stroke="#41516a" stroke-width="2"/>
+    <g stroke="#233044" stroke-width="1.5">
+      <path d="M90 34V334M150 34V334M210 34V334M270 34V334"/>
+      <path d="M30 94H330M30 154H330M30 214H330M30 274H330"/>
+    </g>
+    <g stroke-linecap="round" stroke-width="5" opacity="0.78">
+      <path d="M86 244H265" stroke="#ef4444" stroke-dasharray="10 12"/>
+      <path d="M120 64V244" stroke="#3b82f6" stroke-dasharray="10 12"/>
+      <path d="M274 184H94" stroke="#22c55e" stroke-dasharray="10 12"/>
+    </g>
+    <g fill="none" stroke-width="4">
+      <rect x="256" y="226" width="36" height="36" rx="8" stroke="#ef4444" stroke-dasharray="8 8"/>
+      <rect x="102" y="46" width="36" height="36" rx="8" stroke="#3b82f6" stroke-dasharray="8 8"/>
+      <rect x="76" y="166" width="36" height="36" rx="8" stroke="#22c55e" stroke-dasharray="8 8"/>
+    </g>
+    <g filter="url(#pieceShadow)">
+      <rect x="68" y="226" width="44" height="44" rx="11" fill="#ef4444"/>
+      <rect x="98" y="226" width="44" height="44" rx="11" fill="#3b82f6"/>
+      <rect x="256" y="166" width="44" height="44" rx="11" fill="#22c55e"/>
+      <rect x="226" y="286" width="44" height="44" rx="9" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+    </g>
+    <text x="358" y="73" fill="#f8fafc" font-size="24" font-weight="800">Grid A</text>
+    <text x="358" y="105" fill="#94a3b8" font-size="15">direct input</text>
+    <text x="358" y="278" fill="#f59e0b" font-size="16" font-weight="700">Par 10</text>
+    <text x="358" y="306" fill="#94a3b8" font-size="14">Daily seed</text>
+  </g>
+
+  <g transform="translate(516 265)" filter="url(#softShadow)">
+    <rect x="0" y="0" width="168" height="112" rx="24" fill="#0b1220" stroke="#f59e0b" stroke-width="2.5"/>
+    <rect x="13" y="13" width="142" height="86" rx="18" fill="#111827" stroke="#334155"/>
+    <path d="M43 39H87M79 30L91 39L79 48" fill="none" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M125 73H81M89 64L77 73L89 82" fill="none" stroke="#22c55e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M84 24V88" stroke="#64748b" stroke-width="2" stroke-dasharray="5 7"/>
+    <text x="84" y="139" text-anchor="middle" fill="#f8fafc" font-family="Segoe UI, Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="17" font-weight="800">TRANSPOSE</text>
+  </g>
+
+  <g transform="translate(699 172)" filter="url(#softShadow)">
+    <rect width="424" height="362" rx="24" fill="url(#panel)" stroke="#334155" stroke-width="2"/>
+    <rect x="94" y="34" width="300" height="300" rx="16" fill="#070f1d" stroke="#41516a" stroke-width="2"/>
+    <g stroke="#233044" stroke-width="1.5">
+      <path d="M154 34V334M214 34V334M274 34V334M334 34V334"/>
+      <path d="M94 94H394M94 154H394M94 214H394M94 274H394"/>
+    </g>
+    <g stroke-linecap="round" stroke-width="5" opacity="0.78">
+      <path d="M334 245V66" stroke="#ef4444" stroke-dasharray="10 12"/>
+      <path d="M154 96H334" stroke="#3b82f6" stroke-dasharray="10 12"/>
+      <path d="M154 185V305" stroke="#22c55e" stroke-dasharray="10 12"/>
+    </g>
+    <g fill="none" stroke-width="4">
+      <rect x="316" y="46" width="36" height="36" rx="8" stroke="#ef4444" stroke-dasharray="8 8"/>
+      <rect x="316" y="106" width="36" height="36" rx="8" stroke="#3b82f6" stroke-dasharray="8 8"/>
+      <rect x="136" y="286" width="36" height="36" rx="8" stroke="#22c55e" stroke-dasharray="8 8"/>
+    </g>
+    <g filter="url(#pieceShadow)">
+      <rect x="316" y="226" width="44" height="44" rx="11" fill="#ef4444"/>
+      <rect x="136" y="106" width="44" height="44" rx="11" fill="#3b82f6"/>
+      <rect x="136" y="166" width="44" height="44" rx="11" fill="#22c55e"/>
+      <rect x="376" y="46" width="14" height="104" rx="7" fill="#475569"/>
+    </g>
+    <text x="30" y="73" fill="#f8fafc" font-size="24" font-weight="800">Grid B</text>
+    <text x="30" y="105" fill="#94a3b8" font-size="15">rule-linked</text>
+    <text x="30" y="278" fill="#22c55e" font-size="16" font-weight="700">local best</text>
+    <text x="30" y="306" fill="#94a3b8" font-size="14">moves + time</text>
+  </g>
+
+  <g transform="translate(92 558)" font-family="Segoe UI, Pretendard, Apple SD Gothic Neo, Arial, sans-serif">
+    <rect width="1016" height="40" rx="20" fill="#0b1220" stroke="#334155"/>
+    <circle cx="31" cy="20" r="8" fill="#ef4444"/>
+    <text x="52" y="26" fill="#cbd5e1" font-size="16">30 campaign puzzles</text>
+    <circle cx="274" cy="20" r="8" fill="#3b82f6"/>
+    <text x="295" y="26" fill="#cbd5e1" font-size="16">6 linked rules</text>
+    <circle cx="475" cy="20" r="8" fill="#22c55e"/>
+    <text x="496" y="26" fill="#cbd5e1" font-size="16">daily challenge</text>
+    <circle cx="702" cy="20" r="8" fill="#f59e0b"/>
+    <text x="723" y="26" fill="#cbd5e1" font-size="16">canvas puzzle board</text>
+  </g>
+</svg>
