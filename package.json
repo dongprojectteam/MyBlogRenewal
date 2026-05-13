@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:phase-dual": "vitest run app/phase-dual",
+    "validate:phase-dual": "vitest run app/phase-dual/_lib/puzzles.test.ts",
+    "generate:phase-dual": "node scripts/phase-dual-generate-campaign.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.1",
@@ -24,12 +28,17 @@
     "tetris-toolkit": "^0.1.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/matter-js": "^0.20.2",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.4",
-    "typescript": "^6.0.3"
+    "jsdom": "^29.1.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6"
   }
 }

@@ -5,7 +5,7 @@ export const visualizationCategoryLabels: Record<VisualizationCategory, string> 
   game: "Games",
 };
 
-const fallbackGameUrls = new Set(["/tetris", "/sudoku", "/animal-merge"]);
+const fallbackGameUrls = new Set(["/tetris", "/sudoku", "/animal-merge", "/phase-dual"]);
 
 export function normalizeVisualizationCategory(value: FormDataEntryValue | string | null | undefined): VisualizationCategory {
   return value === "game" ? "game" : "utility";

@@ -1,4 +1,4 @@
-import type { AdminNote, ProfileBundle, SudokuScore, TetrisScore, UploadedFile, Visualization } from "@/types";
+import type { AdminNote, PhaseDualScore, ProfileBundle, SudokuScore, TetrisScore, UploadedFile, Visualization } from "@/types";
 
 const rawSeedVisualizations: Visualization[] = [
   {
@@ -141,6 +141,16 @@ const rawSeedVisualizations: Visualization[] = [
     visible: true,
     sort_order: 14,
   },
+  {
+    id: "seed-phase-dual",
+    title: "Phase Dual",
+    description: "두 격자가 6종 연동 규칙으로 묶인 빙판 슬라이딩 퍼즐입니다.",
+    url: "/phase-dual",
+    image_url: "/images/utilities/phase-dual-preview.svg",
+    category: "game",
+    visible: true,
+    sort_order: 15,
+  },
 ];
 
 const seedVisualizationSeo: Record<string, Pick<Visualization, "description" | "image_url" | "sort_order">> = {
@@ -213,6 +223,11 @@ const seedVisualizationSeo: Record<string, Pick<Visualization, "description" | "
     description: "Drop matching animals into a physics board, merge them into higher levels, and chase combo scores.",
     image_url: "/images/utilities/animal-merge-preview.svg",
     sort_order: 14,
+  },
+  "seed-phase-dual": {
+    description: "두 격자, 6종 연동 규칙, 캠페인 퍼즐과 데일리 리더보드를 갖춘 브라우저 슬라이딩 퍼즐 게임입니다.",
+    image_url: "/images/utilities/phase-dual-preview.svg",
+    sort_order: 15,
   },
 };
 
@@ -391,6 +406,42 @@ export const seedTetrisScores: TetrisScore[] = [
     seed: 20260507,
     daily_key: "2026-05-07",
     created_at: "2026-05-07T00:00:00.000Z",
+  },
+];
+
+export const seedPhaseDualScores: PhaseDualScore[] = [
+  {
+    id: "seed-phase-dual-1",
+    player_name: "DOPT",
+    daily_key: "2026-05-12",
+    puzzle_id: "daily-2026-05-12",
+    score: 1620,
+    moves: 5,
+    time_ms: 38_400,
+    undos: 0,
+    created_at: "2026-05-12T01:00:00.000Z",
+  },
+  {
+    id: "seed-phase-dual-2",
+    player_name: "Linker",
+    daily_key: "2026-05-12",
+    puzzle_id: "daily-2026-05-12",
+    score: 1480,
+    moves: 6,
+    time_ms: 52_100,
+    undos: 1,
+    created_at: "2026-05-12T02:30:00.000Z",
+  },
+  {
+    id: "seed-phase-dual-3",
+    player_name: "Echo",
+    daily_key: "2026-05-12",
+    puzzle_id: "daily-2026-05-12",
+    score: 1240,
+    moves: 8,
+    time_ms: 71_200,
+    undos: 4,
+    created_at: "2026-05-12T05:15:00.000Z",
   },
 ];
 

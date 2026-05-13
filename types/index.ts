@@ -93,3 +93,33 @@ export type SudokuScore = {
   seed: number;
   created_at?: string;
 };
+
+export type PhaseDualLinkRule =
+  | "mirror_h"
+  | "mirror_v"
+  | "inverse"
+  | "rotate_cw"
+  | "rotate_ccw"
+  | "transpose";
+
+export type PhaseDualPieceColor =
+  | "red"
+  | "blue"
+  | "green"
+  | "yellow"
+  | "purple"
+  | "orange";
+
+export type PhaseDualDirection = "up" | "down" | "left" | "right";
+
+export type PhaseDualScore = {
+  id: string;
+  player_name: string;
+  daily_key: string;
+  puzzle_id: string;
+  score: number;
+  moves: number;
+  time_ms: number;
+  undos: number;
+  created_at?: string;
+};
