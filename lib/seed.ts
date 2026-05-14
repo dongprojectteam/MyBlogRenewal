@@ -151,6 +151,16 @@ const rawSeedVisualizations: Visualization[] = [
     visible: true,
     sort_order: 15,
   },
+  {
+    id: "seed-chart-studio",
+    title: "Chart Studio",
+    description: "Create polished 3D-style bar and line charts from manual data, CSV, TSV, or JSON.",
+    url: "/chart-studio",
+    image_url: "/images/utilities/chart-studio-preview.svg",
+    category: "utility",
+    visible: true,
+    sort_order: 16,
+  },
 ];
 
 const seedVisualizationSeo: Record<string, Pick<Visualization, "description" | "image_url" | "sort_order">> = {
@@ -228,6 +238,11 @@ const seedVisualizationSeo: Record<string, Pick<Visualization, "description" | "
     description: "두 격자, 6종 연동 규칙, 캠페인 퍼즐과 데일리 리더보드를 갖춘 브라우저 슬라이딩 퍼즐 게임입니다.",
     image_url: "/images/utilities/phase-dual-preview.svg",
     sort_order: 15,
+  },
+  "seed-chart-studio": {
+    description: "Create polished 3D-style bar and line charts from manual data, CSV, TSV, or JSON.",
+    image_url: "/images/utilities/chart-studio-preview.svg",
+    sort_order: 16,
   },
 };
 

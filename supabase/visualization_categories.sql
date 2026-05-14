@@ -21,7 +21,7 @@ alter table public.visualizations
 
 update public.visualizations
 set category = 'game'
-where url in ('/tetris', '/sudoku', '/animal-merge');
+where url in ('/tetris', '/sudoku', '/animal-merge', '/phase-dual');
 
 update public.visualizations
 set category = 'utility'

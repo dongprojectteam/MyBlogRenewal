@@ -39,9 +39,31 @@ type LocalBest = {
   createdAt: string;
 };
 
+type NoteMask = number;
+
 const PLAYER_NAME_KEY = "dopt-sudoku-player-name";
 const BEST_KEY = "dopt-sudoku-best-v1";
 const DEFAULT_PLAYER_NAME = "DOPT";
+
+function emptyNotes(): NoteMask[][] {
+  return Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => 0));
+}
+
+function hasNote(mask: NoteMask, n: number) {
+  return (mask & (1 << n)) !== 0;
+}
+
+function toggleNote(mask: NoteMask, n: number) {
+  return mask ^ (1 << n);
+}
+
+function noteNumbers(mask: NoteMask) {
+  const nums: number[] = [];
+  for (let n = 1; n <= 9; n += 1) {
+    if (hasNote(mask, n)) nums.push(n);
+  }
+  return nums;
+}
 
 function buildEmptyCellMask(emptyCells: number): boolean[][] {
   const flat = Array.from({ length: 81 }, (_, index) => index >= 81 - emptyCells ? false : true);
@@ -205,6 +227,8 @@ function drawScene(
   puzzle: Grid9 | null,
   playerGrid: Grid9,
   givenMask: boolean[][] | null,
+  notes: NoteMask[][],
+  noteMode: boolean,
   selected: { row: number; col: number } | null,
   conflicts: Set<string>,
   assistProfile: SudokuAssistProfile,
@@ -373,6 +397,27 @@ function drawScene(
   ctx.textBaseline = "middle";
   for (let r = 0; r < 9; r += 1) {
     for (let c = 0; c < 9; c += 1) {
+      if (givenMask[r][c] || playerGrid[r][c] !== 0) continue;
+      const mask = notes[r]?.[c] ?? 0;
+      if (mask === 0) continue;
+      const x = boardX + c * cell;
+      const y = boardY + r * cell;
+      const isSelected = selected?.row === r && selected?.col === c;
+      const noteFont = Math.max(9, Math.floor(cell * 0.18));
+      ctx.font = `700 ${noteFont}px ${theme.font}`;
+      ctx.fillStyle = isSelected ? "rgba(224,242,254,0.86)" : "rgba(186,230,253,0.64)";
+      ctx.shadowColor = "transparent";
+      for (const n of noteNumbers(mask)) {
+        const i = n - 1;
+        const nr = Math.floor(i / 3);
+        const nc = i % 3;
+        ctx.fillText(String(n), x + (cell * (nc + 0.5)) / 3, y + (cell * (nr + 0.5)) / 3);
+      }
+    }
+  }
+
+  for (let r = 0; r < 9; r += 1) {
+    for (let c = 0; c < 9; c += 1) {
       const v = playerGrid[r][c];
       if (v === 0) continue;
       const x = boardX + c * cell + cell / 2;
@@ -401,6 +446,7 @@ function drawScene(
   const px = layout.boardX;
   const py0 = padY + keyGap;
   const selectedValue = selected ? playerGrid[selected.row][selected.col] : 0;
+  const selectedNoteMask = selected ? (notes[selected.row]?.[selected.col] ?? 0) : 0;
   ctx.font = `700 14px ${theme.font}`;
   for (let n = 1; n <= 9; n += 1) {
     const i = n - 1;
@@ -408,10 +454,10 @@ function drawScene(
     const c = i % 3;
     const x0 = px + c * (keyW + keyGap);
     const y0 = py0 + r * (keyH + keyGap);
-    const active = selectedValue === n;
+    const active = noteMode ? hasNote(selectedNoteMask, n) : selectedValue === n;
     const keyGradient = ctx.createLinearGradient(x0, y0, x0, y0 + keyH);
-    keyGradient.addColorStop(0, active ? "rgba(56,189,248,0.34)" : "rgba(30,41,59,0.86)");
-    keyGradient.addColorStop(1, active ? "rgba(14,165,233,0.18)" : "rgba(2,6,23,0.66)");
+    keyGradient.addColorStop(0, active ? (noteMode ? "rgba(20,184,166,0.34)" : "rgba(56,189,248,0.34)") : "rgba(30,41,59,0.86)");
+    keyGradient.addColorStop(1, active ? (noteMode ? "rgba(15,118,110,0.2)" : "rgba(14,165,233,0.18)") : "rgba(2,6,23,0.66)");
     ctx.save();
     ctx.shadowColor = active ? "rgba(56,189,248,0.22)" : "rgba(0,0,0,0.2)";
     ctx.shadowBlur = active ? 12 : 7;
@@ -420,11 +466,11 @@ function drawScene(
     roundPad(x0, y0, keyW, keyH, 8);
     ctx.fill();
     ctx.restore();
-    ctx.strokeStyle = active ? "rgba(125,211,252,0.75)" : "rgba(148,163,184,0.2)";
+    ctx.strokeStyle = active ? (noteMode ? "rgba(94,234,212,0.75)" : "rgba(125,211,252,0.75)") : noteMode ? "rgba(94,234,212,0.28)" : "rgba(148,163,184,0.2)";
     ctx.lineWidth = active ? 1.4 : 1;
     roundPad(x0, y0, keyW, keyH, 8);
     ctx.stroke();
-    ctx.fillStyle = active ? "#e0f2fe" : theme.text;
+    ctx.fillStyle = active ? "#e0f2fe" : noteMode ? "rgba(204,251,241,0.9)" : theme.text;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(n), x0 + keyW / 2, y0 + keyH / 2);
@@ -447,7 +493,7 @@ function drawScene(
   roundPad(px, clearY, keyW * 3 + keyGap * 2, keyH, 8);
   ctx.stroke();
   ctx.fillStyle = "rgba(203,213,225,0.86)";
-  ctx.fillText("지우기", px + (keyW * 3 + keyGap * 2) / 2, clearY + keyH / 2);
+  ctx.fillText(noteMode ? "Clear notes" : "Clear", px + (keyW * 3 + keyGap * 2) / 2, clearY + keyH / 2);
 
   if (phase === "generating") {
     ctx.fillStyle = "rgba(2,6,23,0.55)";
@@ -475,6 +521,7 @@ export function SudokuClient() {
   const [genProgress, setGenProgress] = useState(0);
   const [genLabel, setGenLabel] = useState("");
   const [genError, setGenError] = useState("");
+  const [canvasResizeTick, setCanvasResizeTick] = useState(0);
   const [displayedMs, setDisplayedMs] = useState(0);
   const [scores, setScores] = useState<SudokuScore[]>([]);
   const [isLoadingScores, setIsLoadingScores] = useState(false);
@@ -487,6 +534,8 @@ export function SudokuClient() {
   const [mistakeCount, setMistakeCount] = useState(0);
   const [flashConflictKey, setFlashConflictKey] = useState<string | null>(null);
   const [localBestMap, setLocalBestMap] = useState<Record<string, LocalBest>>({});
+  const [noteMode, setNoteMode] = useState(false);
+  const [notes, setNotes] = useState<NoteMask[][]>(() => emptyNotes());
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -498,6 +547,8 @@ export function SudokuClient() {
   const frozenMsRef = useRef(0);
   const selectedRef = useRef<{ row: number; col: number } | null>({ row: 0, col: 0 });
   const playerGridRef = useRef<Grid9>(emptyGrid());
+  const noteModeRef = useRef(false);
+  const notesRef = useRef<NoteMask[][]>(emptyNotes());
   const mistakeCountRef = useRef(0);
   const mistakeKeysRef = useRef<Set<string>>(new Set());
   const flashConflictTimerRef = useRef<number | null>(null);
@@ -513,10 +564,35 @@ export function SudokuClient() {
     playerGridRef.current = playerGrid;
   }, [playerGrid]);
 
+  useEffect(() => {
+    noteModeRef.current = noteMode;
+  }, [noteMode]);
+
+  useEffect(() => {
+    notesRef.current = notes;
+  }, [notes]);
+
   const resetMistakes = useCallback(() => {
     mistakeCountRef.current = 0;
     mistakeKeysRef.current.clear();
     setMistakeCount(0);
+  }, []);
+
+  const resetNotes = useCallback(() => {
+    const freshNotes = emptyNotes();
+    notesRef.current = freshNotes;
+    noteModeRef.current = false;
+    setNotes(freshNotes);
+    setNoteMode(false);
+  }, []);
+
+  const toggleNoteMode = useCallback(() => {
+    if (phaseRef.current !== "playing") return;
+    setNoteMode((current) => {
+      const next = !current;
+      noteModeRef.current = next;
+      return next;
+    });
   }, []);
 
   const clearFlashConflict = useCallback(() => {
@@ -603,6 +679,7 @@ export function SudokuClient() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    window.requestAnimationFrame(() => setCanvasResizeTick((tick) => tick + 1));
   }, []);
 
   useEffect(() => {
@@ -623,12 +700,12 @@ export function SudokuClient() {
     if (!canvas || !layout || !theme) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    drawScene(ctx, layout, theme, puzzle, playerGrid, givenMask, selected, conflicts, assistProfile, flashConflictKey, phase);
-  }, [puzzle, playerGrid, givenMask, selected, conflicts, assistProfile, flashConflictKey, phase]);
+    drawScene(ctx, layout, theme, puzzle, playerGrid, givenMask, notes, noteMode, selected, conflicts, assistProfile, flashConflictKey, phase);
+  }, [puzzle, playerGrid, givenMask, notes, noteMode, selected, conflicts, assistProfile, flashConflictKey, phase]);
 
   useEffect(() => {
     paint();
-  }, [paint, genProgress]);
+  }, [paint, genProgress, canvasResizeTick]);
 
   const terminateWorker = useCallback(() => {
     workerRef.current?.terminate();
@@ -661,6 +738,7 @@ export function SudokuClient() {
       setHasSubmitted(false);
       setSaveStatus("");
       resetMistakes();
+      resetNotes();
       clearFlashConflict();
 
       const worker = new Worker("/workers/sudoku-generator.worker.js");
@@ -707,7 +785,7 @@ export function SudokuClient() {
       };
       worker.postMessage(msg);
     },
-    [clearFlashConflict, resetMistakes, terminateWorker],
+    [clearFlashConflict, resetMistakes, resetNotes, terminateWorker],
   );
 
   const handleLevelChange = (next: SudokuLevelId) => {
@@ -736,6 +814,7 @@ export function SudokuClient() {
     setPlayerGrid(freshGrid);
     setGivenMask(null);
     resetMistakes();
+    resetNotes();
     clearFlashConflict();
   };
 
@@ -757,6 +836,8 @@ export function SudokuClient() {
       frozenMsRef.current += phaseRef.current === "playing" ? performance.now() - playStartRef.current : 0;
       setDisplayedMs(frozenMsRef.current);
       setPhase("completed");
+      noteModeRef.current = false;
+      setNoteMode(false);
 
       const elapsed = Math.round(frozenMsRef.current);
       const mistakes = mistakeCountRef.current;
@@ -808,9 +889,72 @@ export function SudokuClient() {
 
       playerGridRef.current = next;
       setPlayerGrid(next);
+      if (value !== 0) {
+        setNotes((current) => {
+          if ((current[row]?.[col] ?? 0) === 0) return current;
+          const nextNotes = current.map((line) => line.slice());
+          nextNotes[row][col] = 0;
+          notesRef.current = nextNotes;
+          return nextNotes;
+        });
+      }
       if (phaseRef.current === "playing") tryComplete(next);
     },
     [assistProfile.conflictDisplay, givenMask, puzzle, tryComplete],
+  );
+
+  const toggleCellNote = useCallback(
+    (row: number, col: number, value: number) => {
+      if (phaseRef.current !== "playing") return;
+      if (!givenMask || !puzzle) return;
+      if (value < 1 || value > 9) return;
+      if (givenMask[row][col]) return;
+      if (playerGridRef.current[row][col] !== 0) return;
+
+      const nextNotes = notesRef.current.map((line) => line.slice());
+      nextNotes[row][col] = toggleNote(nextNotes[row][col], value);
+      notesRef.current = nextNotes;
+      setNotes(nextNotes);
+    },
+    [givenMask, puzzle],
+  );
+
+  const clearCellNotes = useCallback(
+    (row: number, col: number) => {
+      if (phaseRef.current !== "playing") return;
+      if (!givenMask || !puzzle) return;
+      if (givenMask[row][col]) return;
+      const currentMask = notesRef.current[row]?.[col] ?? 0;
+      if (currentMask === 0) return;
+
+      const nextNotes = notesRef.current.map((line) => line.slice());
+      nextNotes[row][col] = 0;
+      notesRef.current = nextNotes;
+      setNotes(nextNotes);
+    },
+    [givenMask, puzzle],
+  );
+
+  const handleDigitInput = useCallback(
+    (row: number, col: number, value: number) => {
+      if (noteModeRef.current) {
+        toggleCellNote(row, col, value);
+        return;
+      }
+      setCellDigit(row, col, value);
+    },
+    [setCellDigit, toggleCellNote],
+  );
+
+  const handleClearInput = useCallback(
+    (row: number, col: number) => {
+      if (noteModeRef.current) {
+        clearCellNotes(row, col);
+        return;
+      }
+      setCellDigit(row, col, 0);
+    },
+    [clearCellNotes, setCellDigit],
   );
 
   useEffect(() => {
@@ -826,6 +970,12 @@ export function SudokuClient() {
       const ph = phaseRef.current;
 
       if (ph !== "playing" && ph !== "ready") return;
+
+      if (ph === "playing" && code === "KeyN") {
+        event.preventDefault();
+        toggleNoteMode();
+        return;
+      }
 
       const sel = selectedRef.current;
       if (!sel) return;
@@ -845,17 +995,17 @@ export function SudokuClient() {
         row = (row + 1) % 9;
       } else if (ph === "playing" && (code === "Backspace" || code === "Delete")) {
         event.preventDefault();
-        setCellDigit(row, col, 0);
+        handleClearInput(row, col);
         return;
       } else if (ph === "playing" && /^Digit[1-9]$/.test(code)) {
         event.preventDefault();
         const n = Number(code.replace("Digit", ""));
-        setCellDigit(row, col, n);
+        handleDigitInput(row, col, n);
         return;
       } else if (ph === "playing" && /^Numpad[1-9]$/.test(code)) {
         event.preventDefault();
         const n = Number(code.replace("Numpad", ""));
-        setCellDigit(row, col, n);
+        handleDigitInput(row, col, n);
         return;
       } else {
         return;
@@ -866,7 +1016,7 @@ export function SudokuClient() {
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [puzzle, givenMask, setCellDigit]);
+  }, [puzzle, givenMask, handleClearInput, handleDigitInput, toggleNoteMode]);
 
   useEffect(() => {
     startGeneration(1, bumpGenSeq());
@@ -879,6 +1029,16 @@ export function SudokuClient() {
     const fixed = givenMask[row][col];
     setLiveRegion(`${row + 1}행 ${col + 1}열, 값 ${v === 0 ? "빈칸" : v}, ${fixed ? "힌트" : "입력 가능"}`);
   }, [selected, playerGrid, givenMask]);
+
+  useEffect(() => {
+    if (!selected || !givenMask) return;
+    const { row, col } = selected;
+    const v = playerGrid[row][col];
+    const fixed = givenMask[row][col];
+    const currentNotes = noteNumbers(notes[row]?.[col] ?? 0).join(" ");
+    const noteText = v === 0 && currentNotes ? `, notes ${currentNotes}` : "";
+    setLiveRegion(`Row ${row + 1}, column ${col + 1}, ${v === 0 ? "empty" : `value ${v}`}, ${fixed ? "given" : "editable"}${noteText}${noteMode ? ", note mode" : ""}`);
+  }, [selected, playerGrid, givenMask, notes, noteMode]);
 
   const onCanvasPointer = (event: ReactPointerEvent<HTMLCanvasElement>) => {
     if (phase === "generating") return;
@@ -899,8 +1059,8 @@ export function SudokuClient() {
     if (phaseRef.current !== "playing") return;
     const sel = selectedRef.current;
     if (!sel) return;
-    if (hit.type === "num") setCellDigit(sel.row, sel.col, hit.n);
-    if (hit.type === "clear") setCellDigit(sel.row, sel.col, 0);
+    if (hit.type === "num") handleDigitInput(sel.row, sel.col, hit.n);
+    if (hit.type === "clear") handleClearInput(sel.row, sel.col);
   };
 
   const handleSubmitScore = async () => {
@@ -1007,8 +1167,22 @@ export function SudokuClient() {
 
       <section className="sudoku-layout section">
         <div className="panel sudoku-play-panel">
-          <div className="sudoku-play-header sudoku-play-header--actions-only">
+          <div className="sudoku-play-header">
+            <div className="sudoku-board-status" aria-label={`Lv ${levelId} ${assistProfile.label}`}>
+              <span>Lv {levelId}</span>
+              <strong>{assistProfile.label}</strong>
+            </div>
             <div className="sudoku-play-actions sudoku-play-actions--primary">
+              <button
+                type="button"
+                className={`ghost-button sudoku-note-toggle${noteMode ? " is-active" : ""}`}
+                onClick={toggleNoteMode}
+                aria-pressed={noteMode}
+                disabled={phase !== "playing"}
+                title="Toggle notes (N)"
+              >
+                Note
+              </button>
               {phase === "generating" ? (
                 <button type="button" className="ghost-button" onClick={handleCancelGenerate}>
                   취소
@@ -1069,12 +1243,6 @@ export function SudokuClient() {
               aria-label="스도쿠 보드"
               onPointerDown={onCanvasPointer}
             />
-            {phase !== "completed" ? (
-              <div className="sudoku-board-badge" aria-hidden="true">
-                <span>Lv {levelId}</span>
-                <strong>{assistProfile.label}</strong>
-              </div>
-            ) : null}
             {phase === "ready" ? (
               <button type="button" className="sudoku-canvas-start-button" onClick={startPlay}>
                 Start
@@ -1175,6 +1343,10 @@ export function SudokuClient() {
                 <span className="sudoku-session-label">Mode</span>
                 <strong>{phase === "idle" || phase === "ready" ? "Ready" : phase === "playing" ? "Playing" : phase === "completed" ? "Cleared" : ""}</strong>
               </div>
+              <div className={`sudoku-session-card${noteMode ? " sudoku-session-card--note-active" : ""}`}>
+                <span className="sudoku-session-label">Notes</span>
+                <strong>{noteMode ? "On" : "Off"}</strong>
+              </div>
             </div>
           </section>
 
@@ -1250,6 +1422,7 @@ export function SudokuClient() {
               </div>
             ) : (
               <div className="sudoku-control-list">
+                <span>N Note mode</span>
                 <span>화살표 / WASD 이동</span>
                 <span>1–9 입력</span>
                 <span>Backspace 지우기</span>

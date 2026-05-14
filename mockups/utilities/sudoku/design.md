@@ -1,357 +1,641 @@
-# 설계서: 수도쿠 (Sudoku)
+# 설계서: Sudoku
 
-본 문서는 `requirements.md`를 구현 가능한 수준으로 구체화한다. 먼저 요구사항 대비 **품질·리스크 이슈**와 **설계상 해결책**을 명시하고, 이어서 아키텍처·데이터·UI·API를 규정한다.
+최종 업데이트: 2026-05-14
 
----
+이 문서는 현재 구현된 스도쿠 게임의 구조와 동작을 설명한다. 요구사항은 `mockups/utilities/sudoku/requirements.md`를 기준으로 한다.
 
-## 1. 품질 점검 및 해결 방안
+## 1. 아키텍처
 
-| 이슈 | 설명 | 설계 결정(솔루션) |
-| --- | --- | --- |
-| **리더보드 무결성** | 클리어 시간만 보내면 클라이언트가 임의의 `time_ms`를 제출할 수 있다. 퍼즐·정답 생성이 클라이언트에 있으면 “정답 그리드” 위조도 이론상 가능하다. | **1단계(필수):** 제출 페이로드에 `puzzle`(81칸, 0–9) + `player_grid`(완성 시 81칸) + `level_id` + `time_ms` + `seed`를 포함하고, 서버에서 **스도쿠 규칙 만족 여부**와 **`player_grid === puzzle`의 고정칸 일치**를 검증한다. **2단계(권장):** 서버가 `solution`을 모르면 “완전 유효판”만으로는 다중 해 가능성이 있어, 생성기가 만든 `solution`에 대한 **HMAC 또는 서버 측 퍼즐 레지스트리**는 장기 과제로 분리한다. 단기적으로는 **합리적 상한**(예: 레벨당 최소·최대 시간 클램프), **레이트 리밋**, 동일 세션 중복 제출 방지로 스팸을 줄인다. |
-| **프로그레스 신뢰도** | 백트래킹·유일해 검사는 내부 루프 길이가 들쭉날쭉해 정확한 %가 어렵다. | **단계형 가중치 모델**을 사용한다: 예) `fill_board` 0–40%, `remove_digits` 40–90%, `finalize` 90–100%. 세부 단계 내에서는 **시도 횟수/상한 대비 비율**로 근사치를 올리거나, 알고리즘이 **명시적 콜백**을 호출할 때만 바를 갱신한다. 500ms 이상 지연 시 **결정적(indeterminate) 보조 애니메이션**을 허용한다. |
-| **메인 스레드 점유** | 고난이도 `countSolutions` 반복 시 UI 프리즈. | 생성 로직은 기본적으로 **Web Worker**에서 실행한다. 폴백: Worker 미지원 시에만 메인 스레드 + `requestIdleCallback`/청크 분할(알고리즘 협력 필요). |
-| **경쟁 생성** | 레벨 탭을 빠르게 바꿀 때 이전 생성 결과가 늦게 도착해 잘못된 판이 표시될 수 있다. | `AbortController` 또는 **모노토닉 `generationId`** 로 “최신 요청만 적용”한다. Worker에는 `cancel` 메시지를 보낸다. |
-| **모바일 입력** | 터치 기기에서 키보드 1–9가 불편하거나 없다. | Canvas **숫자 패드는 필수 UX**. 최소 터치 타깃 44px 이상 권장. |
-| **접근성** | 순수 Canvas는 스크린 리더·포커스 맵이 약하다. | 보드 옆(또는 하단)에 **논리적 순서의 숨김 표 또는 `aria-live` 요약**을 둔다. 선택 셀 좌표·값·고정 여부를 **라이브 리전**으로 짧게 알린다. 포커스 가능한 **DOM 컨트롤**(일시정지, 시작)은 항상 유지한다. |
-| **레벨 vs 알고리즘 난이도** | 제품 레벨(1–10)과 솔버 기법(Hard/Easy)이 1:1이 아닐 수 있다. | `levelId` → **생성 프로파일**(`attempts`, 목표 빈칸 수 범위, 허용 최대 기법 등**) 매핑 테이블**을 `lib/sudoku/level-profiles.ts` 등 한 곳에 둔다. 알고리즘 제공 후 조정한다. |
-| **타이머 공정성** | 백그라운드 탭에서 시간이 흐르는 문제. | **요구사항 권장(Start 이후 측정)** 유지. 자동 백그라운드 일시정지는 **하지 않는다**(테트리스류와 동일하게 단순화). 원하면 추후 “공정 모드” 옵션으로 확장. |
-| **일시정지** | 멈춘 상태에서 입력 가능하면 혼란. | 일시정지 중에는 **입력 무시**, Canvas에 오버레이. 타이머 **정지**. |
-| **동순위 리더보드** | `time_ms` 동일 다수. | 정렬: `time_ms` 오름차순, 타이브레이크 **`created_at` 오름차순**(더 빨리 달성한 기록이 상위). |
-
-위 항목은 구현 시 `todo.md`의 순서와 코드 리뷰 체크리스트에 반영한다.
-
----
-
-## 2. 목표 및 범위
-
-* **목표:** 9×9 스도쿠, 레벨 1–10, 자동 생성, Canvas UI, 키보드+마우스 입력, 클리어 시간 기록의 Supabase 글로벌 리더보드.
-* **범위 밖:** 멀티플레이, 커스텀 크기, 자동 힌트(추후 확장 가능).
-
----
-
-## 3. 라우트·파일·네이밍
-
-| 구분 | 값 |
+| 영역 | 파일 |
 | --- | --- |
-| Slug | `sudoku` |
-| 라우트 | `/sudoku` |
-| 페이지 | `app/sudoku/page.tsx` (메타·JSON-LD·`page-shell`·`SiteHeader`·`SudokuClient`) |
-| 클라이언트 | `app/sudoku/sudoku-client.tsx` |
-| API | `app/api/sudoku/scores/route.ts` (`GET` 목록, `POST` 저장) |
-| 데이터 접근 | `lib/data.ts`에 `listSudokuScores`, `saveSudokuScore` (테트리스 패턴) |
-| 타입 | `types/index.ts`에 `SudokuLevelId`, `SudokuScore` |
-| 생성기 | `lib/sudoku/generate.ts` (또는 사용자 제공 모듈) + `lib/sudoku/worker.ts` |
-| Worker 번들 | `public/workers/sudoku-generator.worker.js` 또는 Next 권장 방식에 따른 `*.worker.ts` |
-| 프리뷰 이미지 | `public/images/utilities/sudoku-preview.svg` (구현 단계) |
-| 기획 문서 | `mockups/utilities/sudoku/requirements.md`, 본 `design.md`, `todo.md` |
+| 페이지 | `app/sudoku/page.tsx` |
+| 클라이언트 게임 | `app/sudoku/sudoku-client.tsx` |
+| 스타일 | `app/globals.css`의 `.sudoku-*` 블록 |
+| 점수 API | `app/api/sudoku/scores/route.ts` |
+| 데이터 접근 | `lib/data.ts`의 `listSudokuScores`, `saveSudokuScore` |
+| 생성 프로필 | `lib/sudoku/level-profiles.ts` |
+| 서버 검증용 생성기 | `lib/sudoku/generator.ts` |
+| 클라이언트 생성 Worker | `public/workers/sudoku-generator.worker.js` |
+| 그리드 유틸 | `lib/sudoku/grid.ts` |
+| 점수 계산 | `lib/sudoku/scoring.ts` |
+| 제출 검증 | `lib/sudoku/validate.ts` |
+| 타입 | `types/index.ts` |
+| DB 스키마 | `supabase/sudoku_scores.sql` |
 
----
-
-## 4. 정보 구조 (IA)
-
-* `SiteHeader`
-* **인트로 블록** (`sudoku-intro`): 제목, 한 줄 설명, 레벨 1–10 **탭 그리드** (테트리스 `.tetris-mode-tabs`와 동일 UX; 클래스는 `.sudoku-level-tabs`로 복제·조정)
-* **메인 레이아웃** (`sudoku-layout`): 2열 — 플레이 패널 | 사이드 패널
-  * **플레이 패널:** Canvas 래퍼, 상태 줄(타이머, 레벨, 일시정지 표시), 액션 버튼(Start / New game / Pause), 생성 프로그레스(필요 시)
-  * **사이드 패널:** 플레이어 이름 입력, 로컬 베스트, 글로벌 리더보드, 짧은 조작 안내
-* **숨김 접근성 보조:** `aria-live` 영역 + 선택 셀 설명
+클라이언트 Worker와 서버 검증용 생성기는 같은 알고리즘 계열을 사용한다. 점수 제출 시 서버는 클라이언트가 보낸 퍼즐을 신뢰하지 않고 같은 시드와 레벨 프로필로 다시 생성해 비교한다.
 
 ```mermaid
 flowchart LR
-  subgraph intro [Intro]
-    L[Level 1-10 tabs]
-  end
-  subgraph play [Play panel]
-    C[Canvas board + numpad]
-    P[Progress overlay]
-    A[Start Pause New game]
-  end
-  subgraph side [Side panel]
-    N[Player name]
-    B[Local best]
-    R[Global leaderboard]
-  end
-  L --> P
-  L --> C
-  C --> A
+  Page["/sudoku page"] --> Client["SudokuClient"]
+  Client --> Worker["public worker"]
+  Worker --> Client
+  Client --> Api["/api/sudoku/scores"]
+  Api --> Data["lib/data.ts"]
+  Data --> Validate["lib/sudoku/validate.ts"]
+  Validate --> Generator["lib/sudoku/generator.ts"]
+  Data --> Supabase["sudoku_scores"]
 ```
 
----
+## 2. 데이터 모델
 
-## 5. 화면 상태 머신
+### 2.1 그리드
 
-플레이어가 인지하는 **화면 단계(`ScreenPhase`)**:
+```ts
+export type Grid9 = number[][];
+```
 
-1. **`idle`** — 레벨 선택됨, 아직 생성 전 또는 이전 판 종료. Start 가능.
-2. **`generating`** — Worker에서 퍼즐 생성, 프로그레스 표시, 취소 가능.
-3. **`ready`** — 생성 완료, 타이머 0, **Start** 전. 입력 잠금 또는 연습 입력만(권장: 잠금).
-4. **`playing`** — 타이머 진행, 입력 허용.
-5. **`paused`** — 타이머 정지, 오버레이, 입력 차단.
-6. **`completed`** — 클리어, 타이머 정지, 제출 UI.
+- 9x9 배열이다.
+- 값 `0`은 빈칸이다.
+- 값 `1-9`는 확정 숫자 또는 플레이어 입력 숫자다.
+- `givenMask: boolean[][]`는 초기 퍼즐에서 고정 칸인지 표시한다.
+
+### 2.2 상태
+
+현재 클라이언트 상태는 다음 타입이다.
+
+```ts
+type ScreenPhase = "idle" | "generating" | "ready" | "playing" | "completed";
+```
+
+상태 전이는 다음과 같다.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> idle
-  idle --> generating: New game / level change
-  generating --> idle: Cancel
-  generating --> ready: Success
-  generating --> idle: Fail
+  [*] --> generating: initial mount
+  idle --> generating: New game
+  generating --> idle: Cancel / error
+  generating --> ready: success
   ready --> playing: Start
-  playing --> paused: Pause
-  paused --> playing: Resume
-  playing --> completed: Valid complete grid
-  completed --> idle: New game
-  playing --> idle: New game (confirm discard)
+  playing --> completed: complete valid grid
+  playing --> generating: New game / level change
+  completed --> generating: New game / level change
 ```
 
----
+현재 구현에는 `paused` 상태가 없다.
 
-## 6. 도메인 모델
+### 2.3 로컬 상태
 
-### 6.1 그리드 표현
+`SudokuClient`는 다음 주요 상태를 가진다.
 
-* `CellDigit = 0 | 1 | 2 | ... | 9` — **0은 빈 칸**(내부·API·저장 모두 통일).
-* `Grid9 = CellDigit[][]` — 길이 9×9, 인덱스 `row, col` ∈ [0,8].
-* `givenMask: boolean[][]` — 초기 퍼즐에서 0이 아니었던 칸은 `true`(편집 불가).
+- `levelId`: 현재 레벨
+- `phase`: 화면 상태
+- `puzzle`: 생성된 퍼즐
+- `playerGrid`: 플레이어 입력을 반영한 보드
+- `givenMask`: 고정 칸 마스크
+- `seed`: 퍼즐 재현용 시드
+- `selected`: 현재 선택 칸
+- `displayedMs`: 표시 시간
+- `mistakeCount`: 실수 수
+- `scores`: 글로벌 리더보드 목록
+- `localBestMap`: 레벨별 로컬 베스트
+- `flashConflictKey`: Lv 5 충돌 플래시용 셀 키
 
-### 6.2 세션(클라이언트)
+## 3. 퍼즐 생성 설계
 
-```ts
-type SudokuLevelId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+### 3.1 입력
 
-type SudokuSession = {
-  levelId: SudokuLevelId;
-  seed: number; // u32 권장
-  puzzle: Grid9;
-  solution: Grid9;
-  givenMask: boolean[][];
-  playerGrid: Grid9; // 사용자 입력 반영
-  phase: ScreenPhase;
-  selected: { row: number; col: number } | null;
-  startedAtMs: number | null; // performance.now() 기준 권장
-  elapsedMs: number; // 누적 플레이 시간(일시정지 제외)
-  generationId: number;
-};
-```
-
-### 6.3 생성기 결과(Worker → 메인)
+Worker 요청은 다음 형태다.
 
 ```ts
-type GenerateRequest = {
+type WorkerGenerateMessage = {
   kind: "generate";
   id: number;
-  levelId: SudokuLevelId;
   seed?: number;
-};
-
-type GenerateProgress = {
-  kind: "progress";
-  id: number;
-  ratio: number; // 0..1
-  label?: string;
-};
-
-type GenerateSuccess = {
-  kind: "success";
-  id: number;
-  puzzle: Grid9;
-  solution: Grid9;
-  seed: number;
-  metadata?: {
-    givenCount: number;
-    techniqueTier?: string;
-    durationMs?: number;
+  profile: {
+    maxRemovals: number;
+    removalAttempts: number;
+    fullRegenerateRounds: number;
   };
-};
-
-type GenerateError = {
-  kind: "error";
-  id: number;
-  message: string;
 };
 ```
 
----
+`id`는 생성 요청 순서를 구분한다. 오래된 Worker 응답은 현재 요청과 `id`가 다르면 무시한다.
 
-## 7. Canvas 렌더링 설계
+### 3.2 알고리즘
 
-### 7.1 레이아웃
+생성 절차는 다음 순서다.
 
-* 단일 Canvas를 **세 구역**으로 나눈다: **보드**, **숫자 패드**, (선택) **상태 바**.
-* `ResizeObserver`로 컨테이너 너비 `W`를 읽고, `devicePixelRatio`로 `canvas.width/height`를 스케일한다.
-* 보드는 정사각형 `boardSize = min(W * 0.92, maxBoard)` 등으로 계산하고, 패드는 보드 아래에 고정 높이 또는 비율.
+1. `mulberry32(seed)`로 결정적 난수를 만든다.
+2. 백트래킹으로 완성된 9x9 보드를 채운다.
+3. 무작위 고정 칸을 하나 제거한다.
+4. `countSolutions`로 해답 수가 1개인지 확인한다.
+5. 해답이 유일하면 제거를 확정하고, 유일하지 않으면 원복한다.
+6. `maxRemovals`에 도달하거나 `removalAttempts`가 소진될 때까지 반복한다.
+7. 결과가 부족하면 `fullRegenerateRounds` 범위 안에서 다른 난수 라운드로 재시도한다.
 
-### 7.2 그리기 순서
+Worker는 진행률을 `progress` 메시지로 보내고, 성공 시 `success` 메시지로 `puzzle`, `seed`, `metadata`를 반환한다. 클라이언트는 반환된 퍼즐로 `givenMask`와 `playerGrid`를 만든다.
 
-1. 배경(반투명 패널 톤)
-2. 3×3 굵은 테두리, 셀 얇은 선
-3. 고정 칸 배경(약한 대비)
-4. 플레이어 숫자 / 빈 칸
-5. 선택 셀 테두리(액센트 `var(--accent)`)
-6. 충돌 셀 하이라이트(`var(--danger)` 15–25% 알파)
-7. 완성 시 짧은 펄스(옵션, `prefers-reduced-motion` 시 생략)
+### 3.3 서버 검증 생성기
 
-### 7.3 색 토큰
+서버 검증에서는 `lib/sudoku/generator.ts`를 사용한다. 이 생성기는 제출된 `seed`와 `levelId`의 생성 프로필로 퍼즐과 정답을 다시 만든다.
 
-Canvas `getComputedStyle(container)`로 다음 CSS 변수를 읽어 동기화한다:
+검증 기준:
 
-| 토큰 | 변수 | 용도 |
-| --- | --- | --- |
-| 배경 | `--bg`, `--panel` | 캔버스 배경 |
-| 텍스트 | `--text`, `--muted` | 숫자·라벨 |
-| 테두리 | `--border`, `--border-strong` | 그리드 |
-| 강조 | `--accent`, `--accent-strong` | 선택 |
-| 경고 | `--danger` | 충돌 |
-| 성공 | `--success` | 클리어 순간 |
+- 제출된 `puzzle` 문자열이 서버 재생성 퍼즐과 같아야 한다.
+- 제출된 `givenMask`가 서버 재생성 퍼즐에서 계산한 마스크와 같아야 한다.
+- 제출된 완성 보드가 서버 재생성 정답과 같아야 한다.
 
-폰트: `getComputedStyle`의 `fontFamily` 또는 `16px` 기준 `Intl` 숫자 중앙 정렬.
+이 방식은 클라이언트가 임의의 퍼즐과 정답을 제출하는 위험을 줄인다.
 
----
+## 4. 레벨과 도움 프로필
 
-## 8. 입력 및 히트 테스트
+레벨은 생성 난이도와 플레이 중 도움 수준을 함께 결정한다.
 
-### 8.1 포인터
+| 레벨 | `maxRemovals` | 도움 요약 |
+| --- | ---: | --- |
+| 1 | 24 | 전체 도움 |
+| 2 | 28 | 전체 도움 |
+| 3 | 32 | 충돌 표시 |
+| 4 | 36 | 선택 칸 충돌 |
+| 5 | 40 | 즉시 경고 |
+| 6 | 43 | 실수만 표시 |
+| 7 | 46 | 실수만 표시 |
+| 8 | 49 | 실수 약하게 표시 |
+| 9 | 51 | 완료 후 공개 |
+| 10 | 54 | 완료 후 공개 |
 
-* `pointerdown` 좌표를 보드/패드 사각형에 투영해 **셀 `(row,col)`** 또는 **숫자 `1–9` / clear** 결정.
-* 스크롤 오동작 방지: 패널에 `touch-action: none` (래퍼 CSS).
+도움 프로필은 다음 속성을 가진다.
 
-### 8.2 키보드
+```ts
+type SudokuAssistProfile = {
+  conflictDisplay: "all" | "selected" | "flash" | "none";
+  mistakeVisibility: "visible" | "subtle" | "completed";
+  showPeerHighlight: boolean;
+  showSameDigitHighlight: boolean;
+  label: string;
+};
+```
+
+`label`은 보드 내부가 아닌 `sudoku-play-header`의 `sudoku-board-status`에 표시한다. 이는 보드 숫자를 가리지 않기 위한 UI 결정이다.
+
+## 5. Canvas 렌더링
+
+### 5.1 레이아웃
+
+Canvas는 보드와 숫자 패드를 함께 렌더링한다.
+
+- 보드 크기: 컨테이너 폭과 최대 크기 안에서 계산
+- 숫자 패드: 보드 아래 3x3 버튼과 지우기 버튼
+- DPR: 최대 2.5까지 반영
+- 리사이즈: `ResizeObserver`와 `window.resize`로 재계산
+
+`measureLayout`은 보드 좌표, 셀 크기, 숫자 패드 좌표를 계산한다. `hitTest`는 포인터 좌표를 셀, 숫자, 지우기 버튼 중 하나로 변환한다.
+
+### 5.2 그리기 순서
+
+1. 배경 패널
+2. 보드 그림자와 보드 배경
+3. 고정 칸과 빈칸 톤
+4. 선택 칸의 행/열/박스 강조
+5. 같은 숫자 강조
+6. 충돌 칸 강조
+7. 선택 칸 테두리
+8. 3x3 굵은 선과 일반 격자
+9. 숫자
+10. `ready` 상태 블러 오버레이
+11. 숫자 패드와 지우기 버튼
+12. `generating` 상태 오버레이
+
+### 5.3 색상
+
+Canvas는 컨테이너의 CSS 변수에서 색상을 읽는다.
+
+- `--bg`
+- `--panel`
+- `--text`
+- `--muted`
+- `--border`
+- `--border-strong`
+- `--accent`
+- `--danger`
+- `--success`
+
+## 6. 입력 처리
+
+### 6.1 포인터
+
+- 보드 셀을 누르면 `selected`를 변경한다.
+- 숫자 패드를 누르면 선택 칸에 숫자를 입력한다.
+- 지우기 버튼을 누르면 선택 칸을 `0`으로 바꾼다.
+- `generating` 상태에서는 포인터 입력을 무시한다.
+- 실제 숫자 입력은 `playing` 상태에서만 허용한다.
+
+### 6.2 키보드
+
+키보드 이벤트는 `window`에 등록한다. 입력 폼 내부에서는 단축키를 무시한다.
 
 | 키 | 동작 |
 | --- | --- |
-| `Arrow` / `WASD` | 선택 셀 이동(편집 가능 칸으로 스킵 옵션은 **끔** — 고정 칸 위에도 포커스 가능하나 입력은 무시) |
-| `1`–`9` | 현재 선택 셀에 입력(고정 칸이면 무시) |
-| `Backspace` / `Delete` | 빈 칸으로 |
-| `Space` | (선택) 일시정지 토글 — **P**와 중복 가능 |
-| `P` | 일시정지 토글 (`playing` ↔ `paused`) |
+| `ArrowLeft`, `A` | 왼쪽 이동 |
+| `ArrowRight`, `D` | 오른쪽 이동 |
+| `ArrowUp`, `W` | 위 이동 |
+| `ArrowDown`, `S` | 아래 이동 |
+| `1-9`, `Numpad1-9` | 숫자 입력 |
+| `Backspace`, `Delete` | 지우기 |
 
-폼 포커스(`input`, `textarea`)일 때는 전역 단축키 비활성화(테트리스 `isFormTarget` 패턴 재사용).
+선택 이동은 `ready`와 `playing`에서 가능하고, 숫자 입력과 지우기는 `playing`에서만 가능하다.
 
----
+## 7. 실수와 완료 판정
 
-## 9. 검증 정책 (확정)
+숫자를 입력할 때마다 다음을 수행한다.
 
-* **입력:** 잘못된 숫자도 **허용 입력**(관대). 즉시 **충돌 집합**을 계산해 시각 표시.
-* **충돌 정의:** 같은 행·열·박스에 동일 숫자가 2개 이상이면 해당 **모든 충돌 칸**을 하이라이트(자기 자신 포함).
-* **클리어:** 모든 칸이 1–9이고 **충돌이 0**이면 완료.
-* **고정 칸:** `givenMask[row][col] === true`면 `playerGrid`를 퍼즐과 항상 동기화(덮어쓰기 불가).
+1. 고정 칸이면 무시한다.
+2. `playerGrid`에 값을 반영한다.
+3. 고정 칸 값을 다시 적용해 변조를 막는다.
+4. `computeConflictCells`로 충돌을 계산한다.
+5. 새 `row:col:value` 충돌이면 실수 수를 1 증가한다.
+6. Lv 5에서는 해당 충돌 칸을 650ms 동안 플래시한다.
+7. 보드가 완성되었고 충돌이 없으면 완료 처리한다.
 
-충돌 계산은 O(81×27) 이하의 단순 스캔으로 충분하다.
+완료 조건은 클라이언트에서는 "모든 칸 채움 + 충돌 없음"이다. 서버 제출 시에는 생성된 정답과 일치하는지도 추가 검증한다.
 
----
+## 8. 점수 계산
 
-## 10. 타이머
+점수 계산은 `lib/sudoku/scoring.ts`에 있다.
 
-* **`performance.now()`** 기반: `elapsedMs`는 `playing` 동안만 누적(`requestAnimationFrame` 또는 250ms 틱).
-* **표시:** `mm:ss.cs` (테트리스 `formatTime`과 유사).
-* **Start** 이후 첫 틱부터 누적.
+```ts
+baseScore = 10000 + levelId * 1500 + emptyCells * 250;
+timePenalty = elapsedSeconds * timePenaltyPerSecond(levelId);
+mistakePenalty = mistakeCount * 300;
+finalScore = Math.max(100, Math.round(baseScore - timePenalty - mistakePenalty));
+```
 
----
+초당 시간 패널티:
 
-## 11. Supabase · API
+- Lv 1-3: 12
+- Lv 4-7: 18
+- Lv 8-10: 25
 
-### 11.1 테이블 `sudoku_scores` (제안)
+로컬 베스트는 `score`가 높은 기록을 우선한다. 점수가 같으면 `timeMs`가 짧은 기록을 선택한다.
 
-| 컬럼 | 타입 | 설명 |
-| --- | --- | --- |
-| `id` | uuid | PK |
-| `player_name` | text | 표시명 |
-| `level_id` | int | 1–10 |
-| `time_ms` | int | 클리어 시간 |
-| `seed` | bigint | 재현용 |
-| `puzzle` | text | 81자 문자열(`0`–`9`) 또는 JSON |
-| `created_at` | timestamptz | 기본 now() |
+## 9. API 설계
 
-인덱스: `(level_id, time_ms asc, created_at asc)` for leaderboard.
+### 9.1 `GET /api/sudoku/scores?level=1`
 
-### 11.2 `GET /api/sudoku/scores?level=3`
+응답:
 
-* `level` 쿼리: 1–10.
-* 응답: `{ scores: SudokuScore[] }` 상한 50건.
+```json
+{
+  "scores": [
+    {
+      "id": "uuid",
+      "player_name": "DOPT",
+      "level_id": 1,
+      "time_ms": 81490,
+      "score": 17236,
+      "seed": 12345,
+      "created_at": "2026-05-14T00:00:00.000Z"
+    }
+  ]
+}
+```
 
-### 11.3 `POST /api/sudoku/scores`
+레벨 파라미터가 잘못되면 현재 구현은 Lv 1로 폴백한다.
 
-* 바디 예시:
+### 9.2 `POST /api/sudoku/scores`
+
+요청:
 
 ```json
 {
   "playerName": "DOPT",
-  "levelId": 3,
-  "timeMs": 125430,
-  "seed": 123456789,
-  "puzzle": "000...",
-  "playerGrid": "123...",
-  "givenMask": "101..."
+  "levelId": 1,
+  "timeMs": 81490,
+  "mistakeCount": 0,
+  "seed": 12345,
+  "puzzle": "81 chars",
+  "playerGrid": "81 chars",
+  "givenMask": "81 chars of 0 or 1"
 }
 ```
 
-* **서버 검증 순서:**
-  1. `levelId`, `timeMs`, 문자열 길이 81, 문자 집합 `0-9`.
-  2. `givenMask`와 `puzzle`의 고정칸이 `playerGrid`와 일치.
-  3. `playerGrid`가 완전하고 스도쿠 규칙 만족.
-  4. (선택) `timeMs`가 레벨별 상한/하한 내.
+응답:
 
-검증 실패 시 `400` + 메시지. Supabase 미설정 시 테트리스처럼 `{ saved: false }` 폴백 가능.
+```json
+{
+  "saved": true,
+  "score": {
+    "id": "uuid",
+    "player_name": "DOPT",
+    "level_id": 1,
+    "time_ms": 81490,
+    "score": 17236,
+    "seed": 12345,
+    "created_at": "2026-05-14T00:00:00.000Z"
+  }
+}
+```
 
-### 11.4 타입 `SudokuScore`
+검증 실패 시 `400`과 `{ "error": "message" }`를 반환한다.
+
+## 10. DB 설계
+
+현재 테이블은 `supabase/sudoku_scores.sql`에 정의되어 있다.
+
+| 컬럼 | 타입 | 설명 |
+| --- | --- | --- |
+| `id` | uuid | 기본키 |
+| `player_name` | text | 2-18자 표시 이름 |
+| `level_id` | integer | 1-10 |
+| `time_ms` | integer | 클리어 시간 |
+| `score` | integer | 계산된 점수 |
+| `seed` | integer | 퍼즐 재현 시드 |
+| `puzzle` | text | 81자 퍼즐 문자열 |
+| `created_at` | timestamptz | 생성 시각 |
+
+인덱스:
+
+```sql
+create index if not exists sudoku_scores_level_score_idx
+  on public.sudoku_scores (level_id, score desc, created_at asc);
+```
+
+권장 보완: 점수 동점 정렬을 안정화하려면 `(level_id, score desc, time_ms asc, created_at asc)` 인덱스를 고려한다.
+
+## 11. 로컬 저장소
+
+| 키 | 값 |
+| --- | --- |
+| `dopt-sudoku-player-name` | 최근 플레이어 이름 |
+| `dopt-sudoku-best-v1` | 레벨별 로컬 베스트 `{ timeMs, score, createdAt }` |
+
+이전 로컬 베스트에 `score`가 없으면 현재 점수식으로 보정한다.
+
+## 12. 접근성 설계
+
+- Canvas에는 `aria-label="스도쿠 보드"`를 제공한다.
+- 선택 셀 정보는 `sr-only` + `aria-live="polite"` 영역으로 제공한다.
+- 제출 폼, 이름 입력, 버튼은 DOM 요소를 사용한다.
+- Canvas 숫자 패드는 시각적 입력 장치이며 키보드 입력으로 대체 가능하다.
+
+## 13. 노트 기능 설계
+
+노트 기능은 아직 구현되지 않았다. 요구사항의 FR-12부터 FR-18을 만족하기 위해 다음 구조로 추가한다.
+
+### 13.1 상태 모델
+
+후보 숫자는 9개의 boolean 배열보다 비트마스크가 작고 토글이 단순하다.
 
 ```ts
-export type SudokuScore = {
-  id: string;
-  player_name: string;
-  level_id: number;
-  time_ms: number;
-  seed: number;
-  created_at?: string;
+type NoteMask = number; // bit 1..9 사용, bit 0은 사용하지 않음
+
+type SudokuNotesState = {
+  noteMode: boolean;
+  notes: NoteMask[][];
 };
 ```
 
----
+`SudokuClient`에는 다음 state/ref를 추가한다.
 
-## 12. 로컬 저장
+```ts
+const [noteMode, setNoteMode] = useState(false);
+const [notes, setNotes] = useState<NoteMask[][]>(() => emptyNotes());
+const notesRef = useRef<NoteMask[][]>(emptyNotes());
+```
 
-* `localStorage` 키: `dopt-sudoku-player-name` (기본값 `"DOPT"`).
-* 로컬 베스트: `dopt-sudoku-best-v1` → `Record<SudokuLevelId, { timeMs: number; createdAt: string }>` (더 짧은 시간만 갱신).
+헬퍼 함수:
 
----
+```ts
+function emptyNotes(): NoteMask[][] {
+  return Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => 0));
+}
 
-## 13. 에러·엣지 케이스
+function hasNote(mask: NoteMask, n: number) {
+  return (mask & (1 << n)) !== 0;
+}
 
-* **생성 실패:** 토스트 또는 인라인 에러 + 레벨 선택으로 복귀. “다시 시도” 버튼.
-* **네트워크:** 리더보드 로드 실패 시 빈 목록 + 비차단 메시지.
-* **제출 실패:** 클리어 상태 유지, 재시도 버튼.
-* **Reduced motion:** 셀 애니메이션·완성 펄스 생략.
+function toggleNote(mask: NoteMask, n: number) {
+  return mask ^ (1 << n);
+}
 
----
+function clearCellNotes(notes: NoteMask[][], row: number, col: number) {
+  const next = notes.map((line) => line.slice());
+  next[row][col] = 0;
+  return next;
+}
+```
 
-## 14. SEO (페이지)
+설계 원칙:
 
-* `metadata`: 제목 `Sudoku`, 설명 한글 1–2문장.
-* `canonical`: `/sudoku`.
-* OG/Twitter: `/images/utilities/sudoku-preview.svg`.
-* JSON-LD: `WebSite` + `SoftwareApplication` (기능: 레벨, 리더보드, Canvas).
+- `notes[row][col]`의 bit `n`이 켜져 있으면 후보 숫자 `n`을 표시한다.
+- `givenMask[row][col] === true`인 칸에는 노트를 저장하지 않는다.
+- `playerGrid[row][col] !== 0`인 칸에는 노트를 표시하지 않고, 확정 숫자 입력 시 노트를 삭제한다.
+- 새 게임, 레벨 변경, 생성 취소 시 `notes`와 `noteMode`를 초기화한다.
 
----
+### 13.2 입력 흐름
 
-## 15. 테스트 체크리스트 (수동)
+기존 `setCellDigit(row, col, value)`는 확정 숫자 입력만 담당한다. 노트 기능 추가 시 숫자 입력 진입점을 하나 더 둔다.
 
-* [ ] 레벨 전환 시 이전 Worker 결과 무시
-* [ ] 생성 취소 후 UI 일관성
-* [ ] 고정 칸 입력 불가·시각 구분
-* [ ] 충돌 하이라이트 정확성
-* [ ] 클리어 시에만 POST
-* [ ] 리더보드 정렬·동순위
-* [ ] 모바일 패드-only 플로우
-* [ ] 라이트/다크(향후 테마 확장 시) 색 대비
+```ts
+function handleDigitInput(row: number, col: number, value: number) {
+  if (noteMode) {
+    toggleCellNote(row, col, value);
+    return;
+  }
 
----
+  setCellDigit(row, col, value);
+}
+```
 
-## 16. 구현 시 의존성
+`toggleCellNote` 정책:
 
-* 알고리즘 모듈은 §6.3 메시지 형식을 지키면 UI와 독립적으로 통합 가능하다.
-* `globals.css`에 `.sudoku-*` 블록을 추가할 때 **테트리스 블록을 복사·축소**하여 이질감을 없앤다.
+- `phaseRef.current !== "playing"`이면 무시한다.
+- `givenMask` 또는 `puzzle`이 없으면 무시한다.
+- 고정 칸이면 무시한다.
+- `playerGridRef.current[row][col] !== 0`이면 무시한다.
+- `value`가 1-9가 아니면 무시한다.
+- 해당 후보 숫자를 토글한다.
+- 실수 수와 완료 판정을 호출하지 않는다.
 
----
+지우기 정책:
 
-본 설계서는 `requirements.md`의 미결 영역(검증 정책, 무결성, 프로그레스, Worker, API 스키마)을 **결정**으로 닫는다. 구현 세부는 `todo.md`의 작업 순서를 따른다.
+```ts
+function handleClearInput(row: number, col: number) {
+  if (noteMode) {
+    clearNotes(row, col);
+    return;
+  }
+
+  setCellDigit(row, col, 0);
+}
+```
+
+확정 숫자 입력 정책:
+
+- `setCellDigit`에서 `value !== 0`인 입력을 성공적으로 반영하면 해당 칸의 노트를 삭제한다.
+- `value === 0`으로 지우는 경우에는 노트를 복원하지 않는다.
+- 이 정책은 플레이어가 확정 입력을 선택했다는 명확한 신호로 본다.
+
+### 13.3 UI 컨트롤
+
+노트 토글은 Canvas 내부가 아니라 보드 밖 조작 영역에 둔다.
+
+권장 위치:
+
+- `sudoku-play-header` 또는 보드 하단 컨트롤 영역
+- `New game` 버튼과 같은 행에 두되, 보드 숫자를 가리지 않는다.
+
+권장 마크업:
+
+```tsx
+<button
+  type="button"
+  className={`ghost-button sudoku-note-toggle${noteMode ? " is-active" : ""}`}
+  aria-pressed={noteMode}
+  onClick={() => setNoteMode((value) => !value)}
+>
+  Note
+</button>
+```
+
+추가 UX:
+
+- 토글이 켜졌을 때 숫자 패드 버튼 톤을 약간 바꿔 노트 입력 중임을 알려준다.
+- 사이드 조작 패널에 `N: Note` 단축키를 추가한다.
+- 노트 모드가 켜진 상태에서 `completed`가 되면 토글은 비활성화하거나 자동으로 끈다.
+
+### 13.4 키보드와 포인터 통합
+
+수정 대상:
+
+- 키보드 숫자 입력 분기
+- 키보드 지우기 분기
+- Canvas 숫자 패드 포인터 분기
+- Canvas 지우기 포인터 분기
+
+변경 방향:
+
+```ts
+// 숫자 키
+handleDigitInput(row, col, n);
+
+// 지우기 키
+handleClearInput(row, col);
+
+// Canvas 숫자 패드
+if (hit.type === "num") handleDigitInput(sel.row, sel.col, hit.n);
+
+// Canvas clear
+if (hit.type === "clear") handleClearInput(sel.row, sel.col);
+```
+
+`N` 키:
+
+- `playing` 상태에서만 노트 모드를 토글한다.
+- `isFormTarget(event.target)`이면 무시한다.
+- `event.preventDefault()`로 브라우저 기본 동작을 막는다.
+
+### 13.5 Canvas 렌더링
+
+`drawScene` 인자에 `notes`와 `noteMode`를 추가한다.
+
+```ts
+function drawScene(
+  ctx: CanvasRenderingContext2D,
+  layout: Layout,
+  theme: CanvasTheme,
+  puzzle: Grid9 | null,
+  playerGrid: Grid9,
+  givenMask: boolean[][] | null,
+  notes: NoteMask[][],
+  noteMode: boolean,
+  ...
+) {}
+```
+
+후보 숫자 렌더링은 확정 숫자를 그리기 전에 수행한다.
+
+렌더링 규칙:
+
+- `playerGrid[r][c] !== 0`이면 노트를 그리지 않는다.
+- `givenMask[r][c]`가 true이면 노트를 그리지 않는다.
+- mask가 0이면 그리지 않는다.
+- 셀 내부를 3x3으로 나누고 후보 숫자 `n`을 다음 위치에 그린다.
+
+```text
+1 2 3
+4 5 6
+7 8 9
+```
+
+권장 스타일:
+
+- 글자 크기: `Math.max(9, Math.floor(cell * 0.18))`
+- 색상: `rgba(186, 230, 253, 0.68)` 또는 `theme.muted`
+- 선택 칸에서는 약간 밝게 표시
+- 충돌 배경 위에서도 읽히도록 alpha를 너무 낮추지 않는다.
+
+`noteMode`가 켜져 있으면 숫자 패드 버튼에 작은 `Note` 상태를 직접 쓰지 않는다. 대신 패드 테두리/배경 톤으로만 모드를 암시해 Canvas 안 텍스트 과밀을 피한다.
+
+### 13.6 접근성
+
+`aria-live` 문구 생성 시 후보 숫자를 포함한다.
+
+예:
+
+```text
+3행 4열, 빈칸, 후보 2 5 8, 노트 모드
+```
+
+규칙:
+
+- 후보가 없으면 후보 문구를 생략한다.
+- 노트 모드가 켜져 있으면 "노트 모드"를 문구 끝에 붙인다.
+- 노트 토글 버튼은 `aria-pressed`를 반드시 가진다.
+
+### 13.7 점수, API, 저장소
+
+- 노트는 플레이어 편의 상태이므로 `POST /api/sudoku/scores` 요청에 포함하지 않는다.
+- 노트는 `parseSudokuSubmission`과 서버 검증에 영향을 주지 않는다.
+- 노트 입력은 `mistakeCountRef`를 변경하지 않는다.
+- 노트 입력은 `tryComplete`를 호출하지 않는다.
+- 1차 구현은 노트를 localStorage에 저장하지 않는다.
+- 중단 이어하기를 추가할 때는 별도 키를 사용한다.
+
+권장 future key:
+
+```text
+dopt-sudoku-draft-v1
+```
+
+### 13.8 자동 노트 정리 옵션
+
+1차 구현에서는 자동 노트 정리를 하지 않는다. 이후 옵션으로 추가할 경우 다음 정책을 검토한다.
+
+- 확정 숫자 `n`을 입력하면 같은 행/열/박스의 후보 `n`을 삭제한다.
+- 플레이어가 직접 넣은 후보를 자동으로 지우는 동작이므로 기본값은 꺼짐이 안전하다.
+- 옵션을 켜면 실수 입력 후 되돌릴 때 노트 손실이 발생할 수 있으므로 별도 undo가 없는 현재 구조에서는 신중히 적용한다.
+
+### 13.9 테스트 항목
+
+- 노트 모드 토글 버튼이 `aria-pressed`를 바꾼다.
+- 노트 모드에서 숫자 입력은 `playerGrid`를 바꾸지 않는다.
+- 노트 모드에서 같은 숫자를 두 번 입력하면 후보가 제거된다.
+- 일반 모드에서 확정 숫자를 입력하면 해당 칸 노트가 삭제된다.
+- 노트 모드 지우기는 노트만 지우고 확정 숫자를 지우지 않는다.
+- 고정 칸에는 노트를 추가할 수 없다.
+- 새 게임과 레벨 변경 시 노트가 초기화된다.
+- 노트는 점수 제출 payload에 포함되지 않는다.
+
+## 14. QA 체크리스트
+
+- Lv 1-10 생성이 완료된다.
+- 생성 중 취소가 가능하다.
+- 레벨 변경 시 이전 생성 결과가 현재 퍼즐을 덮어쓰지 않는다.
+- `Start` 전에는 숫자 입력이 보드에 반영되지 않는다.
+- 고정 칸은 변경되지 않는다.
+- 충돌 표시는 레벨별 도움 프로필과 일치한다.
+- 완료 시 점수, 시간, 실수 수가 표시된다.
+- 제출 시 서버가 퍼즐/정답을 재검증한다.
+- 보드 내부에 상태 배지나 HUD가 겹치지 않는다.
+- 모바일에서 숫자 패드와 HUD 텍스트가 잘리지 않는다.
+- 노트 기능 구현 후에는 후보 숫자가 보드 숫자와 겹치지 않는다.
+- 노트 기능 구현 후에는 노트 입력이 점수와 실수 수를 바꾸지 않는다.
+- `npm run build`가 성공한다.
+
+## 15. 알려진 구현 메모
+
+- 일부 UI 한글 문자열이 인코딩 깨짐 상태로 남아 있어 별도 정리가 필요하다.
+- 현재 클라이언트 Worker는 `solution`을 클라이언트로 보내지 않는다. 서버 검증은 서버 재생성 결과의 `solution`으로 수행한다.
+- 완료 판정은 클라이언트에서는 충돌 없는 완성 보드 기준이고, 서버 제출에서 정답 일치까지 확인한다.
+- 완료 제출 폼이 오버레이와 사이드 패널에 모두 존재한다. 최종 UX에서는 한쪽으로 정리할 수 있다.

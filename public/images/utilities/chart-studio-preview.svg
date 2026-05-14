@@ -1,0 +1,30 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#07111f"/>
+  <rect x="86" y="72" width="1028" height="486" rx="34" fill="#111827" stroke="#2f3a4d" stroke-width="2"/>
+  <path d="M160 430H850L920 362H230L160 430Z" fill="#102235" stroke="#334155" stroke-width="2"/>
+  <path d="M230 166V362M360 166V362M490 166V362M620 166V362M750 166V362M880 166V362" stroke="#26364b" stroke-width="2"/>
+  <path d="M160 376H850M160 322H850M160 268H850M160 214H850" stroke="#26364b" stroke-width="2"/>
+  <path d="M208 341L264 288L320 304L376 238L432 250L488 198L544 218L600 174L656 190L712 146" stroke="#40c9a2" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M208 341L264 288L320 304L376 238L432 250L488 198L544 218L600 174L656 190L712 146" stroke="white" stroke-opacity=".55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M224 377L280 334L336 345L392 292L448 298L504 262L560 280L616 235L672 250L728 222" stroke="#f8d66d" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M778 430H828V258H778V430Z" fill="#76a9ff"/>
+  <path d="M828 258L866 224V396L828 430V258Z" fill="#4268ba"/>
+  <path d="M778 258L816 224H866L828 258H778Z" fill="#9fc0ff"/>
+  <path d="M860 430H910V214H860V430Z" fill="#f76f8e"/>
+  <path d="M910 214L948 180V396L910 430V214Z" fill="#b24561"/>
+  <path d="M860 214L898 180H948L910 214H860Z" fill="#ffa0b4"/>
+  <path d="M942 430H992V302H942V430Z" fill="#40c9a2"/>
+  <path d="M992 302L1030 268V396L992 430V302Z" fill="#26816b"/>
+  <path d="M942 302L980 268H1030L992 302H942Z" fill="#78e0c2"/>
+  <circle cx="208" cy="341" r="10" fill="#40c9a2" stroke="white" stroke-opacity=".75" stroke-width="3"/>
+  <circle cx="376" cy="238" r="10" fill="#40c9a2" stroke="white" stroke-opacity=".75" stroke-width="3"/>
+  <circle cx="544" cy="218" r="10" fill="#40c9a2" stroke="white" stroke-opacity=".75" stroke-width="3"/>
+  <circle cx="712" cy="146" r="10" fill="#40c9a2" stroke="white" stroke-opacity=".75" stroke-width="3"/>
+  <text x="146" y="128" fill="#e5eef8" font-family="Segoe UI, Arial, sans-serif" font-size="46" font-weight="800">Chart Studio</text>
+  <text x="148" y="176" fill="#94a3b8" font-family="Segoe UI, Arial, sans-serif" font-size="22">3D bar and line charts from CSV, TSV, JSON, or manual data</text>
+  <rect x="856" y="102" width="186" height="36" rx="18" fill="#1f2937" stroke="#334155"/>
+  <circle cx="884" cy="120" r="8" fill="#40c9a2"/>
+  <circle cx="914" cy="120" r="8" fill="#f8d66d"/>
+  <circle cx="944" cy="120" r="8" fill="#f76f8e"/>
+  <text x="974" y="127" fill="#cbd5e1" font-family="Segoe UI, Arial, sans-serif" font-size="17">canvas</text>
+</svg>

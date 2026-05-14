@@ -93,6 +93,12 @@ function isMissingVisualizationCategoryColumn(error: unknown) {
   );
 }
 
+function getMissingVisualizationCategoryColumnError() {
+  return new Error(
+    "visualizations.category 컬럼이 없어 카테고리를 저장할 수 없습니다. supabase/visualization_categories.sql 마이그레이션을 먼저 적용해주세요.",
+  );
+}
+
 export function isTetrisMode(value: string | null | undefined): value is TetrisMode {
   return Boolean(value && TETRIS_MODES.includes(value as TetrisMode));
 }
@@ -206,20 +212,18 @@ export async function saveVisualization(input: FormData) {
   const supabase = getSupabaseAdminClient();
 
   if (id) {
-    let { error } = await supabase.from("visualizations").update(payload).eq("id", id);
+    const { error } = await supabase.from("visualizations").update(payload).eq("id", id);
     if (error && isMissingVisualizationCategoryColumn(error)) {
-      const retry = await supabase.from("visualizations").update(legacyPayload).eq("id", id);
-      error = retry.error;
+      throw getMissingVisualizationCategoryColumnError();
     }
     if (error) throw error;
     return;
   }
 
   const nextId = randomUUID();
-  let { error } = await supabase.from("visualizations").insert([{ id: nextId, ...payload }]);
+  const { error } = await supabase.from("visualizations").insert([{ id: nextId, ...payload }]);
   if (error && isMissingVisualizationCategoryColumn(error)) {
-    const retry = await supabase.from("visualizations").insert([{ id: nextId, ...legacyPayload }]);
-    error = retry.error;
+    throw getMissingVisualizationCategoryColumnError();
   }
   if (error) throw error;
 }

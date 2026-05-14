@@ -24,6 +24,7 @@ const utilitySeoDescriptions: Record<string, string> = {
   "/time": "Unix timestamp, ISO 날짜, 로컬 시간, UTC, KST와 주요 시간대를 변환하고 날짜 계산을 돕는 시간 유틸리티입니다.",
   "/regex": "JavaScript 정규식을 테스트하고 매치 하이라이트, 캡처 그룹, 치환 결과를 바로 확인하는 정규식 유틸리티입니다.",
   "/table-converter": "CSV, TSV, Markdown 표, JSON 형식의 표 데이터를 서로 변환하고 미리보는 테이블 변환 유틸리티입니다.",
+  "/chart-studio": "Create polished 3D-style bar and line charts from manual data, CSV, TSV, or JSON directly in the browser.",
   "/exif": "사진을 업로드하지 않고 브라우저에서 EXIF 메타데이터를 확인, 정리, 편집, 내보내는 로컬 유틸리티입니다.",
   "/mindmap": "드래그 편집, 브라우저 저장, 다양한 가져오기/내보내기 형식을 지원하는 로컬 마인드맵 만들기 유틸리티입니다.",
 };

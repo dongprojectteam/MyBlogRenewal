@@ -31,12 +31,7 @@
   <path d="M86 514C246 438 372 440 520 493C678 550 858 560 1088 454" fill="none" stroke="#22c55e" stroke-width="2" stroke-opacity="0.18"/>
   <path d="M84 154C286 220 420 184 564 120C758 34 914 66 1116 158" fill="none" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.16"/>
 
-  <g font-family="Segoe UI, Pretendard, Apple SD Gothic Neo, Arial, sans-serif">
-    <text x="92" y="94" fill="#f8fafc" font-size="50" font-weight="800" letter-spacing="0">Phase Dual</text>
-    <text x="94" y="132" fill="#a7b6cc" font-size="21">Linked sliding puzzle · two boards, one rule</text>
-  </g>
-
-  <g transform="translate(77 172)" filter="url(#softShadow)">
+  <g transform="translate(77 118)" filter="url(#softShadow)">
     <rect width="424" height="362" rx="24" fill="url(#panel)" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="34" width="300" height="300" rx="16" fill="#070f1d" stroke="#41516a" stroke-width="2"/>
     <g stroke="#233044" stroke-width="1.5">
@@ -65,7 +60,7 @@
     <text x="358" y="306" fill="#94a3b8" font-size="14">Daily seed</text>
   </g>
 
-  <g transform="translate(516 265)" filter="url(#softShadow)">
+  <g transform="translate(516 211)" filter="url(#softShadow)">
     <rect x="0" y="0" width="168" height="112" rx="24" fill="#0b1220" stroke="#f59e0b" stroke-width="2.5"/>
     <rect x="13" y="13" width="142" height="86" rx="18" fill="#111827" stroke="#334155"/>
     <path d="M43 39H87M79 30L91 39L79 48" fill="none" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -74,7 +69,7 @@
     <text x="84" y="139" text-anchor="middle" fill="#f8fafc" font-family="Segoe UI, Pretendard, Apple SD Gothic Neo, Arial, sans-serif" font-size="17" font-weight="800">TRANSPOSE</text>
   </g>
 
-  <g transform="translate(699 172)" filter="url(#softShadow)">
+  <g transform="translate(699 118)" filter="url(#softShadow)">
     <rect width="424" height="362" rx="24" fill="url(#panel)" stroke="#334155" stroke-width="2"/>
     <rect x="94" y="34" width="300" height="300" rx="16" fill="#070f1d" stroke="#41516a" stroke-width="2"/>
     <g stroke="#233044" stroke-width="1.5">
@@ -103,15 +98,4 @@
     <text x="30" y="306" fill="#94a3b8" font-size="14">moves + time</text>
   </g>
 
-  <g transform="translate(92 558)" font-family="Segoe UI, Pretendard, Apple SD Gothic Neo, Arial, sans-serif">
-    <rect width="1016" height="40" rx="20" fill="#0b1220" stroke="#334155"/>
-    <circle cx="31" cy="20" r="8" fill="#ef4444"/>
-    <text x="52" y="26" fill="#cbd5e1" font-size="16">30 campaign puzzles</text>
-    <circle cx="274" cy="20" r="8" fill="#3b82f6"/>
-    <text x="295" y="26" fill="#cbd5e1" font-size="16">6 linked rules</text>
-    <circle cx="475" cy="20" r="8" fill="#22c55e"/>
-    <text x="496" y="26" fill="#cbd5e1" font-size="16">daily challenge</text>
-    <circle cx="702" cy="20" r="8" fill="#f59e0b"/>
-    <text x="723" y="26" fill="#cbd5e1" font-size="16">canvas puzzle board</text>
-  </g>
 </svg>

@@ -29,12 +29,7 @@
   <path d="M68 506C254 436 394 462 552 514C728 572 892 548 1128 430" fill="none" stroke="#38bdf8" stroke-width="2" stroke-opacity="0.16"/>
   <path d="M82 143C264 218 444 190 614 108C804 18 962 58 1118 150" fill="none" stroke="#22c55e" stroke-width="2" stroke-opacity="0.14"/>
 
-  <g font-family="Segoe UI, Pretendard, Apple SD Gothic Neo, Arial, sans-serif">
-    <text x="84" y="84" fill="#f8fafc" font-size="52" font-weight="800">Sudoku</text>
-    <text x="86" y="124" fill="#a7b6cc" font-size="21">Logic grid · 10 levels · global leaderboard</text>
-  </g>
-
-  <g transform="translate(74 156)" filter="url(#shadow)">
+  <g transform="translate(74 104)" filter="url(#shadow)">
     <rect width="470" height="420" rx="26" fill="url(#card)" stroke="#334155" stroke-width="2"/>
     <rect x="32" y="32" width="360" height="360" rx="18" fill="#f8fafc" stroke="#dbeafe" stroke-width="2"/>
 
@@ -101,7 +96,7 @@
     <text x="408" y="376" fill="#f8fafc" font-family="Segoe UI, Pretendard, Arial, sans-serif" font-size="26" font-weight="800">0/3</text>
   </g>
 
-  <g transform="translate(596 156)" filter="url(#shadow)" font-family="Segoe UI, Pretendard, Apple SD Gothic Neo, Arial, sans-serif">
+  <g transform="translate(596 104)" filter="url(#shadow)" font-family="Segoe UI, Pretendard, Apple SD Gothic Neo, Arial, sans-serif">
     <rect width="520" height="420" rx="26" fill="url(#card)" stroke="#334155" stroke-width="2"/>
     <text x="38" y="62" fill="#f8fafc" font-size="38" font-weight="800">Level 7</text>
     <text x="38" y="98" fill="#a7b6cc" font-size="18">Generated puzzle with canvas input</text>
