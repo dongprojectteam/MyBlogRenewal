@@ -17,6 +17,7 @@ const staticPaths = [
   "/time",
   "/regex",
   "/table-converter",
+  "/chart-studio",
   "/exif",
   "/mindmap",
   "/sudoku",
@@ -50,4 +51,3 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [...baseEntries, ...dynamicEntries];
 }
-
