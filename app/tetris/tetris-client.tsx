@@ -13,7 +13,7 @@ import {
   type RotationDirection,
 } from "tetris-toolkit";
 
-import type { TetrisMode, TetrisScore } from "@/types";
+import type { LeaderboardStats, TetrisMode, TetrisScore } from "@/types";
 import { Board } from "./_components/tetris-board";
 import { MiniPiece } from "./_components/tetris-mini-piece";
 import { TetrisLoadingScreen } from "./_components/tetris-loading-screen";
@@ -45,11 +45,27 @@ function isFormTarget(target: EventTarget | null) {
   return Boolean(target.closest("input, textarea, select, button"));
 }
 
+function formatStatNumber(value: number, formatter: (n: number) => string) {
+  if (!Number.isFinite(value)) return "-";
+  return formatter(Math.round(value));
+}
+
+function formatTopPercent(value: number | null | undefined) {
+  if (!Number.isFinite(value ?? Number.NaN)) return null;
+  return `Top ${Math.max(0.1, value as number).toFixed(1)}%`;
+}
+
 export function TetrisClient() {
   const [mode, setMode] = useState<TetrisMode>("marathon");
   const [state, setState] = useState<GameState>(INITIAL_STATE);
   const [session, setSession] = useState<SessionInfo>({ seed: 0, dailyKey: null, startedAt: 0 });
   const [scores, setScores] = useState<TetrisScore[]>([]);
+  const [leaderboardStats, setLeaderboardStats] = useState<LeaderboardStats>({
+    participants: 0,
+    average: 0,
+    variance: 0,
+    standardDeviation: 0,
+  });
   const [isLoadingScores, setIsLoadingScores] = useState(false);
   const [leaderboardError, setLeaderboardError] = useState("");
   const [playerName, setPlayerName] = useState(DEFAULT_PLAYER_NAME);
@@ -277,15 +293,17 @@ export function TetrisClient() {
       }
 
       const response = await fetch(`/api/tetris/scores?${params.toString()}`, { cache: "no-store" });
-      const data = (await response.json()) as { scores?: TetrisScore[]; error?: string };
+      const data = (await response.json()) as { scores?: TetrisScore[]; stats?: LeaderboardStats; error?: string };
 
       if (!response.ok || data.error) {
         throw new Error(data.error ?? "리더보드를 불러오지 못했습니다.");
       }
 
       setScores(data.scores ?? []);
+      setLeaderboardStats(data.stats ?? { participants: 0, average: 0, variance: 0, standardDeviation: 0 });
     } catch (error) {
       setScores([]);
+      setLeaderboardStats({ participants: 0, average: 0, variance: 0, standardDeviation: 0 });
       setLeaderboardError(error instanceof Error ? error.message : "리더보드를 불러오지 못했습니다.");
     } finally {
       setIsLoadingScores(false);
@@ -568,14 +586,17 @@ export function TetrisClient() {
           dailyKey: session.dailyKey,
         }),
       });
-      const data = (await response.json()) as { saved?: boolean; error?: string };
+      const data = (await response.json()) as { saved?: boolean; topPercent?: number | null; error?: string };
 
       if (!response.ok || data.error) {
         throw new Error(data.error ?? "기록 저장에 실패했습니다.");
       }
 
       setHasSubmitted(true);
-      setSaveStatus(data.saved ? "글로벌 리더보드에 저장되었습니다." : "Supabase 환경변수가 없어 로컬 데모 모드로 처리되었습니다.");
+      const percent = formatTopPercent(data.topPercent);
+      setSaveStatus(
+        `${data.saved ? "Score saved to the global leaderboard." : "Saved locally because Supabase is not configured."}${percent ? ` ${percent}.` : ""}`,
+      );
       await loadScores(mode, session.dailyKey);
     } catch (error) {
       setSaveStatus(error instanceof Error ? error.message : "기록 저장에 실패했습니다.");
@@ -588,6 +609,7 @@ export function TetrisClient() {
   const phaseLabel = getPhaseLabel(state, mode);
   const controlsDisabled = !hasStarted || finished || isPaused(state);
   const elapsedSecondsLabel = elapsedSeconds.toFixed(1);
+  const leaderboardValueFormatter = mode === "sprint" ? formatTime : formatNumber;
 
   if (assetLoadState !== "ready") {
     return <TetrisLoadingScreen status={assetLoadState} error={assetLoadError} />;
@@ -642,6 +664,7 @@ export function TetrisClient() {
       </section>
 
       <section className="tetris-layout section">
+        <div className="game-main-column">
         <div className="panel tetris-play-panel">
           <div className="tetris-play-header">
             <div>
@@ -767,6 +790,46 @@ export function TetrisClient() {
           </div>
         </div>
 
+        <section className="panel tetris-side-panel game-leaderboard-panel">
+          <div className="leaderboard-title-row">
+            <h2>Global Leaderboard</h2>
+            <div className="leaderboard-summary" aria-label="Leaderboard statistics">
+              <span>{leaderboardStats.participants} players</span>
+              <span>Avg {formatStatNumber(leaderboardStats.average, leaderboardValueFormatter)}</span>
+              <span>Var {formatStatNumber(leaderboardStats.variance, formatNumber)}</span>
+              <span>SD {formatStatNumber(leaderboardStats.standardDeviation, leaderboardValueFormatter)}</span>
+            </div>
+          </div>
+          <p className="muted">
+            {mode === "sprint" ? "Fastest clears win. Showing top 10." : "Highest scores win. Showing top 10."}
+          </p>
+
+          {leaderboardError ? <div className="notice notice-error">{leaderboardError}</div> : null}
+          {isLoadingScores ? <div className="loading-inline">Loading leaderboard...</div> : null}
+
+          {!isLoadingScores && scores.length === 0 ? (
+            <p className="muted" style={{ marginBottom: 0 }}>
+              No ranked runs yet.
+            </p>
+          ) : (
+            <ol className="tetris-leaderboard">
+              {scores.map((score, index) => (
+                <li key={score.id}>
+                  <span className="tetris-rank">{index + 1}</span>
+                  <div>
+                    <strong>{score.player_name}</strong>
+                    <span>
+                      {score.lines} lines · Lv {score.level} · {formatTime(score.time_ms)}
+                    </span>
+                  </div>
+                  <b>{getPrimaryRankValue(score, mode)}</b>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+        </div>
+
         <aside className="tetris-side-stack">
           <section className="panel tetris-side-panel">
             <div className="tetris-status-line">
@@ -803,37 +866,6 @@ export function TetrisClient() {
                 <MiniPiece kind={state.hold} label="Held piece" />
               </div>
             </div>
-          </section>
-
-          <section className="panel tetris-side-panel">
-            <h2>Global Leaderboard</h2>
-            <p className="muted">
-              {mode === "sprint" ? "짧을수록 높은 순위입니다." : "점수가 높을수록 높은 순위입니다."}
-            </p>
-
-            {leaderboardError ? <div className="notice notice-error">{leaderboardError}</div> : null}
-            {isLoadingScores ? <div className="loading-inline">리더보드를 불러오는 중입니다.</div> : null}
-
-            {!isLoadingScores && scores.length === 0 ? (
-              <p className="muted" style={{ marginBottom: 0 }}>
-                아직 기록이 없습니다.
-              </p>
-            ) : (
-              <ol className="tetris-leaderboard">
-                {scores.map((score, index) => (
-                  <li key={score.id}>
-                    <span className="tetris-rank">{index + 1}</span>
-                    <div>
-                      <strong>{score.player_name}</strong>
-                      <span>
-                        {score.lines} lines · Lv {score.level} · {formatTime(score.time_ms)}
-                      </span>
-                    </div>
-                    <b>{getPrimaryRankValue(score, mode)}</b>
-                  </li>
-                ))}
-              </ol>
-            )}
           </section>
 
           <section className="panel tetris-side-panel">

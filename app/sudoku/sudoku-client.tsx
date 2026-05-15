@@ -22,7 +22,7 @@ import {
   type SudokuAssistProfile,
 } from "@/lib/sudoku/level-profiles";
 import { computeSudokuScore, computeSudokuScoreBreakdown } from "@/lib/sudoku/scoring";
-import type { SudokuLevelId, SudokuScore } from "@/types";
+import type { LeaderboardStats, SudokuLevelId, SudokuScore } from "@/types";
 
 type ScreenPhase = "idle" | "generating" | "ready" | "playing" | "completed";
 
@@ -38,6 +38,16 @@ type LocalBest = {
   score: number;
   createdAt: string;
 };
+
+function formatStatNumber(value: number) {
+  if (!Number.isFinite(value)) return "-";
+  return Math.round(value).toLocaleString();
+}
+
+function formatTopPercent(value: number | null | undefined) {
+  if (!Number.isFinite(value ?? Number.NaN)) return null;
+  return `Top ${Math.max(0.1, value as number).toFixed(1)}%`;
+}
 
 type NoteMask = number;
 
@@ -524,6 +534,12 @@ export function SudokuClient() {
   const [canvasResizeTick, setCanvasResizeTick] = useState(0);
   const [displayedMs, setDisplayedMs] = useState(0);
   const [scores, setScores] = useState<SudokuScore[]>([]);
+  const [leaderboardStats, setLeaderboardStats] = useState<LeaderboardStats>({
+    participants: 0,
+    average: 0,
+    variance: 0,
+    standardDeviation: 0,
+  });
   const [isLoadingScores, setIsLoadingScores] = useState(false);
   const [leaderboardError, setLeaderboardError] = useState("");
   const [playerName, setPlayerName] = useState(DEFAULT_PLAYER_NAME);
@@ -608,13 +624,15 @@ export function SudokuClient() {
     setLeaderboardError("");
     try {
       const response = await fetch(`/api/sudoku/scores?level=${targetLevel}`, { cache: "no-store" });
-      const data = (await response.json()) as { scores?: SudokuScore[]; error?: string };
+      const data = (await response.json()) as { scores?: SudokuScore[]; stats?: LeaderboardStats; error?: string };
       if (!response.ok || data.error) {
         throw new Error(data.error ?? "리더보드를 불러오지 못했습니다.");
       }
       setScores(data.scores ?? []);
+      setLeaderboardStats(data.stats ?? { participants: 0, average: 0, variance: 0, standardDeviation: 0 });
     } catch (error) {
       setScores([]);
+      setLeaderboardStats({ participants: 0, average: 0, variance: 0, standardDeviation: 0 });
       setLeaderboardError(error instanceof Error ? error.message : "리더보드를 불러오지 못했습니다.");
     } finally {
       setIsLoadingScores(false);
@@ -1086,15 +1104,16 @@ export function SudokuClient() {
           givenMask: givenMask.map((row) => row.map((g) => (g ? "1" : "0")).join("")).join(""),
         }),
       });
-      const data = (await response.json()) as { saved?: boolean; error?: string };
+      const data = (await response.json()) as { saved?: boolean; topPercent?: number | null; error?: string };
 
       if (!response.ok || data.error) {
         throw new Error(data.error ?? "기록 저장에 실패했습니다.");
       }
 
       setHasSubmitted(true);
+      const percent = formatTopPercent(data.topPercent);
       setSaveStatus(
-        data.saved ? "글로벌 리더보드에 저장되었습니다." : "Supabase 환경변수가 없어 로컬 데모 모드로 처리되었습니다.",
+        `${data.saved ? "Score saved to the global leaderboard." : "Saved locally because Supabase is not configured."}${percent ? ` ${percent}.` : ""}`,
       );
       await loadScores(levelId);
     } catch (error) {
@@ -1166,6 +1185,7 @@ export function SudokuClient() {
       </section>
 
       <section className="sudoku-layout section">
+        <div className="game-main-column">
         <div className="panel sudoku-play-panel">
           <div className="sudoku-play-header">
             <div className="sudoku-board-status" aria-label={`Lv ${levelId} ${assistProfile.label}`}>
@@ -1301,6 +1321,40 @@ export function SudokuClient() {
           {genError ? <div className="notice notice-error">{genError}</div> : null}
         </div>
 
+        <section className="panel sudoku-side-panel game-leaderboard-panel">
+          <div className="leaderboard-title-row">
+            <h2>Global Leaderboard</h2>
+            <div className="leaderboard-summary" aria-label="Leaderboard statistics">
+              <span>{leaderboardStats.participants} players</span>
+              <span>Avg {formatStatNumber(leaderboardStats.average)}</span>
+              <span>Var {formatStatNumber(leaderboardStats.variance)}</span>
+              <span>SD {formatStatNumber(leaderboardStats.standardDeviation)}</span>
+            </div>
+          </div>
+          <p className="muted">Same level, score ranked. Showing top 10.</p>
+          {leaderboardError ? <div className="notice notice-error">{leaderboardError}</div> : null}
+          {isLoadingScores ? <div className="loading-inline">Loading leaderboard...</div> : null}
+          {!isLoadingScores && scores.length === 0 ? (
+            <p className="muted" style={{ marginBottom: 0 }}>
+              No ranked runs yet.
+            </p>
+          ) : (
+            <ol className="sudoku-leaderboard">
+              {scores.map((score, index) => (
+                <li key={score.id}>
+                  <span className="sudoku-rank">{index + 1}</span>
+                  <div>
+                    <strong>{score.player_name}</strong>
+                    <span>Lv {score.level_id}</span>
+                  </div>
+                  <b>{formatScore(score.score)}</b>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+        </div>
+
         <aside className="sudoku-side-stack">
           <section className="panel sudoku-side-panel sudoku-session-panel">
             <div className="sudoku-session-header">
@@ -1348,31 +1402,6 @@ export function SudokuClient() {
                 <strong>{noteMode ? "On" : "Off"}</strong>
               </div>
             </div>
-          </section>
-
-          <section className="panel sudoku-side-panel">
-            <h2>Global Leaderboard</h2>
-            <p className="muted">같은 레벨에서 난이도 기반 점수가 높을수록 위입니다.</p>
-            {leaderboardError ? <div className="notice notice-error">{leaderboardError}</div> : null}
-            {isLoadingScores ? <div className="loading-inline">리더보드를 불러오는 중입니다.</div> : null}
-            {!isLoadingScores && scores.length === 0 ? (
-              <p className="muted" style={{ marginBottom: 0 }}>
-                아직 기록이 없습니다.
-              </p>
-            ) : (
-              <ol className="sudoku-leaderboard">
-                {scores.map((score, index) => (
-                  <li key={score.id}>
-                    <span className="sudoku-rank">{index + 1}</span>
-                    <div>
-                      <strong>{score.player_name}</strong>
-                      <span>Lv {score.level_id}</span>
-                    </div>
-                    <b>{formatScore(score.score)}</b>
-                  </li>
-                ))}
-              </ol>
-            )}
           </section>
 
           <section className="panel sudoku-side-panel">

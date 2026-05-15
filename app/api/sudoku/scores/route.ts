@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { listSudokuScores, saveSudokuScore } from "@/lib/data";
+import { getSudokuLeaderboardStats, getSudokuTopPercent, listSudokuScores, saveSudokuScore } from "@/lib/data";
 import { isSudokuLevelId } from "@/lib/sudoku/level-profiles";
 
 export const dynamic = "force-dynamic";
@@ -26,8 +26,8 @@ export async function GET(request: Request) {
   const level = readLevel(url.searchParams.get("level"));
 
   try {
-    const scores = await listSudokuScores(level);
-    return NextResponse.json({ scores });
+    const [scores, stats] = await Promise.all([listSudokuScores(level), getSudokuLeaderboardStats(level)]);
+    return NextResponse.json({ scores, stats });
   } catch (error) {
     const message = error instanceof Error ? error.message : "스도쿠 리더보드를 불러오지 못했습니다.";
     return NextResponse.json({ error: message, scores: [] }, { status: 500 });
@@ -60,7 +60,8 @@ export async function POST(request: Request) {
       givenMask: String(payload.givenMask ?? ""),
     });
 
-    return NextResponse.json(result);
+    const topPercent = await getSudokuTopPercent(result.score, levelId);
+    return NextResponse.json({ ...result, topPercent });
   } catch (error) {
     const message = error instanceof Error ? error.message : "스도쿠 기록을 저장하지 못했습니다.";
     return NextResponse.json({ error: message }, { status: 400 });
