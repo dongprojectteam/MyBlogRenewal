@@ -82,6 +82,13 @@ export type TetrisScore = {
   created_at?: string;
 };
 
+export type LeaderboardStats = {
+  participants: number;
+  average: number;
+  variance: number;
+  standardDeviation: number;
+};
+
 export type SudokuLevelId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 export type SudokuScore = {

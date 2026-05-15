@@ -17,6 +17,7 @@ import type {
   Visualization,
   TetrisMode,
   TetrisScore,
+  LeaderboardStats,
   SudokuScore,
   PhaseDualScore,
 } from "@/types";
@@ -24,8 +25,8 @@ import type {
 const ADMIN_BUCKET = "admin-files";
 const PROFILE_BUCKET = "profile-images";
 const DEFAULT_PROFILE_ID = "11111111-1111-1111-1111-111111111111";
-const TETRIS_SCORE_LIMIT = 20;
-const SUDOKU_SCORE_LIMIT = 50;
+const TETRIS_SCORE_LIMIT = 10;
+const SUDOKU_SCORE_LIMIT = 10;
 const PHASE_DUAL_SCORE_LIMIT = 50;
 const TETRIS_MODES = ["marathon", "sprint", "ultra", "survival", "daily"] as const;
 
@@ -168,6 +169,67 @@ function sortTetrisScores(scores: TetrisScore[], mode: TetrisMode) {
     if (a.time_ms !== b.time_ms) return a.time_ms - b.time_ms;
     return (a.created_at ?? "").localeCompare(b.created_at ?? "");
   });
+}
+
+function summarizeValues(values: number[]): LeaderboardStats {
+  const cleanValues = values.filter(Number.isFinite);
+  const participants = cleanValues.length;
+  if (participants === 0) {
+    return { participants: 0, average: 0, variance: 0, standardDeviation: 0 };
+  }
+
+  const average = cleanValues.reduce((sum, value) => sum + value, 0) / participants;
+  const variance = cleanValues.reduce((sum, value) => sum + (value - average) ** 2, 0) / participants;
+  return {
+    participants,
+    average,
+    variance,
+    standardDeviation: Math.sqrt(variance),
+  };
+}
+
+function calculateTopPercent(values: number[], current: number, higherIsBetter = true) {
+  const cleanValues = values.filter(Number.isFinite);
+  if (!Number.isFinite(current) || cleanValues.length === 0) return null;
+
+  const betterCount = cleanValues.filter((value) => (higherIsBetter ? value > current : value < current)).length;
+  return Math.min(100, Math.max(0, ((betterCount + 1) / cleanValues.length) * 100));
+}
+
+function getTetrisRankMetric(score: Pick<TetrisScore, "score" | "time_ms">, mode: TetrisMode) {
+  return mode === "sprint" ? score.time_ms : score.score;
+}
+
+async function listAllTetrisScoresForStats(mode: TetrisMode, dailyKey?: string | null): Promise<Array<Pick<TetrisScore, "score" | "time_ms">>> {
+  if (!isTetrisMode(mode)) return [];
+
+  if (!hasSupabaseEnv()) {
+    return seedTetrisScores.filter((item) => {
+      if (item.mode !== mode) return false;
+      if (mode === "daily" && isDailyKey(dailyKey)) return item.daily_key === dailyKey;
+      return true;
+    });
+  }
+
+  const supabase = getSupabaseAdminClient();
+  let query = supabase.from("tetris_scores").select("score,time_ms").eq("mode", mode);
+  if (mode === "daily" && isDailyKey(dailyKey)) {
+    query = query.eq("daily_key", dailyKey);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as Array<Pick<TetrisScore, "score" | "time_ms">>;
+}
+
+export async function getTetrisLeaderboardStats(mode: TetrisMode, dailyKey?: string | null): Promise<LeaderboardStats> {
+  const scores = await listAllTetrisScoresForStats(mode, dailyKey);
+  return summarizeValues(scores.map((score) => getTetrisRankMetric(score, mode)));
+}
+
+export async function getTetrisTopPercent(score: Pick<TetrisScore, "score" | "time_ms">, mode: TetrisMode, dailyKey?: string | null) {
+  const scores = await listAllTetrisScoresForStats(mode, dailyKey);
+  return calculateTopPercent(scores.map((item) => getTetrisRankMetric(item, mode)), getTetrisRankMetric(score, mode), mode !== "sprint");
 }
 
 export async function getPublicVisualizations(): Promise<Visualization[]> {
@@ -657,6 +719,29 @@ function sortSudokuScores(scores: SudokuScore[]) {
     if (a.time_ms !== b.time_ms) return a.time_ms - b.time_ms;  // 동점 시 시간 오름차순
     return (a.created_at ?? "").localeCompare(b.created_at ?? "");
   });
+}
+
+async function listAllSudokuScoresForStats(levelId: number): Promise<Array<Pick<SudokuScore, "score">>> {
+  if (!isSudokuLevelId(levelId)) return [];
+
+  if (!hasSupabaseEnv()) {
+    return seedSudokuScores.filter((item) => item.level_id === levelId);
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase.from("sudoku_scores").select("score").eq("level_id", levelId);
+  if (error) throw error;
+  return (data ?? []) as Array<Pick<SudokuScore, "score">>;
+}
+
+export async function getSudokuLeaderboardStats(levelId: number): Promise<LeaderboardStats> {
+  const scores = await listAllSudokuScoresForStats(levelId);
+  return summarizeValues(scores.map((score) => score.score));
+}
+
+export async function getSudokuTopPercent(score: Pick<SudokuScore, "score">, levelId: number) {
+  const scores = await listAllSudokuScoresForStats(levelId);
+  return calculateTopPercent(scores.map((item) => item.score), score.score, true);
 }
 
 function normalizeSudokuScoreRow(input: SaveSudokuScoreInput): {

@@ -24,6 +24,13 @@ type RankRecord = {
   created_at?: string;
 };
 
+type RankStats = {
+  participants: number;
+  average: number;
+  variance: number;
+  standardDeviation: number;
+};
+
 const TABLE = "animal_merge_ranks";
 const FALLBACK: RankRecord[] = [];
 
@@ -59,14 +66,12 @@ export async function GET(request: Request) {
     if (modeParam && !isValidMode(modeParam)) {
       return NextResponse.json({ error: "Invalid game mode.", ranks: [] }, { status: 400 });
     }
-    const mode = modeParam ?? "endless";
+    const mode: GameMode = isValidMode(modeParam) ? modeParam : "endless";
 
     if (!hasSupabaseEnv()) {
-      const ranks = [...FALLBACK]
-        .filter((item) => item.mode === mode && (mode !== "whale-rush" || item.result === "win"))
-        .sort(sortRanks)
-        .slice(0, 10);
-      return NextResponse.json({ ranks });
+      const allRanks = [...FALLBACK].filter((item) => item.mode === mode && (mode !== "whale-rush" || item.result === "win"));
+      const ranks = allRanks.sort(sortRanks).slice(0, 10);
+      return NextResponse.json({ ranks, stats: summarizeRanks(allRanks, mode) });
     }
 
     const supabase = getSupabaseAdminClient();
@@ -81,10 +86,15 @@ export async function GET(request: Request) {
       query = query.order("score", { ascending: false }).order("max_level", { ascending: false }).order("created_at", { ascending: true });
     }
 
-    const { data, error } = await query.limit(10);
+    const [rankResult, statsResult] = await Promise.all([
+      query.limit(10),
+      supabase.from(TABLE).select("score,elapsed_sec,result").eq("mode", mode),
+    ]);
 
-    if (error) throw error;
-    return NextResponse.json({ ranks: data ?? [] });
+    if (rankResult.error) throw rankResult.error;
+    if (statsResult.error) throw statsResult.error;
+    const statsRows = ((statsResult.data ?? []) as RankRecord[]).filter((item) => mode !== "whale-rush" || item.result === "win");
+    return NextResponse.json({ ranks: rankResult.data ?? [], stats: summarizeRanks(statsRows, mode) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to fetch ranks.";
     return NextResponse.json({ error: message, ranks: [] }, { status: 500 });
@@ -141,18 +151,44 @@ export async function POST(request: Request) {
 
     if (!hasSupabaseEnv()) {
       FALLBACK.push(payload);
-      return NextResponse.json({ saved: false, rank: payload });
+      return NextResponse.json({ saved: false, rank: payload, topPercent: calculateTopPercent(FALLBACK, payload, mode) });
     }
 
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase.from(TABLE).insert([payload]).select("*").single();
     if (error) throw error;
 
-    return NextResponse.json({ saved: true, rank: data });
+    const { data: statsRows, error: statsError } = await supabase.from(TABLE).select("score,elapsed_sec,result").eq("mode", mode);
+    if (statsError) throw statsError;
+    const rows = ((statsRows ?? []) as RankRecord[]).filter((item) => mode !== "whale-rush" || item.result === "win");
+
+    return NextResponse.json({ saved: true, rank: data, topPercent: calculateTopPercent(rows, data as RankRecord, mode) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to save score.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
+}
+
+function getRankMetric(row: Pick<RankRecord, "score" | "elapsed_sec">, mode: GameMode) {
+  return mode === "whale-rush" ? row.elapsed_sec : row.score;
+}
+
+function summarizeRanks(rows: Array<Pick<RankRecord, "score" | "elapsed_sec">>, mode: GameMode): RankStats {
+  const values = rows.map((row) => getRankMetric(row, mode)).filter(Number.isFinite);
+  const participants = values.length;
+  if (participants === 0) return { participants: 0, average: 0, variance: 0, standardDeviation: 0 };
+  const average = values.reduce((sum, value) => sum + value, 0) / participants;
+  const variance = values.reduce((sum, value) => sum + (value - average) ** 2, 0) / participants;
+  return { participants, average, variance, standardDeviation: Math.sqrt(variance) };
+}
+
+function calculateTopPercent(rows: Array<Pick<RankRecord, "score" | "elapsed_sec">>, current: Pick<RankRecord, "score" | "elapsed_sec">, mode: GameMode) {
+  const currentValue = getRankMetric(current, mode);
+  const higherIsBetter = mode !== "whale-rush";
+  const values = rows.map((row) => getRankMetric(row, mode)).filter(Number.isFinite);
+  if (!Number.isFinite(currentValue) || values.length === 0) return null;
+  const betterCount = values.filter((value) => (higherIsBetter ? value > currentValue : value < currentValue)).length;
+  return Math.min(100, Math.max(0, ((betterCount + 1) / values.length) * 100));
 }
 
 function sortRanks(a: RankRecord, b: RankRecord) {

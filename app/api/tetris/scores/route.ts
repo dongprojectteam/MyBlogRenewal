@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { isTetrisMode, listTetrisScores, saveTetrisScore } from "@/lib/data";
+import { getTetrisLeaderboardStats, getTetrisTopPercent, isTetrisMode, listTetrisScores, saveTetrisScore } from "@/lib/data";
 import type { TetrisMode } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -27,8 +27,8 @@ export async function GET(request: Request) {
   const dailyKey = url.searchParams.get("dailyKey");
 
   try {
-    const scores = await listTetrisScores(mode, dailyKey);
-    return NextResponse.json({ scores });
+    const [scores, stats] = await Promise.all([listTetrisScores(mode, dailyKey), getTetrisLeaderboardStats(mode, dailyKey)]);
+    return NextResponse.json({ scores, stats });
   } catch (error) {
     const message = error instanceof Error ? error.message : "테트리스 리더보드를 불러오지 못했습니다.";
     return NextResponse.json({ error: message, scores: [] }, { status: 500 });
@@ -61,7 +61,8 @@ export async function POST(request: Request) {
       dailyKey: payload.dailyKey ?? null,
     });
 
-    return NextResponse.json(result);
+    const topPercent = await getTetrisTopPercent(result.score, payload.mode, payload.dailyKey ?? null);
+    return NextResponse.json({ ...result, topPercent });
   } catch (error) {
     const message = error instanceof Error ? error.message : "테트리스 기록을 저장하지 못했습니다.";
     return NextResponse.json({ error: message }, { status: 400 });

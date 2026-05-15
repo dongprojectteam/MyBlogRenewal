@@ -29,6 +29,13 @@ type Rank = {
   created_at?: string;
 };
 
+type RankStats = {
+  participants: number;
+  average: number;
+  variance: number;
+  standardDeviation: number;
+};
+
 type FloatingCombo = { id: number; x: number; y: number; text: string };
 type PreloadStatus = "idle" | "loading" | "ready" | "error";
 type MergeParticle = {
@@ -259,6 +266,16 @@ function saveStoredNickname(value: string) {
   }
 }
 
+function formatRankNumber(value: number) {
+  if (!Number.isFinite(value)) return "-";
+  return Math.round(value).toLocaleString();
+}
+
+function formatTopPercent(value: number | null | undefined) {
+  if (!Number.isFinite(value ?? Number.NaN)) return null;
+  return `Top ${Math.max(0.1, value as number).toFixed(1)}%`;
+}
+
 export function MergeClient() {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -305,6 +322,12 @@ export function MergeClient() {
   const [gameKey, setGameKey] = useState(0);
   const [nickname, setNickname] = useState(DEFAULT_NICKNAME);
   const [ranks, setRanks] = useState<Rank[]>([]);
+  const [rankStats, setRankStats] = useState<RankStats>({
+    participants: 0,
+    average: 0,
+    variance: 0,
+    standardDeviation: 0,
+  });
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [floating, setFloating] = useState<FloatingCombo[]>([]);
   const [preloadStatus, setPreloadStatus] = useState<PreloadStatus>("idle");
@@ -457,6 +480,7 @@ export function MergeClient() {
     if (nextMode === gameMode) return;
     discardRun();
     setRanks([]);
+    setRankStats({ participants: 0, average: 0, variance: 0, standardDeviation: 0 });
     setHighScore(readBestScore(nextMode));
     setGameMode(nextMode);
   }
@@ -1244,8 +1268,9 @@ export function MergeClient() {
 
   async function fetchRanks(mode: GameMode = gameMode) {
     const res = await fetch(`/api/merge/rank?mode=${encodeURIComponent(mode)}`, { cache: "no-store" });
-    const data = (await res.json()) as { ranks?: Rank[] };
+    const data = (await res.json()) as { ranks?: Rank[]; stats?: RankStats };
     setRanks(data.ranks ?? []);
+    setRankStats(data.stats ?? { participants: 0, average: 0, variance: 0, standardDeviation: 0 });
   }
 
   function handleNicknameChange(value: string) {
@@ -1276,12 +1301,13 @@ export function MergeClient() {
         result: gameResult,
       }),
     });
-    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    const data = (await res.json().catch(() => ({}))) as { error?: string; topPercent?: number | null };
     if (!res.ok) {
       setSubmitMessage(data.error ?? "Failed to submit score.");
       return;
     }
-    setSubmitMessage("Score submitted.");
+    const percent = formatTopPercent(data.topPercent);
+    setSubmitMessage(`Score submitted.${percent ? ` ${percent}.` : ""}`);
     await fetchRanks(gameMode);
   }
 
@@ -1727,16 +1753,33 @@ export function MergeClient() {
             </div>
           </div>
         </div>
-        <section className="panel tetris-side-panel" style={{ display: "grid", gap: 12, alignContent: "start" }}>
-          <h2 style={{ marginBottom: 0 }}>Global Leaderboard ({modeConfig.label})</h2>
-          <ol style={{ margin: 0, paddingLeft: 20 }}>
-            {ranks.map((r) => (
-              <li key={r.id}>
-                {r.nickname} - {r.score} · Lv {r.max_level} · {r.elapsed_sec}s
-              </li>
-            ))}
-          </ol>
-          {ranks.length === 0 ? <p className="muted" style={{ marginBottom: 0 }}>No ranked runs yet.</p> : null}
+        <section className="panel tetris-side-panel game-leaderboard-panel merge-leaderboard-panel">
+          <div className="leaderboard-title-row">
+            <h2>Global Leaderboard</h2>
+            <div className="leaderboard-summary" aria-label="Leaderboard statistics">
+              <span>{rankStats.participants} players</span>
+              <span>Avg {formatRankNumber(rankStats.average)}</span>
+              <span>Var {formatRankNumber(rankStats.variance)}</span>
+              <span>SD {formatRankNumber(rankStats.standardDeviation)}</span>
+            </div>
+          </div>
+          <p className="muted">{modeConfig.label} · Showing top 10.</p>
+          {ranks.length === 0 ? (
+            <p className="muted" style={{ marginBottom: 0 }}>No ranked runs yet.</p>
+          ) : (
+            <ol className="tetris-leaderboard merge-leaderboard">
+              {ranks.map((r, index) => (
+                <li key={r.id}>
+                  <span className="tetris-rank">{index + 1}</span>
+                  <div>
+                    <strong>{r.nickname}</strong>
+                    <span>Lv {r.max_level} · {r.pieces} pieces · {r.elapsed_sec}s</span>
+                  </div>
+                  <b>{gameMode === "whale-rush" ? `${r.elapsed_sec}s` : formatRankNumber(r.score)}</b>
+                </li>
+              ))}
+            </ol>
+          )}
         </section>
         </div>
 
