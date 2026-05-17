@@ -1347,7 +1347,10 @@ export function SudokuClient() {
                     <strong>{score.player_name}</strong>
                     <span>Lv {score.level_id}</span>
                   </div>
-                  <b>{formatScore(score.score)}</b>
+                  <div className="sudoku-leaderboard-result">
+                    <b>{formatScore(score.score)}</b>
+                    <span>{formatTime(score.time_ms)}</span>
+                  </div>
                 </li>
               ))}
             </ol>

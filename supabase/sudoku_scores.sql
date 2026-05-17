@@ -14,6 +14,9 @@ create table if not exists public.sudoku_scores (
 create index if not exists sudoku_scores_level_score_idx
   on public.sudoku_scores (level_id, score desc, created_at asc);
 
+create index if not exists sudoku_scores_level_score_time_idx
+  on public.sudoku_scores (level_id, score desc, time_ms asc, created_at asc);
+
 alter table public.sudoku_scores enable row level security;
 
 insert into public.visualizations (id, title, description, url, image_url, category, visible, sort_order)

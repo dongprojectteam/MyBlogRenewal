@@ -4522,6 +4522,11 @@ textarea {
   min-width: 0;
 }
 
+.sudoku-leaderboard-result {
+  justify-items: end;
+  text-align: right;
+}
+
 .sudoku-leaderboard strong,
 .sudoku-leaderboard span {
   overflow: hidden;

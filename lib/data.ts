@@ -797,6 +797,7 @@ export async function listSudokuScores(levelId: number): Promise<SudokuScore[]> 
     .select("id, player_name, level_id, time_ms, score, seed, created_at")
     .eq("level_id", levelId)
     .order("score", { ascending: false })
+    .order("time_ms", { ascending: true })
     .order("created_at", { ascending: true })
     .limit(SUDOKU_SCORE_LIMIT);
 
