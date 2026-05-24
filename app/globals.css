@@ -806,15 +806,25 @@ textarea {
   gap: 16px;
 }
 
+.admin-profile-manager {
+  display: grid;
+  gap: 14px;
+}
+
 .admin-visualization-create,
 .admin-visualization-item,
-.admin-visualization-minimap {
+.admin-visualization-minimap,
+.admin-profile-section,
+.admin-profile-item {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: rgba(2, 6, 23, 0.22);
 }
 
-.admin-visualization-create {
+.admin-compact-panel,
+.admin-visualization-create,
+.admin-profile-section,
+.admin-profile-item {
   padding: 16px;
 }
 
@@ -847,16 +857,64 @@ textarea {
   align-items: end;
 }
 
-.admin-visualization-form-grid .field {
+.admin-profile-copy-grid,
+.admin-profile-form-grid,
+.admin-profile-link-grid {
+  display: grid;
+  gap: 10px;
+  align-items: end;
+}
+
+.admin-profile-copy-grid {
+  grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
+}
+
+.admin-profile-form-grid {
+  grid-template-columns: minmax(180px, 1.1fr) minmax(180px, 1fr) minmax(112px, 0.5fr) minmax(112px, 0.5fr);
+}
+
+.admin-profile-link-grid {
+  grid-template-columns: minmax(150px, 0.7fr) minmax(220px, 1.2fr) minmax(110px, 0.4fr);
+}
+
+.admin-profile-photo-grid {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.admin-profile-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-profile-section h3,
+.admin-profile-item h3 {
+  margin-top: 0;
+}
+
+.admin-visualization-form-grid .field,
+.admin-profile-copy-grid .field,
+.admin-profile-form-grid .field,
+.admin-profile-link-grid .field {
   gap: 5px;
 }
 
-.admin-visualization-form-grid .label {
+.admin-visualization-form-grid .label,
+.admin-profile-copy-grid .label,
+.admin-profile-form-grid .label,
+.admin-profile-link-grid .label {
   font-size: 0.82rem;
 }
 
 .admin-visualization-form-grid .input,
-.admin-visualization-form-grid .textarea {
+.admin-visualization-form-grid .textarea,
+.admin-profile-copy-grid .input,
+.admin-profile-copy-grid .textarea,
+.admin-profile-form-grid .input,
+.admin-profile-form-grid .textarea,
+.admin-profile-link-grid .input {
   padding: 9px 10px;
 }
 
@@ -865,6 +923,14 @@ textarea {
 }
 
 .admin-grid-span-full {
+  grid-column: 1 / -1;
+}
+
+.admin-profile-span-3 {
+  grid-column: span 3;
+}
+
+.admin-profile-span-full {
   grid-column: 1 / -1;
 }
 
@@ -891,15 +957,25 @@ textarea {
   resize: vertical;
 }
 
+.admin-profile-textarea {
+  min-height: 78px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
 .admin-form-actions {
   justify-content: flex-end;
 }
 
 .admin-visualization-workspace {
   display: grid;
-  grid-template-columns: minmax(184px, 236px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
   align-items: flex-start;
+}
+
+.admin-sidebar-extension:empty {
+  display: none;
 }
 
 .admin-visualization-minimap {
@@ -1519,7 +1595,15 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .admin-grid-span-3 {
+  .admin-profile-copy-grid,
+  .admin-profile-form-grid,
+  .admin-profile-link-grid,
+  .admin-profile-photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-grid-span-3,
+  .admin-profile-span-3 {
     grid-column: 1 / -1;
   }
 
@@ -1564,8 +1648,17 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .admin-profile-copy-grid,
+  .admin-profile-form-grid,
+  .admin-profile-link-grid,
+  .admin-profile-photo-grid {
+    grid-template-columns: 1fr;
+  }
+
   .admin-grid-span-3,
-  .admin-grid-span-full {
+  .admin-grid-span-full,
+  .admin-profile-span-3,
+  .admin-profile-span-full {
     grid-column: 1;
   }
 

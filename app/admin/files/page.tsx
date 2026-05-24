@@ -5,11 +5,11 @@ import { requireAdmin } from "@/lib/auth";
 import { listUploadedFiles } from "@/lib/data";
 
 const fileErrorMessages: Record<string, string> = {
-  missing_file: "업로드할 파일을 선택해 주세요.",
-  missing_file_id: "삭제할 파일 정보를 찾을 수 없습니다.",
-  upload_failed: "파일 업로드 중 오류가 발생했습니다. Supabase Storage 설정과 버킷 이름을 확인해 주세요.",
-  delete_failed: "파일 삭제 중 오류가 발생했습니다.",
-  unauthorized: "로그인이 만료되었습니다. 다시 로그인해 주세요.",
+  missing_file: "Choose a file to upload.",
+  missing_file_id: "The file to delete could not be found.",
+  upload_failed: "File upload failed. Check the Supabase Storage settings and bucket name.",
+  delete_failed: "File deletion failed.",
+  unauthorized: "Your login session expired. Please sign in again.",
 };
 
 export default async function AdminFilesPage({
@@ -24,11 +24,7 @@ export default async function AdminFilesPage({
   const errorMessage = fileErrorMessages[errorKey];
 
   return (
-    <AdminShell
-      current="/admin/files"
-      title="파일 관리"
-      description="파일을 업로드하고 저장된 파일을 다운로드하거나 삭제합니다."
-    >
+    <AdminShell current="/admin/files" title="Files" description="Upload, download, preview, and delete stored files.">
       <div className="stack">
         {errorMessage ? <div className="notice">{errorMessage}</div> : null}
 

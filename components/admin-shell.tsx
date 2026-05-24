@@ -61,6 +61,8 @@ export function AdminShell({ current, title, description, children }: AdminShell
                 </Link>
               ))}
             </nav>
+
+            <div id="admin-sidebar-extension" className="admin-sidebar-extension" />
           </div>
         </aside>
 

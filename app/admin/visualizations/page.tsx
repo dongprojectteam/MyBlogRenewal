@@ -12,8 +12,8 @@ export default async function AdminVisualizationsPage() {
   return (
     <AdminShell
       current="/admin/visualizations"
-      title="홈 콘텐츠 관리"
-      description="홈에 노출할 유틸리티와 게임 메타데이터를 등록하고 정렬합니다."
+      title="Home Content"
+      description="Register, edit, and sort utility and game metadata shown on the home page."
     >
       <AdminVisualizationEditor items={items} showCategoryStorageNotice={showCategoryStorageNotice} />
     </AdminShell>

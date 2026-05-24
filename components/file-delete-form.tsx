@@ -28,7 +28,7 @@ export function FileDeleteForm({ fileId }: { fileId: string }) {
   return (
     <form onSubmit={handleSubmit}>
       <button className="danger-button" type="submit" disabled={isDeleting} aria-busy={isDeleting}>
-        {isDeleting ? "삭제 중..." : "삭제"}
+        {isDeleting ? "Deleting..." : "Delete"}
       </button>
     </form>
   );

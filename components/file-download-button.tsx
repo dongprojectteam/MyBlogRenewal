@@ -23,7 +23,7 @@ export function FileDownloadButton({ fileId }: FileDownloadButtonProps) {
       <form action="/admin/files/download" method="get" target={iframeName} onSubmit={handleSubmit}>
         <input type="hidden" name="id" value={fileId} />
         <button className="button" type="submit" disabled={isDownloading} aria-busy={isDownloading}>
-          {isDownloading ? "다운로드 준비 중..." : "download"}
+          {isDownloading ? "Preparing..." : "Download"}
         </button>
       </form>
       <iframe title={`download-${fileId}`} name={iframeName} hidden onLoad={() => setIsDownloading(false)} />

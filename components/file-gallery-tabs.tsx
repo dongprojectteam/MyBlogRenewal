@@ -39,10 +39,10 @@ export function FileGalleryTabs({ files }: FileGalleryTabsProps) {
   }, [activeTab, imageFiles.length]);
 
   return (
-    <div className="panel" style={{ padding: 20 }}>
+    <div className="panel admin-compact-panel">
       <div className="tabs-header">
-        <h3>업로드한 파일</h3>
-        <div className="segmented-control" role="tablist" aria-label="파일 보기 방식">
+        <h3>Uploaded Files</h3>
+        <div className="segmented-control" role="tablist" aria-label="File view mode">
           <button
             className={activeTab === "files" ? "segment active" : "segment"}
             type="button"
@@ -50,7 +50,7 @@ export function FileGalleryTabs({ files }: FileGalleryTabsProps) {
             aria-selected={activeTab === "files"}
             onClick={() => setActiveTab("files")}
           >
-            파일
+            Files
           </button>
           <button
             className={activeTab === "images" ? "segment active" : "segment"}
@@ -59,7 +59,7 @@ export function FileGalleryTabs({ files }: FileGalleryTabsProps) {
             aria-selected={activeTab === "images"}
             onClick={() => setActiveTab("images")}
           >
-            이미지 {imageFiles.length}
+            Images {imageFiles.length}
           </button>
         </div>
       </div>
@@ -67,17 +67,17 @@ export function FileGalleryTabs({ files }: FileGalleryTabsProps) {
       {activeTab === "files" ? (
         files.length === 0 ? (
           <p className="muted" style={{ marginBottom: 0 }}>
-            업로드한 파일이 없습니다.
+            No files have been uploaded yet.
           </p>
         ) : (
           <div className="table-scroll">
             <table className="table">
               <thead>
                 <tr>
-                  <th>파일명</th>
-                  <th>크기</th>
-                  <th>다운로드</th>
-                  <th>삭제</th>
+                  <th>File Name</th>
+                  <th>Size</th>
+                  <th>Download</th>
+                  <th>Delete</th>
                 </tr>
               </thead>
               <tbody>
@@ -99,7 +99,7 @@ export function FileGalleryTabs({ files }: FileGalleryTabsProps) {
         )
       ) : imageFiles.length === 0 ? (
         <p className="muted" style={{ marginBottom: 0 }}>
-          이미지 파일이 아직 없습니다.
+          No image files yet.
         </p>
       ) : (
         <>
@@ -119,7 +119,7 @@ export function FileGalleryTabs({ files }: FileGalleryTabsProps) {
             ))}
           </div>
           <div ref={sentinelRef} className="gallery-sentinel">
-            {visibleImageCount < imageFiles.length ? "이미지 더 불러오는 중..." : "모든 이미지를 불러왔습니다."}
+            {visibleImageCount < imageFiles.length ? "Loading more images..." : "All images loaded."}
           </div>
         </>
       )}
