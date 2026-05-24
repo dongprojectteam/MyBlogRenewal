@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/auth";
 
 const errorMessages: Record<string, string> = {
-  invalid_credentials: "아이디 또는 비밀번호가 올바르지 않습니다.",
-  missing_fields: "아이디와 비밀번호를 모두 입력해 주세요.",
+  invalid_credentials: "The ID or password is incorrect.",
+  missing_fields: "Enter both ID and password.",
 };
 
 export default async function AdminLoginPage({
@@ -27,10 +27,14 @@ export default async function AdminLoginPage({
         <div className="eyebrow">admin login</div>
         <h1>DOPT Admin</h1>
         <p className="muted" style={{ lineHeight: 1.7 }}>
-          관리자 로그인 후 소개 페이지, 유틸 목록, 메모, 파일을 관리할 수 있습니다.
+          Sign in to manage the about page, home content, notes, and files.
         </p>
 
-        {errorMessage ? <div className="notice" style={{ marginBottom: 18 }}>{errorMessage}</div> : null}
+        {errorMessage ? (
+          <div className="notice" style={{ marginBottom: 18 }}>
+            {errorMessage}
+          </div>
+        ) : null}
 
         <form action="/admin/login" method="post" className="stack">
           <div className="field">
@@ -47,7 +51,7 @@ export default async function AdminLoginPage({
           </div>
           <div className="actions">
             <button className="button" type="submit">
-              login
+              Login
             </button>
           </div>
         </form>

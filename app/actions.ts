@@ -34,7 +34,7 @@ function getActionErrorMessage(error: unknown) {
     if (typeof maybeHint === "string" && maybeHint) return maybeHint;
   }
 
-  return "소개 페이지 저장 중 오류가 발생했습니다.";
+  return "An error occurred while saving the profile page.";
 }
 
 export async function saveVisualizationAction(formData: FormData) {
@@ -86,7 +86,7 @@ export async function saveProfileTextFormAction(_: FormState, formData: FormData
     revalidatePath("/admin/profile");
     return {
       status: "success",
-      message: "소개 페이지 내용이 저장되었습니다.",
+      message: "Profile content saved.",
     };
   } catch (error) {
     return {

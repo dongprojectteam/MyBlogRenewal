@@ -96,7 +96,7 @@ function isMissingVisualizationCategoryColumn(error: unknown) {
 
 function getMissingVisualizationCategoryColumnError() {
   return new Error(
-    "visualizations.category 컬럼이 없어 카테고리를 저장할 수 없습니다. supabase/visualization_categories.sql 마이그레이션을 먼저 적용해주세요.",
+    "The visualizations.category column is missing, so categories cannot be saved. Apply supabase/visualization_categories.sql first.",
   );
 }
 
