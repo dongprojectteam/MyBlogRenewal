@@ -49,7 +49,11 @@ function decodeUriLoose(value: string) {
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { text?: unknown } | null;
-  const text = typeof body?.text === "string" ? body.text.slice(0, MAX_TEXT_LENGTH) : "";
+  const text = typeof body?.text === "string" ? body.text : "";
+
+  if (text.length > MAX_TEXT_LENGTH) {
+    return NextResponse.json({ error: `Text exceeds the ${MAX_TEXT_LENGTH} character limit.` }, { status: 413 });
+  }
 
   if (!text.trim()) {
     return NextResponse.json({ candidates: [] });

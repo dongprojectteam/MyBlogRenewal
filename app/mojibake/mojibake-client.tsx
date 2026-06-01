@@ -10,6 +10,7 @@ type RepairCandidate = {
 
 const SAMPLE_TEXT =
   "\u00ec\u2022\u02c6\u00eb\u2026\u2022\u00ed\u2022\u02dc\u00ec\u201e\u00b8\u00ec\u0161\u201d, DOPT!";
+const MAX_TEXT_LENGTH = 50000;
 
 export function MojibakeClient() {
   const [text, setText] = useState(SAMPLE_TEXT);
@@ -19,6 +20,12 @@ export function MojibakeClient() {
   const [copyId, setCopyId] = useState<string | null>(null);
 
   async function repairText() {
+    if (text.length > MAX_TEXT_LENGTH) {
+      setStatus("error");
+      setMessage(`Text must be ${MAX_TEXT_LENGTH.toLocaleString()} characters or fewer.`);
+      return;
+    }
+
     setStatus("loading");
     setMessage("");
 
@@ -29,11 +36,12 @@ export function MojibakeClient() {
         body: JSON.stringify({ text }),
       });
 
-      if (!response.ok) {
-        throw new Error("Repair request failed.");
+      const data = (await response.json()) as { candidates?: RepairCandidate[]; error?: string };
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error ?? "Repair request failed.");
       }
 
-      const data = (await response.json()) as { candidates?: RepairCandidate[] };
       setCandidates(data.candidates ?? []);
       setStatus("ready");
     } catch (error) {
@@ -83,6 +91,11 @@ export function MojibakeClient() {
               onChange={(event) => setText(event.target.value)}
             />
           </label>
+
+          <p className="muted" style={{ margin: 0 }}>
+            Text is sent to this app&apos;s server route for encoding repair and is limited to{" "}
+            {MAX_TEXT_LENGTH.toLocaleString()} characters.
+          </p>
 
           <div className="actions">
             <button type="button" className="button" onClick={repairText} disabled={status === "loading" || !text.trim()}>

@@ -163,24 +163,41 @@ export function CalendarClient() {
   });
   const [holidays, setHolidays] = useState<Record<string, string[]>>({});
   const [memos, setMemos] = useState<Record<string, string>>({});
+  const [hasLoadedMemos, setHasLoadedMemos] = useState(false);
+  const [memoStorageError, setMemoStorageError] = useState("");
   const [selectedDateKey, setSelectedDateKey] = useState<string>(toDateKey(new Date()));
   const [isLoadingHoliday, setIsLoadingHoliday] = useState(false);
   const [holidayError, setHolidayError] = useState<string>("");
 
   useEffect(() => {
-    const saved = localStorage.getItem(MEMO_STORAGE_KEY);
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem(MEMO_STORAGE_KEY);
+      if (saved) {
         setMemos(JSON.parse(saved) as Record<string, string>);
-      } catch {
-        localStorage.removeItem(MEMO_STORAGE_KEY);
       }
+      setMemoStorageError("");
+    } catch {
+      setMemoStorageError("저장된 메모를 불러오지 못했습니다.");
+      try {
+        localStorage.removeItem(MEMO_STORAGE_KEY);
+      } catch {
+        // Ignore cleanup failures; the visible notice is enough for the user.
+      }
+    } finally {
+      setHasLoadedMemos(true);
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(MEMO_STORAGE_KEY, JSON.stringify(memos));
-  }, [memos]);
+    if (!hasLoadedMemos) return;
+
+    try {
+      localStorage.setItem(MEMO_STORAGE_KEY, JSON.stringify(memos));
+      setMemoStorageError("");
+    } catch {
+      setMemoStorageError("브라우저 저장소에 메모를 저장하지 못했습니다.");
+    }
+  }, [hasLoadedMemos, memos]);
 
   useEffect(() => {
     const year = currentMonth.getFullYear();
@@ -352,6 +369,7 @@ export function CalendarClient() {
 
       {isLoadingHoliday ? <div className="loading-inline">공휴일 정보를 불러오는 중입니다.</div> : null}
       {holidayError ? <div className="notice notice-error">{holidayError}</div> : null}
+      {memoStorageError ? <div className="notice notice-error">{memoStorageError}</div> : null}
 
       <div className="calendar-grid-wrap">
         <div className="calendar-week-header">Wk</div>

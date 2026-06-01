@@ -11,6 +11,8 @@ PASSWORD=your_admin_password
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxx
 SUPABASE_SECRET_KEY=sb_secret_xxxxx
+PLANTUML_SERVER_URL=https://www.plantuml.com/plantuml
+HOLIDAY_SERVICE_KEY=your_data_go_kr_service_key
 ```
 
 설명:
@@ -23,6 +25,10 @@ SUPABASE_SECRET_KEY=sb_secret_xxxxx
   - 클라이언트에서 사용하는 공개 키
 - `SUPABASE_SECRET_KEY`
   - 서버 전용 비밀 키 (절대 클라이언트에 노출 금지)
+- `PLANTUML_SERVER_URL`
+  - PlantUML 렌더링 서버 URL
+- `HOLIDAY_SERVICE_KEY`
+  - 한국 공휴일 API용 data.go.kr 서비스 키
 
 ## Supabase 키 확인
 
@@ -99,6 +105,8 @@ supabase/sudoku_scores.sql
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SECRET_KEY`
+- `PLANTUML_SERVER_URL`
+- `HOLIDAY_SERVICE_KEY`
 
 권장 환경:
 
@@ -137,6 +145,15 @@ npm run dev
 - `mockups/utilities/diagram/`
 - `mockups/utilities/exif/`
 - `mockups/utilities/mindmap/`
+- `mockups/utilities/calendar/`
+- `mockups/utilities/chart-studio/`
+- `mockups/utilities/codec/`
+- `mockups/utilities/diff/`
+- `mockups/utilities/ladder/`
+- `mockups/utilities/mojibake/`
+- `mockups/utilities/regex/`
+- `mockups/utilities/table-converter/`
+- `mockups/utilities/time/`
 
 ## 관리자 로그인
 

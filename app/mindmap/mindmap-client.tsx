@@ -2565,7 +2565,8 @@ export function MindMapClient() {
       return;
     }
 
-    setSelectedId(focusRoot.id);
+    setInlineEditor(null);
+    setOutlineEditor(null);
   }
 
   function zoomCanvasAtPoint(deltaY: number, clientX: number, clientY: number) {
