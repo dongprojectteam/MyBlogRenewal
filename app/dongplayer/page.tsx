@@ -17,7 +17,7 @@ const pageDescription =
   "기기 안 음악을 폴더와 메타데이터로 정리하고 재생목록, 즐겨찾기, A/B 반복, 위젯, 백업까지 제공하는 Android 로컬 음악 플레이어 DongPlayer입니다.";
 
 // 실제 APK, Play Store, GitHub Release URL이 생기면 이 값과 isDownloadReady만 바꾸면 됩니다.
-const downloadHref = "#";
+const downloadHref = "https://drive.google.com/file/d/1yqgBHs-sYmIKXdBLi7Qa7AcMZVgDYdTS/view?usp=drive_link";
 const isDownloadReady = false;
 
 const heroPills = ["오프라인 파일 중심", "폴더와 메타데이터", "재생목록", "A/B 반복", "위젯", "백업"];
@@ -268,7 +268,7 @@ export default function DongPlayerPage() {
             </p>
             <div className="dongplayer-hero-actions">
               <a className="dongplayer-action dongplayer-action-primary" href="#dongplayer-download">
-                다운로드 준비 상태 보기
+                다운로드 링크로 가기
               </a>
               <a className="dongplayer-action dongplayer-action-secondary" href="#dongplayer-preview">
                 실제 화면 보기
@@ -394,7 +394,7 @@ export default function DongPlayerPage() {
             aria-disabled={!isDownloadReady}
             data-disabled={isDownloadReady ? "false" : "true"}
           >
-            다운로드 링크 준비 중
+            다운로드 링크
           </a>
         </section>
       </div>

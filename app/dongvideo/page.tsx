@@ -17,7 +17,7 @@ const pageDescription =
   "기기 안 영상을 MediaStore와 선택 폴더로 찾고, 이어보기, 자막 싱크, 오디오 트랙, PIP, 위젯, 재생목록을 제공하는 Android 로컬 비디오 플레이어 DongVideo입니다.";
 
 // 실제 APK, Play Store, GitHub Release URL이 생기면 이 값과 isDownloadReady만 바꾸면 됩니다.
-const downloadHref = "#";
+const downloadHref = "https://drive.google.com/file/d/1rv4ma9xqilFrdI4StahwV8kFZrZ8iV6b/view?usp=drive_link";
 const isDownloadReady = false;
 
 const heroPills = ["이어보기", "자막 싱크", "오디오 트랙", "PIP", "제스처", "자동 재생목록"];
@@ -270,7 +270,7 @@ export default function DongVideoPage() {
             </p>
             <div className="dongplayer-hero-actions">
               <a className="dongplayer-action dongplayer-action-primary" href="#dongvideo-download">
-                다운로드 준비 상태 보기
+                다운로드 링크로 가기
               </a>
               <a className="dongplayer-action dongplayer-action-secondary" href="#dongvideo-preview">
                 실제 화면 보기
@@ -397,7 +397,7 @@ export default function DongVideoPage() {
             aria-disabled={!isDownloadReady}
             data-disabled={isDownloadReady ? "false" : "true"}
           >
-            다운로드 링크 준비 중
+            다운로드 링크
           </a>
         </section>
       </div>
