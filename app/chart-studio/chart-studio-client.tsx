@@ -978,12 +978,12 @@ function drawChart(
   drawLabelsAndLegend(ctx, width, height, plot, dataset, palette, settings);
 }
 
-function fileKindFromName(fileName: string): SourceKind {
+function fileKindFromName(fileName: string): { kind: SourceKind; supported: boolean } {
   const lower = fileName.toLowerCase();
-  if (lower.endsWith(".json")) return "json";
-  if (lower.endsWith(".tsv") || lower.endsWith(".tab")) return "tsv";
-  if (lower.endsWith(".csv")) return "csv";
-  return "auto";
+  if (lower.endsWith(".json")) return { kind: "json", supported: true };
+  if (lower.endsWith(".tsv") || lower.endsWith(".tab")) return { kind: "tsv", supported: true };
+  if (lower.endsWith(".csv")) return { kind: "csv", supported: true };
+  return { kind: "auto", supported: false };
 }
 
 function downloadCanvasPng(canvas: HTMLCanvasElement, title: string) {
@@ -1082,8 +1082,12 @@ export function ChartStudioClient() {
       const text = await file.text();
       const nextKind = fileKindFromName(file.name);
       setSource(text);
-      if (nextKind !== "auto") setSourceKind(nextKind);
-      setFileStatus(`Imported ${file.name}.`);
+      if (nextKind.kind !== "auto") setSourceKind(nextKind.kind);
+      setFileStatus(
+        nextKind.supported
+          ? `Imported ${file.name}.`
+          : `Imported ${file.name}. Unknown extension; using auto detection.`,
+      );
     } catch {
       setFileStatus("Unable to read this file.");
     }

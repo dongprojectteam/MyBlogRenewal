@@ -23,6 +23,8 @@ const staticPaths = [
   "/sudoku",
   "/animal-merge",
   "/phase-dual",
+  "/dongplayer",
+  "/dongvideo",
 ];
 const staticPathSet = new Set(staticPaths);
 

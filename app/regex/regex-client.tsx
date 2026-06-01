@@ -27,6 +27,7 @@ const SAMPLE_TEXT = [
   "GET /admin 302 7ms",
   "DELETE /api/users/42 204 31ms",
 ].join("\n");
+const MAX_MATCHES = 1000;
 
 function buildFlags(flags: Record<RegexFlag, boolean>) {
   return FLAG_OPTIONS.filter((option) => flags[option.value]).map((option) => option.value).join("");
@@ -34,7 +35,7 @@ function buildFlags(flags: Record<RegexFlag, boolean>) {
 
 function computeMatches(pattern: string, flags: string, text: string) {
   if (!pattern) {
-    return { matches: [] as MatchItem[], error: "", replacementError: "", replaceOutput: "" };
+    return { matches: [] as MatchItem[], error: "", replacementError: "", replaceOutput: "", truncated: false };
   }
 
   try {
@@ -44,7 +45,10 @@ function computeMatches(pattern: string, flags: string, text: string) {
     let match: RegExpExecArray | null;
     let guard = 0;
 
-    while ((match = regex.exec(text)) && guard < 1000) {
+    while (guard < MAX_MATCHES) {
+      match = regex.exec(text);
+      if (!match) break;
+
       matches.push({
         id: `${match.index}-${matches.length}`,
         index: match.index,
@@ -59,13 +63,14 @@ function computeMatches(pattern: string, flags: string, text: string) {
       guard += 1;
     }
 
-    return { matches, error: "", replacementError: "", replaceOutput: "" };
+    return { matches, error: "", replacementError: "", replaceOutput: "", truncated: matches.length >= MAX_MATCHES };
   } catch (error) {
     return {
       matches: [] as MatchItem[],
       error: error instanceof Error ? error.message : "Invalid regular expression.",
       replacementError: "",
       replaceOutput: "",
+      truncated: false,
     };
   }
 }
@@ -194,6 +199,9 @@ export function RegexClient() {
           </label>
 
           {error ? <div className="notice notice-error">{error}</div> : null}
+          {matchResult.truncated ? (
+            <div className="notice">Showing the first {MAX_MATCHES} matches to keep the preview responsive.</div>
+          ) : null}
         </div>
 
         <div className="panel stack">

@@ -1,7 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 
-const SERVICE_KEY =
-  "d0e07a1c0c97c65ea97243f4be6b3e2140271cbe3a18d254474158dd645069fa";
+const SERVICE_KEY = process.env.HOLIDAY_SERVICE_KEY;
 const API_URL = "https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo";
 
 type HolidayItem = {
@@ -51,6 +50,11 @@ export async function GET(request: Request) {
   }
 
   const paddedMonth = month.padStart(2, "0");
+
+  if (!SERVICE_KEY) {
+    return NextResponse.json({ error: "HOLIDAY_SERVICE_KEY is not configured." }, { status: 500 });
+  }
+
   const params = new URLSearchParams({
     serviceKey: SERVICE_KEY,
     pageNo: "1",

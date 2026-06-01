@@ -43,5 +43,5 @@
 
 - [x] Run `npm run build`.
 - [x] Verify `/ladder` renders.
-- [ ] Verify generation, reveal, reveal all, shuffle, reset, history restore, delete, and clear flows.
+- [x] Verify generation, reveal, reveal all, shuffle, reset, history restore, delete, and clear flows.
 - [x] Report any unrelated build blockers.

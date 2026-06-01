@@ -83,6 +83,10 @@ function parseDelimited(source: string, delimiter: "," | "\t", trimCells: boolea
     cell += character;
   }
 
+  if (quoted) {
+    throw new Error("Quoted cell is not closed.");
+  }
+
   row.push(trimCells ? cell.trim() : cell);
   rows.push(row);
 
