@@ -591,6 +591,24 @@ textarea {
   color: var(--muted-strong);
 }
 
+.tag.success {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(74, 222, 128, 0.34);
+  color: #bbf7d0;
+}
+
+.tag.accent {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(125, 211, 252, 0.34);
+  color: #bae6fd;
+}
+
+.tag.danger {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(252, 165, 165, 0.34);
+  color: #fecaca;
+}
+
 .utility-description {
   min-height: 0;
   line-height: 1.5;
@@ -2044,11 +2062,209 @@ textarea {
   }
 }
 
+.diagram-hero {
+  position: relative;
+  overflow: hidden;
+  gap: 14px;
+  padding: 18px 20px;
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.14), transparent 34%),
+    radial-gradient(circle at 18% 100%, rgba(45, 212, 191, 0.1), transparent 28%),
+    linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.92));
+}
+
+.diagram-hero .eyebrow {
+  padding: 5px 10px;
+  font-size: 0.78rem;
+}
+
+.diagram-hero .label {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.diagram-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(226, 232, 240, 0.06);
+}
+
+.diagram-hero-top {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.diagram-hero-title {
+  margin: 8px 0 6px;
+  font-family: var(--font-serif);
+  font-size: clamp(1.55rem, 2.4vw, 2rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.diagram-hero-lead {
+  max-width: 58ch;
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.diagram-hero-formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.diagram-format-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.diagram-format-pill-mermaid {
+  border-color: rgba(196, 181, 253, 0.34);
+  background: rgba(139, 92, 246, 0.14);
+  color: #ddd6fe;
+}
+
+.diagram-format-pill-plantuml {
+  border-color: rgba(110, 231, 183, 0.34);
+  background: rgba(16, 185, 129, 0.14);
+  color: #a7f3d0;
+}
+
+.diagram-format-pill-markdown {
+  border-color: rgba(125, 211, 252, 0.34);
+  background: rgba(56, 189, 248, 0.14);
+  color: #bae6fd;
+}
+
+.diagram-hero-mark {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 84px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(160deg, rgba(139, 92, 246, 0.12), rgba(45, 212, 191, 0.08)),
+    rgba(2, 6, 23, 0.28);
+  color: rgba(186, 230, 253, 0.72);
+  box-shadow: inset 0 1px 0 rgba(226, 232, 240, 0.05);
+}
+
+.diagram-hero-graphic {
+  width: 88px;
+  height: auto;
+}
+
+.diagram-hero-deck {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(200px, 0.95fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.diagram-hero-card {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: var(--radius-sm);
+  background: rgba(2, 6, 23, 0.28);
+  padding: 10px 12px;
+}
+
+.diagram-hero-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diagram-hero-card-row .label {
+  flex: 0 0 auto;
+}
+
+.diagram-hero-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.diagram-tag-compact {
+  padding: 4px 8px;
+  font-size: 0.74rem;
+}
+
+.diagram-hero .segmented-control {
+  padding: 3px;
+}
+
+.diagram-mode-control .segment {
+  padding: 5px 9px;
+  font-size: 0.8rem;
+}
+
+.diagram-hero-drop-zone {
+  min-height: 54px;
+  gap: 2px;
+  padding: 8px 10px;
+}
+
+.diagram-hero-drop-zone .file-drop-title {
+  font-size: 0.82rem;
+}
+
+.diagram-hero-drop-zone .file-drop-hint {
+  font-size: 0.72rem;
+}
+
+.diagram-compact-button {
+  min-height: 32px;
+  padding: 6px 11px;
+  font-size: 0.82rem;
+}
+
+.diagram-hero-copy,
+.diagram-panel-heading {
+  min-width: 0;
+}
+
 .diagram-title-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
+}
+
+.diagram-header-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: 0;
 }
 
 .diagram-status-tags {
@@ -2058,80 +2274,291 @@ textarea {
   gap: 8px;
 }
 
+.diagram-workbench-shell.is-wide {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-inline: clamp(16px, 2.4vw, 32px);
+  box-sizing: border-box;
+}
+
+.diagram-workbench-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.diagram-wide-toggle.is-active {
+  border-color: rgba(125, 211, 252, 0.42);
+  background: rgba(56, 189, 248, 0.12);
+  color: #e0f2fe;
+}
+
+.diagram-workbench-shell.is-wide .diagram-textarea {
+  min-height: 460px;
+}
+
+.diagram-workbench-shell.is-wide .diagram-preview-surface {
+  min-height: min(72vh, 920px);
+  max-height: min(82vh, 980px);
+}
+
 .diagram-workbench {
+  --diagram-splitter-size: 12px;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+  grid-template-columns:
+    minmax(260px, var(--diagram-source-size, 20%))
+    var(--diagram-splitter-size)
+    minmax(260px, 1fr);
+  gap: 0;
   align-items: stretch;
+}
+
+.diagram-workbench-splitter {
+  position: relative;
+  z-index: 1;
+  align-self: stretch;
+  width: var(--diagram-splitter-size);
+  margin-inline: -2px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.diagram-workbench-splitter::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 50%;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.28);
+  transform: translateX(-50%);
+  transition: background 160ms ease, width 160ms ease;
+}
+
+.diagram-workbench-splitter::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.42);
+  transform: translate(-50%, -50%);
+  transition: background 160ms ease, height 160ms ease;
+}
+
+.diagram-workbench-splitter:hover::before,
+.diagram-workbench.is-resizing .diagram-workbench-splitter::before {
+  width: 3px;
+  background: rgba(125, 211, 252, 0.72);
+}
+
+.diagram-workbench-splitter:hover::after,
+.diagram-workbench.is-resizing .diagram-workbench-splitter::after {
+  height: 36px;
+  background: rgba(125, 211, 252, 0.82);
+}
+
+.diagram-workbench-shell.is-resizing-split {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.diagram-workbench-shell.is-resizing-split .diagram-workbench-splitter {
+  background: rgba(56, 189, 248, 0.06);
 }
 
 .diagram-editor-panel,
 .diagram-preview-panel {
   min-width: 0;
+  gap: 10px;
+}
+
+.diagram-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.diagram-panel-header-tools {
+  align-items: center;
+  gap: 10px;
+}
+
+.diagram-panel-title {
+  margin: 0 0 4px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.diagram-panel-meta {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.diagram-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.diagram-source-field {
+  gap: 0;
+}
+
+.diagram-source-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.diagram-source-font-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  width: fit-content;
+  padding: 3px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.18);
+}
+
+.diagram-source-font-value {
+  min-width: 42px;
+  color: var(--muted-strong);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.diagram-textarea {
+  min-height: 420px;
+  resize: vertical;
+  border-color: rgba(148, 163, 184, 0.22);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(2, 6, 23, 0.42), rgba(2, 6, 23, 0.3)),
+    rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--diagram-source-font-size, 13px);
+  line-height: 1.5;
+  padding: 14px;
+}
+
+.diagram-textarea::placeholder {
+  color: rgba(148, 163, 184, 0.72);
+}
+
+.diagram-textarea:focus {
+  border-color: rgba(125, 211, 252, 0.42);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.08);
+}
+
+.diagram-preview-deck {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+.diagram-zoom-controls,
+.diagram-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.diagram-zoom-controls {
+  width: fit-content;
+  padding: 3px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.18);
+}
+
+.diagram-zoom-value {
+  min-width: 44px;
+  color: var(--muted-strong);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.diagram-icon-button {
+  width: 30px;
+  min-width: 30px;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.diagram-panel-actions .diagram-compact-button {
+  min-height: 32px;
+}
+
+.diagram-preview-surface {
+  min-height: 560px;
+  max-height: min(78vh, 900px);
+  overflow: auto;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  color: #111827;
+  padding: 28px;
 }
 
 .diagram-control-bar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
   align-items: end;
 }
 
 .diagram-file-field {
   min-width: 0;
+  width: 190px;
+}
+
+.diagram-mode-field {
+  min-width: 0;
 }
 
 .diagram-file-drop-zone {
-  min-height: 78px;
+  min-height: 44px;
+  gap: 2px;
+  padding: 7px 11px;
+}
+
+.diagram-file-drop-zone .file-drop-title {
+  font-size: 0.86rem;
+  line-height: 1.1;
+}
+
+.diagram-file-drop-zone .file-drop-hint {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.74rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .diagram-mode-control {
   width: max-content;
-}
-
-.diagram-samples {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.diagram-textarea {
-  min-height: 340px;
-  resize: vertical;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  line-height: 1.55;
-}
-
-.diagram-preview-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-}
-
-.diagram-zoom-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.diagram-zoom-controls span {
-  min-width: 54px;
-  color: var(--muted-strong);
-  font-size: 0.92rem;
-  text-align: center;
-}
-
-.diagram-preview-surface {
-  min-height: 720px;
-  max-height: 900px;
-  overflow: auto;
-  border: 1px solid rgba(148, 163, 184, 0.38);
-  border-radius: var(--radius-md);
-  background: #ffffff;
-  color: #111827;
-  padding: 28px;
+  max-width: 100%;
 }
 
 .diagram-preview-surface .loading-inline {
@@ -2295,27 +2722,269 @@ textarea {
   word-break: break-word;
 }
 
+.diagram-history-panel {
+  gap: 12px;
+}
+
+.diagram-history-save-bar {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
+.diagram-history-comment-field {
+  display: grid;
+  gap: 6px;
+  width: min(100%, 420px);
+}
+
+.diagram-history-comment-label {
+  color: var(--muted-strong);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.diagram-history-comment-input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: var(--radius-sm);
+  background: rgba(2, 6, 23, 0.34);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  padding: 8px 10px;
+}
+
+.diagram-history-comment-input::placeholder {
+  color: rgba(148, 163, 184, 0.72);
+}
+
+.diagram-history-comment-input:focus {
+  border-color: rgba(125, 211, 252, 0.42);
+  outline: 2px solid rgba(56, 189, 248, 0.18);
+  outline-offset: 1px;
+}
+
+.diagram-history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.diagram-history-message {
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: var(--radius-sm);
+  background: rgba(56, 189, 248, 0.1);
+  color: #bae6fd;
+  font-size: 0.84rem;
+  padding: 8px 12px;
+}
+
+.diagram-history-active {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.diagram-history-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.diagram-history-item {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: var(--radius-sm);
+  background: rgba(2, 6, 23, 0.22);
+  padding: 10px 12px;
+}
+
+.diagram-history-item.is-active {
+  border-color: rgba(125, 211, 252, 0.34);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.diagram-history-item-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.diagram-history-item-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.diagram-history-item-heading {
+  display: grid;
+  gap: 6px;
+}
+
+.diagram-history-comment-input-inline {
+  max-width: 100%;
+}
+
+.diagram-history-item-title {
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.diagram-history-item-meta {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.diagram-history-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.diagram-history-version-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0 0 0 10px;
+  border-left: 2px solid rgba(148, 163, 184, 0.18);
+  list-style: none;
+}
+
+.diagram-history-version-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.diagram-history-version-copy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.diagram-history-version-label {
+  color: var(--muted-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.diagram-history-empty {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
 @media (max-width: 1060px) {
   .diagram-workbench {
     grid-template-columns: 1fr;
   }
 
+  .diagram-workbench-splitter {
+    display: none;
+  }
+
+  .diagram-workbench {
+    gap: 18px;
+  }
+
   .diagram-textarea {
-    min-height: 360px;
+    min-height: 320px;
+    font-size: var(--diagram-source-font-size, 15px);
+  }
+
+  .diagram-preview-surface {
+    min-height: 480px;
+    max-height: none;
   }
 }
 
 @media (max-width: 640px) {
   .diagram-title-row,
-  .diagram-control-bar,
-  .diagram-preview-toolbar {
-    grid-template-columns: 1fr;
+  .diagram-hero-top,
+  .diagram-panel-header-tools {
     flex-direction: column;
     align-items: stretch;
   }
 
+  .diagram-panel-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .diagram-export-actions {
+    flex: 1 1 auto;
+  }
+
+  .diagram-export-actions .button,
+  .diagram-export-actions .ghost-button {
+    flex: 1 1 auto;
+  }
+
+  .diagram-history-item-main,
+  .diagram-history-version-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .diagram-history-item-actions,
+  .diagram-history-actions,
+  .diagram-history-save-bar {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .diagram-history-comment-field {
+    width: 100%;
+  }
+
+  .diagram-source-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .diagram-hero-top {
+    display: flex;
+  }
+
+  .diagram-hero-mark {
+    width: 100%;
+    max-width: none;
+  }
+
+  .diagram-hero-deck {
+    grid-template-columns: 1fr;
+  }
+
+  .diagram-header-tools,
+  .diagram-control-bar {
+    align-items: stretch;
+  }
+
+  .diagram-control-bar {
+    justify-content: flex-start;
+  }
+
   .diagram-status-tags {
     justify-content: flex-start;
+  }
+
+  .diagram-file-field {
+    width: 100%;
   }
 
   .diagram-mode-control {
