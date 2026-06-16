@@ -16,9 +16,10 @@ const ogImageUrl = `${siteUrl}${ogImage}`;
 const pageDescription =
   "기기 안 영상을 MediaStore와 선택 폴더로 찾고, 이어보기, 자막 싱크, 오디오 트랙, PIP, 위젯, 재생목록을 제공하는 Android 로컬 비디오 플레이어 DongVideo입니다.";
 
-// 실제 APK, Play Store, GitHub Release URL이 생기면 이 값과 isDownloadReady만 바꾸면 됩니다.
-const downloadHref = "#";
-const isDownloadReady = false;
+const downloadHref =
+  "https://drive.google.com/file/d/1rv4ma9xqilFrdI4StahwV8kFZrZ8iV6b/view?usp=drivesdk";
+const isDownloadReady = true;
+const downloadLabel = "APK 다운로드";
 
 const heroPills = ["이어보기", "자막 싱크", "오디오 트랙", "PIP", "제스처", "자동 재생목록"];
 
@@ -269,8 +270,13 @@ export default function DongVideoPage() {
               재생 중 바로 맞추는 로컬 비디오 플레이어입니다.
             </p>
             <div className="dongplayer-hero-actions">
-              <a className="dongplayer-action dongplayer-action-primary" href="#dongvideo-download">
-                다운로드 준비 상태 보기
+              <a
+                className="dongplayer-action dongplayer-action-primary"
+                href={downloadHref}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {downloadLabel}
               </a>
               <a className="dongplayer-action dongplayer-action-secondary" href="#dongvideo-preview">
                 실제 화면 보기
@@ -385,19 +391,21 @@ export default function DongVideoPage() {
         <section id="dongvideo-download" className="dongplayer-download" aria-labelledby="dongvideo-download-title">
           <div>
             <p className="dongplayer-kicker">Download</p>
-            <h2 id="dongvideo-download-title">배포 링크를 연결할 준비가 되어 있습니다</h2>
+            <h2 id="dongvideo-download-title">Android APK를 다운로드할 수 있습니다</h2>
             <p>
-              APK, Play Store, GitHub Release 등 실제 배포 위치가 정해지면 페이지 상단의
-              <code>downloadHref</code>와 <code>isDownloadReady</code> 값만 바꾸면 됩니다.
+              Google Drive에서 APK를 받아 설치할 수 있습니다. Android 8.0 이상 기기에서 사용할 수
+              있으며, 알 수 없는 출처 설치 허용이 필요할 수 있습니다.
             </p>
           </div>
           <a
             className="dongplayer-download-link"
             href={downloadHref}
+            target="_blank"
+            rel="noopener noreferrer"
             aria-disabled={!isDownloadReady}
             data-disabled={isDownloadReady ? "false" : "true"}
           >
-            다운로드 링크 준비 중
+            {downloadLabel}
           </a>
         </section>
       </div>
